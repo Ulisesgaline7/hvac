@@ -21,7 +21,7 @@ class OrdenTrabajoForm
 {
     public static function configure(Schema $schema): Schema
     {
-        return $schema->components([
+        return $schema->disabled(fn ($record) => $record && in_array($record->estado, [\App\Enums\EstadoOt::Cerrada, \App\Enums\EstadoOt::Cancelada], true))->components([
             Section::make('Datos generales')->columns(2)->schema([
                 TextInput::make('numero')
                     ->label('Número')
