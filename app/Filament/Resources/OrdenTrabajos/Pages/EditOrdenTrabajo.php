@@ -4,7 +4,9 @@ namespace App\Filament\Resources\OrdenTrabajos\Pages;
 
 use App\Enums\EstadoOt;
 use App\Filament\Resources\OrdenTrabajos\OrdenTrabajoResource;
+use App\Models\Informe;
 use App\Models\Tecnico;
+use App\Services\PublicadorInforme;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
@@ -29,6 +31,45 @@ class EditOrdenTrabajo extends EditRecord
                 ->label('Informe PDF')
                 ->icon('heroicon-o-document-arrow-down')
                 ->url(fn () => route('ordenes-trabajo.informe', $this->record->id), shouldOpenInNewTab: true),
+            Action::make('generarInforme')
+                ->label('Generar informe')
+                ->icon('heroicon-o-document-plus')
+                ->visible(fn () => $this->record->estado === EstadoOt::Cerrada
+                    && ! Informe::where('orden_trabajo_id', $this->record->id)->where('estado', 'publicado')->exists()
+                    && (auth()->user()?->hasAnyRole(['administrador', 'coordinador']) ?? false))
+                ->requiresConfirmation()
+                ->modalDescription('Se genera el PDF en borrador. El cliente no lo verá hasta que lo publiques.')
+                ->action(function () {
+                    try {
+                        app(PublicadorInforme::class)->generar($this->record);
+                    } catch (\DomainException $e) {
+                        Notification::make()->danger()->title($e->getMessage())->send();
+
+                        return;
+                    }
+
+                    Notification::make()->success()->title('Informe generado (borrador)')->send();
+                }),
+            Action::make('publicarInforme')
+                ->label('Publicar informe')
+                ->icon('heroicon-o-paper-airplane')
+                ->color('success')
+                ->visible(fn () => (auth()->user()?->hasAnyRole(['administrador', 'coordinador']) ?? false)
+                    && Informe::where('orden_trabajo_id', $this->record->id)->where('estado', 'borrador')->exists())
+                ->requiresConfirmation()
+                ->modalDescription('Revisa el PDF antes. Al publicarlo, el cliente podrá verlo y descargarlo, y ya no se podrá regenerar.')
+                ->action(function () {
+                    try {
+                        $informe = Informe::where('orden_trabajo_id', $this->record->id)->firstOrFail();
+                        app(PublicadorInforme::class)->publicar($informe);
+                    } catch (\DomainException $e) {
+                        Notification::make()->danger()->title($e->getMessage())->send();
+
+                        return;
+                    }
+
+                    Notification::make()->success()->title('Informe publicado')->send();
+                }),
             Action::make('asignar')
                 ->label('Asignar técnico')
                 ->icon('heroicon-o-user-plus')
