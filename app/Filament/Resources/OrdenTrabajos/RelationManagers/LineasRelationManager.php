@@ -113,7 +113,7 @@ class LineasRelationManager extends RelationManager
                             }
                         }
 
-                                                $this->adjuntar($record, $data);
+                        $this->adjuntar($record, $data);
                         $ficha = app(FichaService::class)->guardar($ficha, $this->conAdjuntos($record, $ficha, $respuestas));
 
                         Notification::make()->success()
