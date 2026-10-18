@@ -8,6 +8,7 @@ use App\Models\OrdenTrabajoEquipo;
 use App\Models\PlantillaFormulario;
 use App\Models\TipoEquipo;
 use DomainException;
+use Illuminate\Support\Facades\Storage;
 
 class FichaService
 {
@@ -64,5 +65,58 @@ class FichaService
 
         return ($plantillaId ? PlantillaFormulario::find($plantillaId) : null)
             ?? throw new DomainException('El tipo de equipo no tiene plantilla de formulario asignada.');
+    }
+
+    /** Guarda firmas (PNG base64) y fotos (rutas temporales en el disco local) como media de la línea. */
+    public function adjuntar(OrdenTrabajoEquipo $linea, array $data): void
+    {
+        foreach ($data as $k => $v) {
+            if (! str_starts_with($k, 'f_') || empty($v)) {
+                continue;
+            }
+
+            $coleccion = substr($k, 2);
+
+            if (is_string($v) && str_starts_with($v, 'data:image/png;base64,')) {
+                if (strlen($v) > 1_400_000) {
+                    throw new DomainException('La firma es demasiado grande.');
+                }
+
+                $linea->clearMediaCollection($coleccion);
+                $linea->addMediaFromBase64($v, ['image/png'])->usingFileName($coleccion . '.png')->toMediaCollection($coleccion, 'local');
+
+                continue;
+            }
+
+            foreach (array_values((array) $v) as $ruta) {
+                $linea->addMedia(Storage::disk('local')->path($ruta))->toMediaCollection($coleccion, 'local');
+                Storage::disk('local')->delete($ruta);
+            }
+        }
+    }
+
+    /**
+     * Recalcula completitud y alertas desde la realidad: los marcadores de foto y firma
+     * se reconstruyen según los archivos que existen hoy (si se borró uno, la ficha deja de estar completa).
+     */
+    public function recalcular(FichaTecnica $ficha): FichaTecnica
+    {
+        $linea = $ficha->linea;
+        $linea->unsetRelation('media');
+        $respuestas = $ficha->respuestas ?? [];
+
+        foreach ($ficha->version->definicion as $c) {
+            if (! in_array($c['tipo'], ['foto', 'firma'], true)) {
+                continue;
+            }
+
+            unset($respuestas[$c['clave']]);
+
+            if ($linea->getMedia($c['clave'])->isNotEmpty()) {
+                $respuestas[$c['clave']] = 'adjunto';
+            }
+        }
+
+        return $this->guardar($ficha, $respuestas);
     }
 }

@@ -90,3 +90,39 @@ it('sin plantilla asignada al tipo de equipo lanza un error claro', function () 
 
     expect(fn () => app(FichaService::class)->obtenerOCrear($linea->fresh()))->toThrow(DomainException::class);
 });
+
+const FIRMA_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+
+it('la firma en media completa la ficha y permite completar la OT; al borrarla se bloquea', function () {
+    Illuminate\Support\Facades\Storage::fake('local');
+
+    [, $linea] = lineaParaFicha();
+    $svc = app(FichaService::class);
+    $ficha = $svc->obtenerOCrear($linea);
+    $ficha = $svc->guardar($ficha, ['motivo' => 'Revisión', 'temp' => 3, 'ok' => true]);
+    expect($ficha->completa)->toBeFalse();
+
+    $svc->adjuntar($linea, ['f_firma' => FIRMA_PNG]);
+    $ficha = $svc->recalcular($ficha->fresh());
+    expect($ficha->completa)->toBeTrue();
+
+    $ot = $linea->ordenTrabajo->fresh();
+    $ot->cambiarEstado(App\Enums\EstadoOt::Asignada);
+    $ot->cambiarEstado(App\Enums\EstadoOt::EnProceso);
+    $ot->cambiarEstado(App\Enums\EstadoOt::CompletadaTecnico);
+    expect($ot->fresh()->estado)->toBe(App\Enums\EstadoOt::CompletadaTecnico);
+
+    $linea->fresh()->clearMediaCollection('firma');
+    $ficha = $svc->recalcular($ficha->fresh());
+    expect($ficha->completa)->toBeFalse()
+        ->and($ficha->respuestas)->not->toHaveKey('firma');
+});
+
+it('rechaza una firma demasiado grande', function () {
+    Illuminate\Support\Facades\Storage::fake('local');
+
+    [, $linea] = lineaParaFicha();
+
+    expect(fn () => app(FichaService::class)->adjuntar($linea, ['f_firma' => 'data:image/png;base64,' . str_repeat('A', 1_500_000)]))
+        ->toThrow(DomainException::class);
+});
