@@ -38,6 +38,16 @@ class OrdenTrabajo extends Model
 
     protected static function booted(): void
     {
+        static::updating(function (OrdenTrabajo $ot) {
+            $original = $ot->getOriginal('estado');
+            $original = $original instanceof EstadoOt ? $original : EstadoOt::tryFrom((string) $original);
+
+            // Cerrada y cancelada son de solo lectura.
+            if (in_array($original, [EstadoOt::Cerrada, EstadoOt::Cancelada], true) && $ot->isDirty()) {
+                throw new \DomainException('La OT está ' . strtolower($original->getLabel()) . ' y no se puede modificar.');
+            }
+        });
+
         static::creating(function (OrdenTrabajo $ot) {
             if (empty($ot->numero)) {
                 $ot->numero = 'TMP-' . Str::uuid();
