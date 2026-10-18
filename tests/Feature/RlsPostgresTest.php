@@ -90,3 +90,13 @@ it('un cliente no puede escribir filas de otro cliente', function () {
 
     expect(DB::connection('rls_owner')->table('sucursales')->where('nombre', 'Intruso')->count())->toBe(0);
 });
+
+it('un cliente no puede modificar ni crear datos propios (solo lectura)', function () {
+    comoApp(['interno' => 'false', 'cliente' => $this->cliente_a], function ($c) {
+        $afectadas = $c->table('clientes')->where('id', $this->cliente_a)->update(['notas' => 'cambio']);
+        expect($afectadas)->toBe(0);
+
+        expect(fn () => $c->table('sucursales')->insert(['cliente_id' => $this->cliente_a, 'nombre' => 'Nueva']))
+            ->toThrow(Illuminate\Database\QueryException::class);
+    });
+});
