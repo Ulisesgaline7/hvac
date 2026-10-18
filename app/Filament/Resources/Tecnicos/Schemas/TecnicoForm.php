@@ -32,6 +32,7 @@ class TecnicoForm
                     return $usuario->getKey();
                 }),
             TextInput::make('telefono')->label('Teléfono')->tel(),
+            TextInput::make('rtn')->label('RTN'),
             TextInput::make('zona')->label('Zona de trabajo'),
             Select::make('estado_homologacion')
                 ->label('Homologación')
