@@ -128,10 +128,45 @@ class OrdenTrabajo extends Model
         return $this->hasMany(HistorialEstadoOt::class, 'orden_trabajo_id')->latest('id');
     }
 
+    /** Guardas de negocio: no se completa ni se cierra una OT con fichas pendientes. */
+    private function validarTransicion(EstadoOt $nuevo, ?string $motivo): void
+    {
+        if (! in_array($nuevo, [EstadoOt::CompletadaTecnico, EstadoOt::Cerrada], true)) {
+            return;
+        }
+
+        $lineas = $this->lineas()->with('ficha')->get();
+
+        if ($lineas->isEmpty()) {
+            throw new \DomainException('La OT no tiene equipos registrados.');
+        }
+
+        $incompletas = $lineas->filter(fn ($l) => ! $l->ficha?->completa)->count();
+        if ($incompletas > 0) {
+            throw new \DomainException("Hay {$incompletas} equipo(s) con la ficha técnica incompleta o sin llenar.");
+        }
+
+        if ($nuevo === EstadoOt::Cerrada
+            && $lineas->contains(fn ($l) => ! empty($l->ficha?->alertas))
+            && blank($motivo)) {
+            throw new \DomainException('Hay valores fuera de rango. Indica en el motivo cómo se atendieron antes de cerrar.');
+        }
+    }
+
     public function cambiarEstado(EstadoOt $nuevo, ?string $motivo = null): void
     {
         if (! in_array($nuevo, $this->estado->transiciones(), true)) {
             throw new \DomainException("No se puede pasar de «{$this->estado->getLabel()}» a «{$nuevo->getLabel()}».");
+        }
+
+        $this->validarTransicion($nuevo, $motivo);
+
+        if ($this->estado === EstadoOt::Asignada && $nuevo === EstadoOt::EnProceso) {
+            $this->check_in_at ??= now();
+        }
+
+        if ($nuevo === EstadoOt::CompletadaTecnico) {
+            $this->check_out_at ??= now();
         }
 
         if ($this->estado === EstadoOt::EnRevision && $nuevo === EstadoOt::EnProceso) {
