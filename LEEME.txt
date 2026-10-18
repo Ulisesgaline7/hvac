@@ -1,0 +1,3 @@
+Kit PDF Control Total (DomPDF)
+public/images/pdf/   -> encabezado.png, pie.png, simbolo.png, marca-agua.png
+resources/views/pdf/layout-marca.blade.php -> layout base (encabezado, pie, marca de agua, estilos)

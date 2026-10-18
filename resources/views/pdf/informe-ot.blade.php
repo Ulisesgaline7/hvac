@@ -1,33 +1,31 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
+@extends('pdf.layout-marca')
+
+@section('documento', 'Informe de servicio ' . $ot->numero)
+@section('titulo-documento', 'Informe de servicio')
+@section('subtitulo-documento', $ot->numero)
+@section('pie-extra', '· ' . $ot->numero . ' · Generado el ' . $generado)
+
+@push('estilos')
 <style>
-    @page { margin: 28px 32px; }
-    body { font-family: 'DejaVu Sans', sans-serif; font-size: 10px; color: #1f2937; }
-    h1 { font-size: 17px; margin: 0 0 2px; }
-    h2 { font-size: 12px; margin: 16px 0 6px; padding-bottom: 3px; border-bottom: 2px solid #0e7490; color: #0e7490; }
-    table { width: 100%; border-collapse: collapse; }
-    td, th { padding: 4px 6px; vertical-align: top; }
-    .datos td { border-bottom: 1px solid #e5e7eb; }
-    .datos td.k { width: 18%; color: #6b7280; }
-    .filas td { border-bottom: 1px solid #f3f4f6; }
-    .filas td.k { width: 55%; }
+    .datos td { border-bottom: 0.6pt solid #D9D9D9; padding: 4px 6px; vertical-align: top; }
+    .datos td.k { width: 18%; color: #4B5A6E; font-size: 8pt; text-transform: uppercase; font-weight: bold; }
+    .filas td { border-bottom: 0.6pt solid #E6F0FF; padding: 4px 6px; vertical-align: top; }
+    .filas td.k { width: 55%; color: #4B5A6E; }
     .fuera { color: #b91c1c; font-weight: bold; }
-    .equipo { margin-top: 12px; border: 1px solid #d1d5db; padding: 8px; page-break-inside: avoid; }
-    .equipo-titulo { font-size: 11px; font-weight: bold; }
-    .badge { font-size: 9px; padding: 1px 6px; border-radius: 8px; color: #fff; }
-    .ok { background: #15803d; } .borrador { background: #b45309; } .sin { background: #6b7280; }
+    .equipo { margin-top: 12px; border: 0.6pt solid #D9D9D9; border-top: 2.5pt solid #087BFF; padding: 8px; page-break-inside: avoid; }
+    .equipo-titulo { font-size: 10pt; font-weight: bold; color: #082A4A; }
+    .badge { font-size: 7pt; padding: 1px 6px; border-radius: 8px; color: #fff; }
+    .ok { background: #15803d; } .borrador { background: #b45309; } .sin { background: #4B5A6E; }
     .alerta { background: #fef2f2; border-left: 3px solid #b91c1c; padding: 3px 6px; margin: 3px 0; color: #991b1b; }
-    .pie { position: fixed; bottom: -14px; left: 0; right: 0; text-align: center; color: #9ca3af; font-size: 8px; }
     .bloque { margin: 4px 0; }
 </style>
-</head>
-<body>
-    <h1>Informe de servicio · {{ $ot->numero }}</h1>
-    <div style="color:#6b7280">Generado el {{ $generado }}</div>
+@endpush
 
-    <h2>Datos generales</h2>
+@section('contenido')
+    <h1 class="doc">Informe de servicio · {{ $ot->numero }}</h1>
+    <div style="color:#4B5A6E">Generado el {{ $generado }}</div>
+
+    <div class="seccion">Datos generales</div>
     <table class="datos">
         <tr><td class="k">Cliente</td><td>{{ $cliente?->razon_social }}</td><td class="k">Sucursal</td><td>{{ $sucursal?->nombre }}</td></tr>
         <tr><td class="k">Tipo</td><td>{{ $ot->tipo?->getLabel() ?? $ot->tipo }}</td><td class="k">Estado</td><td>{{ $ot->estado?->getLabel() ?? $ot->estado }}</td></tr>
@@ -40,7 +38,7 @@
     @if ($ot->causa_raiz)<div class="bloque"><strong>Causa raíz:</strong> {{ $ot->causa_raiz }}</div>@endif
     @if ($ot->reparacion)<div class="bloque"><strong>Reparación:</strong> {{ $ot->reparacion }}</div>@endif
 
-    <h2>Equipos intervenidos ({{ $lineas->count() }})</h2>
+    <div class="seccion">Equipos intervenidos ({{ $lineas->count() }})</div>
 
     @forelse ($lineas as $l)
         <div class="equipo">
@@ -73,7 +71,7 @@
                 @foreach ($l['fotos'] as $f)
                     <div style="display:inline-block; width:48%; margin:2px; vertical-align:top;">
                         <img src="{{ $f['src'] }}" style="width:100%;">
-                        <div style="font-size:8px; color:#6b7280;">{{ $f['titulo'] }}</div>
+                        <div style="font-size:8px; color:#4B5A6E;">{{ $f['titulo'] }}</div>
                     </div>
                 @endforeach
             @endif
@@ -83,7 +81,7 @@
                     @foreach ($l['firmas'] as $f)
                         <td style="width:50%; text-align:center;">
                             <img src="{{ $f['src'] }}" style="height:60px;">
-                            <div style="border-top:1px solid #6b7280; font-size:8px; color:#6b7280;">{{ $f['titulo'] }}</div>
+                            <div class="firma">{{ $f['titulo'] }}</div>
                         </td>
                     @endforeach
                 </tr></table>
@@ -94,7 +92,4 @@
     @endforelse
 
     {{-- Evidencias y firmas: se conectan en el módulo de evidencias --}}
-
-    <div class="pie">{{ $ot->numero }} · Informe generado el {{ $generado }}</div>
-</body>
-</html>
+@endsection
