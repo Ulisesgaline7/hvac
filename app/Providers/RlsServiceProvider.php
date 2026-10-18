@@ -41,21 +41,21 @@ class RlsServiceProvider extends ServiceProvider
             && $usuario->hasAnyRole(['administrador', 'coordinador']);
         $clienteId = (! $interno && ! empty($usuario->cliente_id)) ? (string) $usuario->cliente_id : '';
 
-        self::fijar($interno ? 'true' : 'false', $clienteId);
+        self::fijar($interno ? 'true' : 'false', $clienteId, (string) $usuario->getAuthIdentifier());
     }
 
     public static function limpiar(): void
     {
         if (DB::connection()->getDriverName() === 'pgsql') {
-            self::fijar('', '');
+            self::fijar('', '', '');
         }
     }
 
-    private static function fijar(string $interno, string $clienteId): void
+    private static function fijar(string $interno, string $clienteId, string $userId): void
     {
         DB::connection()->select(
-            "select set_config('app.es_interno', ?, false), set_config('app.cliente_id', ?, false)",
-            [$interno, $clienteId]
+            "select set_config('app.es_interno', ?, false), set_config('app.cliente_id', ?, false), set_config('app.user_id', ?, false)",
+            [$interno, $clienteId, $userId]
         );
     }
 }
