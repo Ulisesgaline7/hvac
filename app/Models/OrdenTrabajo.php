@@ -74,6 +74,7 @@ class OrdenTrabajo extends Model
             'estado_anterior' => $valor($anterior),
             'estado_nuevo' => $valor($nuevo),
             'usuario_id' => Auth::id(),
+            'motivo' => $ot->motivoCambio,
             'created_at' => now(),
         ]);
     }
@@ -113,5 +114,33 @@ class OrdenTrabajo extends Model
     protected static function restringirACliente(Builder $consulta, int $clienteId): void
     {
         $consulta->where('cliente_id', $clienteId);
+    }
+
+    public ?string $motivoCambio = null;
+
+    public function historial(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(HistorialEstadoOt::class, 'orden_trabajo_id')->latest('id');
+    }
+
+    public function cambiarEstado(EstadoOt $nuevo, ?string $motivo = null): void
+    {
+        if (! in_array($nuevo, $this->estado->transiciones(), true)) {
+            throw new \DomainException("No se puede pasar de «{$this->estado->getLabel()}» a «{$nuevo->getLabel()}».");
+        }
+
+        if ($this->estado === EstadoOt::EnRevision && $nuevo === EstadoOt::EnProceso) {
+            $this->motivo_devolucion = $motivo;
+        }
+
+        if ($nuevo === EstadoOt::Cerrada) {
+            $this->cerrada_en = now();
+            $this->tardia = $this->fecha_programada ? now()->startOfDay()->gt($this->fecha_programada) : false;
+        }
+
+        $this->motivoCambio = $motivo;
+        $this->estado = $nuevo;
+        $this->save();
+        $this->motivoCambio = null;
     }
 }

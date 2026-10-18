@@ -2,7 +2,9 @@
 
 namespace App\Enums;
 
-enum Frecuencia: string
+use Filament\Support\Contracts\HasLabel;
+
+enum Frecuencia: string implements HasLabel
 {
     case Mensual = 'mensual';
     case Trimestral = 'trimestral';
@@ -17,5 +19,10 @@ enum Frecuencia: string
             self::Semestral => 6,
             self::Anual => 12,
         };
+    }
+
+    public function getLabel(): string
+    {
+        return ucfirst($this->value);
     }
 }
