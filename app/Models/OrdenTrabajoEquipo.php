@@ -3,11 +3,22 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-class OrdenTrabajoEquipo extends Model
+class OrdenTrabajoEquipo extends Model implements HasMedia
 {
+    use InteractsWithMedia;
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        // Versión reducida para el PDF: evita incrustar fotos de varios MB.
+        $this->addMediaConversion('informe')->width(800)->nonQueued();
+    }
+
     protected $table = 'orden_trabajo_equipo';
     protected $guarded = [];
 

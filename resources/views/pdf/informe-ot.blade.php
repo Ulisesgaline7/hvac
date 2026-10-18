@@ -67,6 +67,27 @@
                     @endforeach
                 </table>
             @endif
+
+            @if ($l['fotos'])
+                <div class="bloque"><strong>Evidencias</strong></div>
+                @foreach ($l['fotos'] as $f)
+                    <div style="display:inline-block; width:48%; margin:2px; vertical-align:top;">
+                        <img src="{{ $f['src'] }}" style="width:100%;">
+                        <div style="font-size:8px; color:#6b7280;">{{ $f['titulo'] }}</div>
+                    </div>
+                @endforeach
+            @endif
+
+            @if ($l['firmas'])
+                <table style="margin-top:8px;"><tr>
+                    @foreach ($l['firmas'] as $f)
+                        <td style="width:50%; text-align:center;">
+                            <img src="{{ $f['src'] }}" style="height:60px;">
+                            <div style="border-top:1px solid #6b7280; font-size:8px; color:#6b7280;">{{ $f['titulo'] }}</div>
+                        </td>
+                    @endforeach
+                </tr></table>
+            @endif
         </div>
     @empty
         <p>Esta orden no tiene equipos registrados.</p>

@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Forms\Components\FirmaPad;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
@@ -12,7 +14,7 @@ use Filament\Forms\Components\Toggle;
 class FormularioDinamico
 {
     /** Tipos que aún no se renderizan ni validan (esperan el módulo de adjuntos). */
-    public const PENDIENTES = ['foto', 'firma'];
+    public const PENDIENTES = [];
 
     public static function componentes(array $campos, string $prefijo = 'r_'): array
     {
@@ -32,6 +34,9 @@ class FormularioDinamico
                 'seleccion' => Select::make($nombre)->label($etiqueta)->options(self::opciones($c)),
                 'casilla' => Toggle::make($nombre)->label($etiqueta),
                 'checklist' => CheckboxList::make($nombre)->label($etiqueta)->options(self::opciones($c))->columns(2)->columnSpanFull(),
+                'foto' => FileUpload::make('f_' . $c['clave'])->label($etiqueta)->image()->multiple()->maxFiles(6)
+                    ->maxSize(10240)->disk('local')->directory('tmp-fotos')->visibility('private')->columnSpanFull(),
+                'firma' => FirmaPad::make('f_' . $c['clave'])->label($etiqueta)->columnSpanFull(),
                 'fecha' => DatePicker::make($nombre)->label($etiqueta),
                 'nota' => Textarea::make($nombre)->label($etiqueta)->columnSpanFull(),
                 default => TextInput::make($nombre)->label($etiqueta),
@@ -47,7 +52,7 @@ class FormularioDinamico
         $faltan = [];
 
         foreach ($campos as $c) {
-            if (empty($c['obligatorio']) || in_array($c['tipo'], self::PENDIENTES, true)) {
+            if (empty($c['obligatorio'])) {
                 continue;
             }
 

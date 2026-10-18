@@ -24,7 +24,7 @@ class InformeOtService
     public function datos(OrdenTrabajo $ot): array
     {
         $lineas = OrdenTrabajoEquipo::where('orden_trabajo_id', $ot->id)
-            ->with(['equipo', 'ficha.version'])
+            ->with(['equipo', 'ficha.version', 'media'])
             ->orderBy('id')
             ->get()
             ->map(function ($l) {
@@ -37,6 +37,8 @@ class InformeOtService
                     'estado_resultante' => $l->estado_resultante,
                     'observaciones' => $l->observaciones,
                     'tiene_ficha' => (bool) $ficha,
+                    'fotos' => $this->fotos($l),
+                    'firmas' => $this->firmas($l),
                     'completa' => (bool) $ficha?->completa,
                     'alertas' => $ficha?->alertas ?? [],
                     'plantilla' => $ficha?->version?->plantilla?->nombre ?? null,
@@ -54,13 +56,46 @@ class InformeOtService
         ];
     }
 
+    /** Fotos de la línea como data URI (versión reducida si existe). */
+    private function fotos(OrdenTrabajoEquipo $l): array
+    {
+        $titulos = ['foto_antes' => 'Antes', 'foto_despues' => 'Después'];
+
+        return $l->media
+            ->filter(fn ($m) => str_starts_with($m->collection_name, 'foto'))
+            ->map(function ($m) use ($titulos) {
+                $ruta = $m->getPath('informe');
+                if (! is_file($ruta)) {
+                    $ruta = $m->getPath();
+                }
+
+                return [
+                    'titulo' => $titulos[$m->collection_name] ?? ucfirst(str_replace('_', ' ', substr($m->collection_name, 5))),
+                    'src' => 'data:' . $m->mime_type . ';base64,' . base64_encode(file_get_contents($ruta)),
+                ];
+            })->values()->all();
+    }
+
+    /** Firmas de la línea como data URI. */
+    private function firmas(OrdenTrabajoEquipo $l): array
+    {
+        $titulos = ['firma_tecnico' => 'Firma del técnico', 'firma_cliente' => 'Firma del cliente'];
+
+        return $l->media
+            ->filter(fn ($m) => str_starts_with($m->collection_name, 'firma'))
+            ->map(fn ($m) => [
+                'titulo' => $titulos[$m->collection_name] ?? ucfirst(str_replace('_', ' ', $m->collection_name)),
+                'src' => 'data:image/png;base64,' . base64_encode(file_get_contents($m->getPath())),
+            ])->values()->all();
+    }
+
     /** Una fila por campo de la plantilla (omite foto y firma, que llegan con el módulo de evidencias). */
     private function filas(array $campos, array $resp): array
     {
         $filas = [];
 
         foreach ($campos as $c) {
-            if (in_array($c['tipo'], FormularioDinamico::PENDIENTES, true)) {
+            if (in_array($c['tipo'], ['foto', 'firma'], true)) {
                 continue;
             }
 
