@@ -26,26 +26,36 @@ class RlsServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        Event::listen(Authenticated::class, function (Authenticated $evento) {
-            $conexion = DB::connection();
+        Event::listen(Authenticated::class, fn (Authenticated $e) => self::aplicar($e->user));
 
-            if ($conexion->getDriverName() !== 'pgsql') {
-                return;
-            }
+        $this->app->terminating(fn () => self::limpiar());
+    }
 
-            $usuario = $evento->user;
-            $interno = method_exists($usuario, 'hasAnyRole')
-                && $usuario->hasAnyRole(['administrador', 'coordinador']);
-            $clienteId = (! $interno && ! empty($usuario->cliente_id)) ? (string) $usuario->cliente_id : '';
+    public static function aplicar($usuario): void
+    {
+        if (DB::connection()->getDriverName() !== 'pgsql') {
+            return;
+        }
 
-            $conexion->select(
-                "select set_config('app.es_interno', ?, false), set_config('app.cliente_id', ?, false)",
-                [$interno ? 'true' : 'false', $clienteId]
-            );
+        $interno = method_exists($usuario, 'hasAnyRole')
+            && $usuario->hasAnyRole(['administrador', 'coordinador']);
+        $clienteId = (! $interno && ! empty($usuario->cliente_id)) ? (string) $usuario->cliente_id : '';
 
-            $this->app->terminating(function () {
-                DB::connection()->select("select set_config('app.es_interno', '', false), set_config('app.cliente_id', '', false)");
-            });
-        });
+        self::fijar($interno ? 'true' : 'false', $clienteId);
+    }
+
+    public static function limpiar(): void
+    {
+        if (DB::connection()->getDriverName() === 'pgsql') {
+            self::fijar('', '');
+        }
+    }
+
+    private static function fijar(string $interno, string $clienteId): void
+    {
+        DB::connection()->select(
+            "select set_config('app.es_interno', ?, false), set_config('app.cliente_id', ?, false)",
+            [$interno, $clienteId]
+        );
     }
 }
