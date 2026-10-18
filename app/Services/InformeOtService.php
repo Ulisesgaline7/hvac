@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\ActaConformidad;
 use App\Models\Cliente;
+use App\Models\Informe;
 use App\Models\OrdenTrabajo;
 use App\Models\OrdenTrabajoEquipo;
 use App\Models\Sucursal;
@@ -11,17 +13,17 @@ use Dompdf\Dompdf;
 
 class InformeOtService
 {
-    public function pdf(OrdenTrabajo $ot): string
+    public function pdf(OrdenTrabajo $ot, ?Informe $informe = null): string
     {
         $dompdf = new Dompdf(['defaultFont' => 'DejaVu Sans', 'isRemoteEnabled' => false]);
-        $dompdf->loadHtml(view('pdf.informe-ot', $this->datos($ot))->render());
+        $dompdf->loadHtml(view('pdf.informe-ot', $this->datos($ot, $informe))->render());
         $dompdf->setPaper('letter');
         $dompdf->render();
 
         return $dompdf->output();
     }
 
-    public function datos(OrdenTrabajo $ot): array
+    public function datos(OrdenTrabajo $ot, ?Informe $informe = null): array
     {
         $lineas = OrdenTrabajoEquipo::where('orden_trabajo_id', $ot->id)
             ->with(['equipo', 'ficha.version.plantilla', 'media'])
@@ -46,6 +48,8 @@ class InformeOtService
                 ];
             });
 
+        $urlVerificacion = $informe?->token_verificacion ? route('informe.verificar', $informe->token_verificacion) : null;
+
         return [
             'ot' => $ot,
             'cliente' => Cliente::find($ot->cliente_id),
@@ -53,6 +57,9 @@ class InformeOtService
             'tecnico' => $ot->tecnico?->user?->name,
             'lineas' => $lineas,
             'generado' => now()->format('d/m/Y H:i'),
+            'acta' => $this->acta($ot),
+            'qr' => $urlVerificacion ? app(GeneradorQr::class)->dataUriDeUrl($urlVerificacion) : null,
+            'verificacion_url' => $urlVerificacion,
         ];
     }
 
@@ -125,5 +132,36 @@ class InformeOtService
         }
 
         return $filas;
+    }
+
+    /** Acta de conformidad lista para imprimir, o null si la OT no tiene. */
+    private function acta(OrdenTrabajo $ot): ?array
+    {
+        $a = ActaConformidad::where('orden_trabajo_id', $ot->id)->latest('id')->first();
+        if (! $a) {
+            return null;
+        }
+
+        $conf = $a->confirmaciones;
+        if (is_string($conf)) {
+            $conf = json_decode($conf, true);
+        }
+
+        $filas = [];
+        foreach ((array) $conf as $k => $v) {
+            $filas[] = [
+                'etiqueta' => is_string($k) ? ucfirst(str_replace('_', ' ', $k)) : '•',
+                'valor' => is_bool($v) ? ($v ? 'Sí' : 'No') : (is_array($v) ? implode(', ', array_map('strval', $v)) : (string) $v),
+            ];
+        }
+
+        return [
+            'fecha' => $a->fecha ? \Illuminate\Support\Carbon::parse($a->fecha)->format('d/m/Y') : null,
+            'recibe' => $a->recibe_nombre,
+            'cargo' => $a->recibe_cargo,
+            'calificacion' => $a->calificacion,
+            'observaciones' => $a->observaciones_cliente,
+            'confirmaciones' => $filas,
+        ];
     }
 }

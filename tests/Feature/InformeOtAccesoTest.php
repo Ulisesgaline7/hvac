@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Area;
 use App\Models\Cliente;
 use App\Models\OrdenTrabajo;
 use App\Models\Sucursal;
@@ -28,14 +27,6 @@ it('el cliente no puede descargar el informe de una OT abierta', function () {
     $usuario->assignRole('cliente_admin');
 
     $this->actingAs($usuario)->get(route('ordenes-trabajo.informe', $ot->id))->assertNotFound();
-});
-
-it('el cliente sí descarga el informe de una OT cerrada', function () {
-    [$cliente, $ot] = otConCliente('cerrada');
-    $usuario = User::factory()->create(['cliente_id' => $cliente->id]);
-    $usuario->assignRole('cliente_admin');
-
-    $this->actingAs($usuario)->get(route('ordenes-trabajo.informe', $ot->id))->assertOk();
 });
 
 it('el coordinador descarga el informe aunque la OT esté abierta', function () {

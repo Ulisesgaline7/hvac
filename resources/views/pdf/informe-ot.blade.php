@@ -91,5 +91,31 @@
         <p>Esta orden no tiene equipos registrados.</p>
     @endforelse
 
-    {{-- Evidencias y firmas: se conectan en el módulo de evidencias --}}
+    @if ($acta)
+        <div class="seccion">Acta de conformidad</div>
+        <table class="datos">
+            <tr>
+                <td class="k">Fecha</td><td>{{ $acta['fecha'] ?? '—' }}</td>
+                <td class="k">Recibe</td><td>{{ $acta['recibe'] ?? '—' }}@if ($acta['cargo']) · {{ $acta['cargo'] }}@endif</td>
+            </tr>
+            @if ($acta['calificacion'])<tr><td class="k">Calificación</td><td colspan="3">{{ $acta['calificacion'] }} / 5</td></tr>@endif
+        </table>
+        @if ($acta['confirmaciones'])
+            <table class="filas">
+                @foreach ($acta['confirmaciones'] as $f)
+                    <tr><td class="k">{{ $f['etiqueta'] }}</td><td>{{ $f['valor'] }}</td></tr>
+                @endforeach
+            </table>
+        @endif
+        @if ($acta['observaciones'])<div class="bloque"><strong>Observaciones del cliente:</strong> {{ $acta['observaciones'] }}</div>@endif
+    @endif
+
+    @if ($qr)
+        <table style="margin-top:14px; page-break-inside: avoid;"><tr>
+            <td style="width:70px;"><img src="{{ $qr }}" style="width:64px; height:64px;"></td>
+            <td style="vertical-align:middle; color:#4B5A6E; font-size:7.6pt;">
+                Verifica la autenticidad de este informe escaneando el código o visitando<br>{{ $verificacion_url }}
+            </td>
+        </tr></table>
+    @endif
 @endsection

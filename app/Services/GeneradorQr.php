@@ -25,4 +25,11 @@ class GeneradorQr
             margin: 0,
         ))->build()->getDataUri();
     }
+
+    public function dataUriDeUrl(string $url): string
+    {
+        $escritor = extension_loaded('gd') ? new PngWriter() : new SvgWriter();
+
+        return (new Builder(writer: $escritor, data: $url, size: 300, margin: 0))->build()->getDataUri();
+    }
 }

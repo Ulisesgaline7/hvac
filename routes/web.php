@@ -27,3 +27,8 @@ Route::middleware(['web', 'auth'])
     ->get('/ordenes-trabajo/{ot}/informe', \App\Http\Controllers\InformeOtController::class)
     ->whereNumber('ot')
     ->name('ordenes-trabajo.informe');
+
+Route::middleware(['web', 'throttle:30,1'])
+    ->get('/v/{token}', \App\Http\Controllers\VerificarInformeController::class)
+    ->whereAlphaNumeric('token')
+    ->name('informe.verificar');
