@@ -73,10 +73,31 @@ class LineasRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('equipo.codigo')->label('Equipo')->placeholder('Por instalar'),
                 TextColumn::make('equipo.tipo.nombre')->label('Tipo')->placeholder('—'),
+                TextColumn::make('marca_modelo')->label('Marca y modelo')->placeholder('—')
+                    ->state(fn ($record) => $record->equipo
+                        ? trim((\App\Models\Marca::find($record->equipo->marca_id)?->nombre ?? '') . ' ' . ($record->equipo->modelo ?? '')) ?: null
+                        : null),
+                TextColumn::make('capacidad')->label('Capacidad')->placeholder('—')
+                    ->state(fn ($record) => $record->equipo?->capacidad_valor
+                        ? rtrim(rtrim((string) $record->equipo->capacidad_valor, '0'), '.') . ' ' . $record->equipo->capacidad_unidad
+                        : null),
+                TextColumn::make('ubicacion')->label('Ubicación')->placeholder('—')
+                    ->state(fn ($record) => \App\Models\Area::find($record->equipo?->area_id ?? $record->area_id)?->nombre),
+                TextColumn::make('tareas')->label('Tareas previstas')->placeholder('—')->wrap()
+                    ->state(fn ($record) => $record->datos_previstos['tareas'] ?? null),
                 IconColumn::make('ficha.completa')->label('Ficha completa')->boolean(),
                 TextColumn::make('ficha.version.version')->label('Versión')->prefix('v')->placeholder('—'),
             ])
             ->recordActions([
+                Action::make('tareas')
+                    ->label('Tareas previstas')
+                    ->icon('heroicon-o-list-bullet')
+                    ->fillForm(fn ($record) => ['tareas' => $record->datos_previstos['tareas'] ?? ''])
+                    ->schema([\Filament\Forms\Components\Textarea::make('tareas')->label('Tareas previstas')->rows(4)])
+                    ->action(function (array $data, $record) {
+                        $record->update(['datos_previstos' => array_merge($record->datos_previstos ?? [], ['tareas' => $data['tareas']])]);
+                        Notification::make()->success()->title('Tareas previstas guardadas')->send();
+                    }),
                 Action::make('ficha')
                     ->label('Llenar ficha')
                     ->icon('heroicon-o-clipboard-document-list')
