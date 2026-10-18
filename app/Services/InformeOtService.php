@@ -24,7 +24,7 @@ class InformeOtService
     public function datos(OrdenTrabajo $ot): array
     {
         $lineas = OrdenTrabajoEquipo::where('orden_trabajo_id', $ot->id)
-            ->with(['equipo', 'ficha.version', 'media'])
+            ->with(['equipo', 'ficha.version.plantilla', 'media'])
             ->orderBy('id')
             ->get()
             ->map(function ($l) {
@@ -69,11 +69,15 @@ class InformeOtService
                     $ruta = $m->getPath();
                 }
 
+                if (! is_file($ruta)) {
+                    return null;
+                }
+
                 return [
                     'titulo' => $titulos[$m->collection_name] ?? ucfirst(str_replace('_', ' ', substr($m->collection_name, 5))),
                     'src' => 'data:' . $m->mime_type . ';base64,' . base64_encode(file_get_contents($ruta)),
                 ];
-            })->values()->all();
+            })->filter()->values()->all();
     }
 
     /** Firmas de la línea como data URI. */
@@ -83,6 +87,7 @@ class InformeOtService
 
         return $l->media
             ->filter(fn ($m) => str_starts_with($m->collection_name, 'firma'))
+            ->filter(fn ($m) => is_file($m->getPath()))
             ->map(fn ($m) => [
                 'titulo' => $titulos[$m->collection_name] ?? ucfirst(str_replace('_', ' ', $m->collection_name)),
                 'src' => 'data:image/png;base64,' . base64_encode(file_get_contents($m->getPath())),
