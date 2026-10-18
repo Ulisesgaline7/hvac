@@ -29,42 +29,7 @@ class LineasRelationManager extends RelationManager
         return $datos;
     }
 
-    private function adjuntar($linea, array $data): void
-    {
-        foreach ($data as $k => $v) {
-            if (! str_starts_with($k, 'f_') || empty($v)) {
-                continue;
-            }
 
-            $coleccion = substr($k, 2);
-
-            if (is_string($v) && str_starts_with($v, 'data:image/png;base64,')) {
-                $linea->clearMediaCollection($coleccion);
-                $linea->addMediaFromBase64($v, ['image/png'])->usingFileName($coleccion . '.png')->toMediaCollection($coleccion, 'local');
-
-                continue;
-            }
-
-            foreach (array_values((array) $v) as $ruta) {
-                $linea->addMedia(Storage::disk('local')->path($ruta))->toMediaCollection($coleccion, 'local');
-                Storage::disk('local')->delete($ruta);
-            }
-        }
-    }
-
-    /** Marca como respondidos los campos foto/firma que ya tienen archivos, para que faltantes() los cuente. */
-    private function conAdjuntos($linea, \App\Models\FichaTecnica $ficha, array $respuestas): array
-    {
-        $linea->unsetRelation('media');
-
-        foreach ($ficha->version->definicion as $c) {
-            if (in_array($c['tipo'], ['foto', 'firma'], true) && $linea->getMedia($c['clave'])->isNotEmpty()) {
-                $respuestas[$c['clave']] = 'adjunto';
-            }
-        }
-
-        return $respuestas;
-    }
 
     public function table(Table $table): Table
     {
@@ -134,8 +99,17 @@ class LineasRelationManager extends RelationManager
                             }
                         }
 
-                        $this->adjuntar($record, $data);
-                        $ficha = app(FichaService::class)->guardar($ficha, $this->conAdjuntos($record, $ficha, $respuestas));
+                        $svc = app(FichaService::class);
+
+                        try {
+                            $svc->adjuntar($record, $data);
+                        } catch (DomainException $e) {
+                            Notification::make()->danger()->title($e->getMessage())->send();
+
+                            return;
+                        }
+
+                        $ficha = $svc->recalcular($svc->guardar($ficha, $respuestas));
 
                         Notification::make()->success()
                             ->title($ficha->completa ? 'Ficha completa' : 'Borrador guardado (faltan campos obligatorios)')
