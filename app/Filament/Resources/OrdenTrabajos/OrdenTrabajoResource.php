@@ -39,7 +39,7 @@ class OrdenTrabajoResource extends Resource
 
     public static function getRelations(): array
     {
-        return [HistorialRelationManager::class];
+        return [\App\Filament\Resources\OrdenTrabajos\RelationManagers\LineasRelationManager::class, HistorialRelationManager::class];
     }
 
     public static function getPages(): array
