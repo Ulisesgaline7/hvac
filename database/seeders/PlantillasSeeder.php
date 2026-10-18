@@ -98,6 +98,14 @@ class PlantillasSeeder extends Seeder
             $this->c('firma_cliente', 'Firma del cliente (acta de entrega)', 'firma', ['obligatorio' => true]),
         ]);
 
+        // Versión 2: formato físico (antes/después, verificación OK/Obs/N/A, firmas).
+        foreach (\App\Support\PlantillasV2::todas() as $familia => $campos) {
+            $p = PlantillaFormulario::where('familia', $familia)->first();
+            if ($p && $p->versiones()->count() < 2) {
+                $p->publicar($campos);
+            }
+        }
+
         // Vincula cada tipo de equipo con la plantilla de su familia, si aún no tiene una.
         foreach (PlantillaFormulario::all() as $p) {
             TipoEquipo::where('familia', $p->familia)->whereNull('plantilla_id')->update(['plantilla_id' => $p->id]);

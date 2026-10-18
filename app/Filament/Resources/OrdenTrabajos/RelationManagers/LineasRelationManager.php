@@ -75,7 +75,7 @@ class LineasRelationManager extends RelationManager
                 TextColumn::make('equipo.tipo.nombre')->label('Tipo')->placeholder('—'),
                 TextColumn::make('marca_modelo')->label('Marca y modelo')->placeholder('—')
                     ->state(fn ($record) => $record->equipo
-                        ? trim((\App\Models\Marca::find($record->equipo->marca_id)?->nombre ?? '') . ' ' . ($record->equipo->modelo ?? '')) ?: null
+                        ? trim(($record->equipo->marca?->nombre ?? '') . ' ' . ($record->equipo->modelo ?? '')) ?: null
                         : null),
                 TextColumn::make('capacidad')->label('Capacidad')->placeholder('—')
                     ->state(fn ($record) => $record->equipo?->capacidad_valor
