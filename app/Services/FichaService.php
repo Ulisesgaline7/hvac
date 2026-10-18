@@ -13,19 +13,27 @@ class FichaService
 {
     public function obtenerOCrear(OrdenTrabajoEquipo $linea): FichaTecnica
     {
-        if ($linea->ficha) {
-            return $linea->ficha;
+        $existente = FichaTecnica::where('orden_trabajo_equipo_id', $linea->id)->first();
+
+        if ($existente) {
+            $linea->setRelation('ficha', $existente);
+
+            return $existente;
         }
 
         $version = $this->plantillaPara($linea)->ultimaVersion
             ?? throw new DomainException('La plantilla no tiene versiones publicadas.');
 
-        return FichaTecnica::create([
+        $ficha = FichaTecnica::create([
             'orden_trabajo_id' => $linea->orden_trabajo_id,
             'orden_trabajo_equipo_id' => $linea->id,
             'plantilla_version_id' => $version->id,
             'respuestas' => [],
         ]);
+
+        $linea->setRelation('ficha', $ficha);
+
+        return $ficha;
     }
 
     /** Guarda respuestas (borrador permitido) y recalcula completitud y alertas. */
