@@ -76,9 +76,10 @@ class OrdenTrabajoForm
                     ->label('Equipos')
                     ->multiple()
                     ->relationship('equipos', 'codigo', fn ($query, Get $get) => $query->whereIn(
-                        'area_id',
+                        'equipos.area_id',
                         DB::table('areas')->where('sucursal_id', $get('sucursal_id') ?: 0)->select('id')
                     ))
+                    ->disabled(fn (Get $get) => ! $get('sucursal_id'))
                     ->preload()
                     ->visible(fn (Get $get) => $get('tipo') !== TipoOt::Instalacion->value)
                     ->columnSpanFull(),

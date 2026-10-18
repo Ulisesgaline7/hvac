@@ -63,7 +63,7 @@ class Equipo extends Model
 
     protected static function restringirACliente(Builder $consulta, int $clienteId): void
     {
-        $consulta->whereIn('area_id', DB::table('areas')
+        $consulta->whereIn('equipos.area_id', DB::table('areas')
             ->join('sucursales', 'sucursales.id', '=', 'areas.sucursal_id')
             ->where('sucursales.cliente_id', $clienteId)
             ->select('areas.id'));
