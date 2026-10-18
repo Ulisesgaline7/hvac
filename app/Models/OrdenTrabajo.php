@@ -134,6 +134,16 @@ class OrdenTrabajo extends Model
         $consulta->where('cliente_id', $clienteId);
     }
 
+    public function actas(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ActaConformidad::class, 'orden_trabajo_id');
+    }
+
+    public function trabajosAdicionales(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(TrabajoAdicional::class, 'orden_trabajo_id');
+    }
+
     public ?string $motivoCambio = null;
 
     public function historial(): \Illuminate\Database\Eloquent\Relations\HasMany
