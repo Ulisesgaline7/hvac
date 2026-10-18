@@ -7,7 +7,9 @@ use App\Enums\TipoOt;
 use App\Models\Contrato;
 use App\Models\Sucursal;
 use App\Models\Tecnico;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
@@ -36,7 +38,7 @@ class OrdenTrabajoForm
                     ->visibleOn('edit')
                     ->helperText('Se cambia con la acción «Cambiar estado».'),
                 Select::make('tipo')
-                    ->options([TipoOt::Correctivo->value => 'Correctivo', TipoOt::Instalacion->value => 'Instalación'])
+                    ->options([TipoOt::Correctivo->value => 'Correctivo', TipoOt::Instalacion->value => 'Instalación', TipoOt::Emergencia->value => 'Emergencia'])
                     ->required()
                     ->live()
                     ->disabledOn('edit')
@@ -47,7 +49,7 @@ class OrdenTrabajoForm
                         }
                     }),
                 Select::make('prioridad')
-                    ->options(['baja' => 'Baja', 'normal' => 'Normal', 'alta' => 'Alta', 'emergencia' => 'Emergencia'])
+                    ->options(['baja' => 'Baja', 'normal' => 'Normal', 'alta' => 'Urgente', 'emergencia' => 'Emergencia'])
                     ->default('normal')
                     ->required(),
                 Select::make('cliente_id')
@@ -96,6 +98,19 @@ class OrdenTrabajoForm
                     ->searchable()
                     ->helperText('Solo técnicos aprobados.'),
                 DatePicker::make('fecha_programada')->label('Fecha programada'),
+                TimePicker::make('hora_programada')->label('Hora programada')->seconds(false),
+            ]),
+            Section::make('Alcance y costo')->columns(2)->schema([
+                Textarea::make('materiales_autorizados')->label('Materiales y repuestos autorizados')->columnSpanFull(),
+                TextInput::make('precio_estimado')->label('Precio (L)')->numeric()->prefix('L')->minValue(0),
+                TextInput::make('anticipo')->label('Anticipo (L)')->numeric()->prefix('L')->minValue(0),
+            ]),
+            Section::make('Seguridad antes de iniciar')->schema([
+                CheckboxList::make('seguridad_previa')->hiddenLabel()->options([
+                    'epp_listo' => 'Equipo de protección listo',
+                    'energia_bloqueada' => 'Energía bloqueada antes de intervenir',
+                    'altura_evaluada' => 'Trabajo en altura evaluado',
+                ])->columns(1),
             ]),
             Section::make('Ejecución')->visibleOn('edit')->columns(1)->schema([
                 Textarea::make('diagnostico')->label('Diagnóstico'),
