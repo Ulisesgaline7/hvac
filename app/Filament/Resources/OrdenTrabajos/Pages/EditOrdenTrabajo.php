@@ -25,6 +25,10 @@ class EditOrdenTrabajo extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('informe')
+                ->label('Informe PDF')
+                ->icon('heroicon-o-document-arrow-down')
+                ->url(fn () => route('ordenes-trabajo.informe', $this->record->id), shouldOpenInNewTab: true),
             Action::make('asignar')
                 ->label('Asignar técnico')
                 ->icon('heroicon-o-user-plus')

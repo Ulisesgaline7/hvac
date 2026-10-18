@@ -104,6 +104,11 @@ class OrdenTrabajo extends Model
         return $this->belongsTo(self::class, 'ot_origen_id');
     }
 
+    public function lineas(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(OrdenTrabajoEquipo::class, 'orden_trabajo_id');
+    }
+
     public function equipos(): BelongsToMany
     {
         return $this->belongsToMany(Equipo::class, 'orden_trabajo_equipo')

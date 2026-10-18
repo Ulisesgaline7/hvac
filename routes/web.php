@@ -22,3 +22,8 @@ Route::middleware('web')->group(function () {
 Route::get('/equipos/plantilla-importacion', \App\Http\Controllers\PlantillaImportacionController::class)
     ->middleware('web')
     ->name('equipos.plantilla');
+
+Route::middleware(['web', 'auth'])
+    ->get('/ordenes-trabajo/{ot}/informe', \App\Http\Controllers\InformeOtController::class)
+    ->whereNumber('ot')
+    ->name('ordenes-trabajo.informe');

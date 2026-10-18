@@ -4,6 +4,7 @@ namespace App\Filament\Resources\OrdenTrabajos\Tables;
 
 use App\Enums\EstadoOt;
 use App\Enums\TipoOt;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -42,7 +43,13 @@ class OrdenTrabajosTable
                 SelectFilter::make('tecnico_id')->label('Técnico')->relationship('tecnico.user', 'name'),
                 TrashedFilter::make(),
             ])
-            ->recordActions([EditAction::make()])
+            ->recordActions([
+                Action::make('informe')
+                    ->label('Informe')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->url(fn ($record) => route('ordenes-trabajo.informe', $record->id), shouldOpenInNewTab: true),
+                EditAction::make(),
+            ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
