@@ -182,6 +182,14 @@ class OrdenTrabajo extends Model
             throw new \DomainException("No se puede pasar de «{$this->estado->getLabel()}» a «{$nuevo->getLabel()}».");
         }
 
+        $usuario = Auth::user();
+        $esCierreODevolucion = $nuevo === EstadoOt::Cerrada
+            || ($this->estado === EstadoOt::EnRevision && $nuevo === EstadoOt::EnProceso);
+
+        if ($esCierreODevolucion && $usuario && ! $usuario->hasAnyRole(['administrador', 'coordinador'])) {
+            throw new \DomainException('Solo coordinador o administrador pueden cerrar o devolver la OT.');
+        }
+
         $this->validarTransicion($nuevo, $motivo);
 
         if ($this->estado === EstadoOt::Asignada && $nuevo === EstadoOt::EnProceso) {

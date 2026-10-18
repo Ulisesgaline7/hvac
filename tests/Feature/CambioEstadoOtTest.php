@@ -1,27 +1,28 @@
 <?php
 
 use App\Enums\EstadoOt;
-use App\Models\Area;
-use App\Models\Cliente;
-use App\Models\OrdenTrabajo;
-use App\Models\Sucursal;
+use App\Models\User;
+use App\Services\FichaService;
+use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-function nuevaOtCorrectiva(array $extra = []): OrdenTrabajo
+/** OT correctiva con un equipo y la ficha marcada como completa (usa el helper de FormulariosTest). */
+function otListaParaCerrar()
 {
-    $cliente = Cliente::create(['razon_social' => 'Cliente ' . uniqid()]);
-    $sucursal = Sucursal::create(['cliente_id' => $cliente->id, 'nombre' => 'Matriz']);
+    [, $linea] = lineaConPlantilla();
+    $ficha = app(FichaService::class)->obtenerOCrear($linea);
+    $ficha->update(['completa' => true, 'alertas' => []]);
 
-    return OrdenTrabajo::create(array_merge([
-        'tipo' => 'correctivo', 'cliente_id' => $cliente->id, 'sucursal_id' => $sucursal->id,
-        'fecha_programada' => now()->subDays(2)->toDateString(),
-    ], $extra));
+    $ot = $linea->ordenTrabajo;
+    $ot->update(['fecha_programada' => now()->subDays(2)->toDateString()]);
+
+    return $ot->fresh();
 }
 
 it('recorre el flujo completo y registra cada cambio con su motivo', function () {
-    $ot = nuevaOtCorrectiva();
+    $ot = otListaParaCerrar();
 
     foreach ([EstadoOt::Asignada, EstadoOt::EnProceso, EstadoOt::CompletadaTecnico, EstadoOt::EnRevision] as $e) {
         $ot->cambiarEstado($e);
@@ -40,11 +41,41 @@ it('recorre el flujo completo y registra cada cambio con su motivo', function ()
         ->and(DB::table('historial_estados_ot')->where('orden_trabajo_id', $ot->id)->where('motivo', 'Falta foto de placa')->count())->toBe(1);
 });
 
-it('rechaza transiciones inválidas y las OT cerradas no cambian', function () {
-    $ot = nuevaOtCorrectiva();
+it('rechaza transiciones inválidas y las OT canceladas no cambian', function () {
+    $ot = otListaParaCerrar();
 
     expect(fn () => $ot->cambiarEstado(EstadoOt::Cerrada))->toThrow(DomainException::class);
 
     $ot->cambiarEstado(EstadoOt::Cancelada, 'Cliente desistió');
-    expect(fn () => $ot->cambiarEstado(EstadoOt::Pendiente))->toThrow(DomainException::class);
+    expect(fn () => $ot->fresh()->cambiarEstado(EstadoOt::Pendiente))->toThrow(DomainException::class);
+});
+
+it('no deja completar una OT sin equipos ni fichas completas', function () {
+    $ot = otListaParaCerrar();
+    $ot->lineas()->first()->ficha->update(['completa' => false]);
+
+    foreach ([EstadoOt::Asignada, EstadoOt::EnProceso] as $e) {
+        $ot->cambiarEstado($e);
+    }
+
+    expect(fn () => $ot->cambiarEstado(EstadoOt::CompletadaTecnico))->toThrow(DomainException::class);
+});
+
+it('un técnico no puede cerrar ni devolver una OT; el coordinador sí', function () {
+    $this->seed(RolesSeeder::class);
+    $ot = otListaParaCerrar();
+    DB::table('ordenes_trabajo')->where('id', $ot->id)->update(['estado' => 'en_revision']);
+
+    $tecnico = User::factory()->create();
+    $tecnico->assignRole('tecnico');
+    $this->actingAs($tecnico);
+    expect(fn () => $ot->fresh()->cambiarEstado(EstadoOt::Cerrada))->toThrow(DomainException::class, 'Solo coordinador')
+        ->and(fn () => $ot->fresh()->cambiarEstado(EstadoOt::EnProceso, 'x'))->toThrow(DomainException::class, 'Solo coordinador');
+
+    $coord = User::factory()->create();
+    $coord->assignRole('coordinador');
+    $this->actingAs($coord);
+    $ot->fresh()->cambiarEstado(EstadoOt::Cerrada);
+
+    expect($ot->fresh()->estado)->toBe(EstadoOt::Cerrada);
 });
