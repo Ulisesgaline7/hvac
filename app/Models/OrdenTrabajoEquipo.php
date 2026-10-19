@@ -34,6 +34,11 @@ class OrdenTrabajoEquipo extends Model implements HasMedia
         return $this->belongsTo(Equipo::class);
     }
 
+    public function movimientos(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(MovimientoRefrigerante::class, 'orden_trabajo_equipo_id');
+    }
+
     public function ficha(): HasOne
     {
         return $this->hasOne(FichaTecnica::class, 'orden_trabajo_equipo_id');
