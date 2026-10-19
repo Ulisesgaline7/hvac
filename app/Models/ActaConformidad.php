@@ -5,11 +5,13 @@ namespace App\Models;
 use App\Models\Concerns\Auditable;
 use App\Models\Concerns\RegistraCreador;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ActaConformidad extends Model
+class ActaConformidad extends Model implements HasMedia
 {
-    use Auditable, RegistraCreador;
+    use Auditable, InteractsWithMedia, RegistraCreador;
 
     protected $table = 'actas_conformidad';
     protected $guarded = [];

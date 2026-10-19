@@ -17,6 +17,8 @@ use Filament\Tables\Table;
 
 class ActaConformidadRelationManager extends RelationManager
 {
+    use \App\Filament\Concerns\GuardaFirmas;
+
     protected static string $relationship = 'actas';
 
     protected static ?string $title = 'Acta de conformidad';
@@ -37,6 +39,8 @@ class ActaConformidadRelationManager extends RelationManager
             ]),
             TextInput::make('recibe_nombre')->label('Recibe (nombre)')->required(),
             TextInput::make('recibe_cargo')->label('Cargo'),
+            \App\Forms\Components\FirmaPad::make('f_firma_cliente')->label('Firma del cliente')->columnSpanFull(),
+            \App\Forms\Components\FirmaPad::make('f_firma_tecnico')->label('Firma del técnico')->columnSpanFull(),
         ])->columns(2);
     }
 
@@ -46,10 +50,15 @@ class ActaConformidadRelationManager extends RelationManager
             ->recordTitleAttribute('recibe_nombre')
             ->columns([
                 TextColumn::make('fecha')->date('d/m/Y')->label('Fecha'),
+                \Filament\Tables\Columns\IconColumn::make('firmada')->label('Firmada')->boolean()
+                    ->state(fn ($record) => $record->getMedia('firma_cliente')->isNotEmpty()),
                 TextColumn::make('recibe_nombre')->label('Recibe'),
                 TextColumn::make('calificacion')->label('Calificación')->placeholder('—'),
             ])
-            ->headerActions([CreateAction::make()->label('Registrar acta')])
-            ->recordActions([EditAction::make(), DeleteAction::make()]);
+            ->headerActions([CreateAction::make()->label('Registrar acta')
+                ->using(fn (array $data) => $this->guardarConFirmas(null, $data, ['firma_cliente', 'firma_tecnico']))])
+            ->recordActions([EditAction::make()
+                ->using(fn (array $data, $record) => $this->guardarConFirmas($record, $data, ['firma_cliente', 'firma_tecnico'])),
+                DeleteAction::make()]);
     }
 }

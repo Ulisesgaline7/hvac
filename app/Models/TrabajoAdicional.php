@@ -5,11 +5,13 @@ namespace App\Models;
 use App\Models\Concerns\Auditable;
 use App\Models\Concerns\RegistraCreador;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class TrabajoAdicional extends Model
+class TrabajoAdicional extends Model implements HasMedia
 {
-    use Auditable, RegistraCreador;
+    use Auditable, InteractsWithMedia, RegistraCreador;
 
     public const ISV = 0.15;
 

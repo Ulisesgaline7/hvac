@@ -17,6 +17,8 @@ use Filament\Tables\Table;
 
 class TrabajosAdicionalesRelationManager extends RelationManager
 {
+    use \App\Filament\Concerns\GuardaFirmas;
+
     protected static string $relationship = 'trabajosAdicionales';
 
     protected static ?string $title = 'Trabajos adicionales';
@@ -48,6 +50,8 @@ class TrabajosAdicionalesRelationManager extends RelationManager
             ])->default('pendiente')->required()->columnSpanFull(),
             TextInput::make('decidido_por_nombre')->label('Nombre de quien decide'),
             TextInput::make('decidido_por_cargo')->label('Cargo'),
+            \App\Forms\Components\FirmaPad::make('f_firma_cliente')->label('Firma del cliente')->columnSpanFull(),
+            \App\Forms\Components\FirmaPad::make('f_firma_tecnico')->label('Firma del técnico')->columnSpanFull(),
         ])->columns(2);
     }
 
@@ -57,13 +61,18 @@ class TrabajosAdicionalesRelationManager extends RelationManager
             ->recordTitleAttribute('hallazgo')
             ->columns([
                 TextColumn::make('fecha')->date('d/m/Y')->label('Fecha'),
+                \Filament\Tables\Columns\IconColumn::make('firmada')->label('Firmada')->boolean()
+                    ->state(fn ($record) => $record->getMedia('firma_cliente')->isNotEmpty()),
                 TextColumn::make('linea.equipo.codigo')->label('Equipo')->placeholder('—'),
                 TextColumn::make('hallazgo')->label('Hallazgo')->limit(40),
                 TextColumn::make('total')->label('Total (L)')->numeric(2),
                 TextColumn::make('decision')->label('Decisión')->badge()
                     ->color(fn ($state) => match ($state) { 'aprobado' => 'success', 'rechazado' => 'danger', default => 'warning' }),
             ])
-            ->headerActions([CreateAction::make()->label('Nuevo trabajo adicional')])
-            ->recordActions([EditAction::make(), DeleteAction::make()]);
+            ->headerActions([CreateAction::make()->label('Nuevo trabajo adicional')
+                ->using(fn (array $data) => $this->guardarConFirmas(null, $data, ['firma_cliente', 'firma_tecnico']))])
+            ->recordActions([EditAction::make()
+                ->using(fn (array $data, $record) => $this->guardarConFirmas($record, $data, ['firma_cliente', 'firma_tecnico'])),
+                DeleteAction::make()]);
     }
 }
