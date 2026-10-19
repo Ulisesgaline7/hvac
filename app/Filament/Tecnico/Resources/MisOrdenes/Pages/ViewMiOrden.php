@@ -16,6 +16,7 @@ class ViewMiOrden extends ViewRecord
     {
         return [
             $this->transicion('iniciar', 'Iniciar', EstadoOt::Asignada, EstadoOt::EnProceso, 'heroicon-o-play'),
+            $this->transicion('reanudar', 'Reanudar', EstadoOt::EnEspera, EstadoOt::EnProceso, 'heroicon-o-arrow-path'),
             $this->transicion('completar', 'Completar', EstadoOt::EnProceso, EstadoOt::CompletadaTecnico, 'heroicon-o-check'),
         ];
     }
