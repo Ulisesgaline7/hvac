@@ -48,6 +48,21 @@ class CilindroResource extends Resource
         return parent::getRecordRouteBindingEloquentQuery()->withoutGlobalScopes([SoftDeletingScope::class]);
     }
 
+    private static function esGestor(): bool
+    {
+        return auth()->user()?->hasAnyRole(['administrador', 'coordinador']) ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return self::esGestor();
+    }
+
+    public static function canEdit($record): bool
+    {
+        return self::esGestor();
+    }
+
     public static function getModelLabel(): string
     {
         return 'Cilindro';
