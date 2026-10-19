@@ -190,6 +190,14 @@ class OrdenTrabajo extends Model
         }
     }
 
+    /** Cuadrilla asignada: el rol (lider, tecnico, ayudante, supervisor) va en el pivote. */
+    public function cuadrilla(): BelongsToMany
+    {
+        return $this->belongsToMany(Tecnico::class, 'orden_trabajo_tecnico', 'orden_trabajo_id', 'tecnico_id')
+            ->withPivot('rol')
+            ->withTimestamps();
+    }
+
     public function cambiarEstado(EstadoOt $nuevo, ?string $motivo = null): void
     {
         if (! in_array($nuevo, $this->estado->transiciones(), true)) {
