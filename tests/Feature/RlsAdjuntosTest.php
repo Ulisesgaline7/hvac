@@ -144,3 +144,31 @@ it('el personal interno ve todo y sin contexto no se ve nada', function () {
         }
     });
 });
+
+it('el cliente solo ve las firmas de actas y trabajos de OT cerradas; el interno ve todas', function () {
+    $o = DB::connection('rls_owner');
+
+    foreach (['abierta', 'cerrada'] as $clave) {
+        $ot = $this->d['a'][$clave]['ot'];
+        $acta = $o->table('actas_conformidad')->where('orden_trabajo_id', $ot)->value('id');
+        $trabajo = $o->table('trabajos_adicionales')->where('orden_trabajo_id', $ot)->value('id');
+
+        $o->table('media')->insert(array_merge(filaMedia(0, "firma-acta-$clave"), [
+            'model_type' => App\Models\ActaConformidad::class, 'model_id' => $acta,
+        ]));
+        $o->table('media')->insert(array_merge(filaMedia(0, "firma-trab-$clave"), [
+            'model_type' => App\Models\TrabajoAdicional::class, 'model_id' => $trabajo,
+        ]));
+    }
+
+    comoAppAdjuntos(['interno' => 'false', 'cliente' => $this->d['a']['cli']], function ($c) {
+        $nombres = $c->table('media')->where('name', 'like', 'firma-%')->pluck('name')->all();
+        sort($nombres);
+
+        expect($nombres)->toBe(['firma-acta-cerrada', 'firma-trab-cerrada']);
+    });
+
+    comoAppAdjuntos(['interno' => 'true'], function ($c) {
+        expect($c->table('media')->where('name', 'like', 'firma-%')->count())->toBe(4);
+    });
+});
