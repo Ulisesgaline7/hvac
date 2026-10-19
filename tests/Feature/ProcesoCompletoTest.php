@@ -15,6 +15,7 @@ use App\Models\TipoEquipo;
 use App\Models\TrabajoAdicional;
 use App\Models\User;
 use App\Services\CotizacionFlujo;
+use App\Services\CuadrillaService;
 use App\Services\FichaService;
 use App\Services\GeneradorQr;
 use App\Services\PublicadorInforme;
@@ -75,9 +76,15 @@ it('recorre el proceso: cotización, equipos con QR, OT, ejecución, cierre, gar
 
     $user = User::create(['name' => 'Técnico Flujo', 'email' => 'tec-flujo@test.com', 'password' => 'x']);
     $tecnico = Tecnico::create(['user_id' => $user->id, 'estado_homologacion' => 'aprobado']);
+    $userAyudante = User::create(['name' => 'Ayudante Flujo', 'email' => 'ayu-flujo@test.com', 'password' => 'x']);
+    $ayudante = Tecnico::create(['user_id' => $userAyudante->id, 'estado_homologacion' => 'aprobado']);
 
-    $ot->update(['tecnico_id' => $tecnico->id, 'fecha_programada' => now()->addDay()->toDateString(), 'hora_programada' => '09:00']);
-    $ot->fresh()->cambiarEstado(EstadoOt::Asignada, 'Asignación de técnico');
+    $ot->update(['fecha_programada' => now()->addDay()->toDateString(), 'hora_programada' => '09:00']);
+    $ot = app(\App\Services\CuadrillaService::class)->asignar($ot->fresh(), $tecnico->id, [$ayudante->id => 'ayudante']);
+
+    expect($ot->estado)->toBe(EstadoOt::Asignada)
+        ->and($ot->tecnico_id)->toBe($tecnico->id)
+        ->and($ot->cuadrilla->pluck('pivot.rol', 'id')->all())->toBe([$tecnico->id => 'lider', $ayudante->id => 'ayudante']);
 
     // --- 4. Ejecución: el técnico llena las fichas y completa
     $ot = $ot->fresh();
