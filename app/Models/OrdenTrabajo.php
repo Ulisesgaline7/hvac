@@ -170,6 +170,12 @@ class OrdenTrabajo extends Model
         }
 
         if ($nuevo === EstadoOt::Cerrada
+            && in_array($this->tipo, [TipoOt::Instalacion, TipoOt::Emergencia], true)
+            && ! $this->actas()->get()->contains(fn ($a) => $a->getMedia('firma_cliente')->isNotEmpty())) {
+            throw new \DomainException('Una OT de instalación o emergencia necesita el acta de conformidad firmada por el cliente para cerrarse.');
+        }
+
+        if ($nuevo === EstadoOt::Cerrada
             && $lineas->contains(fn ($l) => ! empty($l->ficha?->alertas))
             && blank($motivo)) {
             throw new \DomainException('Hay valores fuera de rango. Indica en el motivo cómo se atendieron antes de cerrar.');
