@@ -105,3 +105,27 @@ it('un técnico no puede cerrar ni devolver una OT; el coordinador sí', functio
 
     expect($ot->fresh()->estado)->toBe(EstadoOt::Cerrada);
 });
+
+it('una OT cerrada o cancelada es de solo lectura', function () {
+    $ot = otListaParaCerrar();
+
+    // Cancelada
+    $cancelada = OrdenTrabajo::create([
+        'tipo' => 'correctivo',
+        'cliente_id' => $ot->cliente_id,
+        'sucursal_id' => $ot->sucursal_id,
+    ]);
+    $cancelada->cambiarEstado(EstadoOt::Cancelada, 'prueba');
+
+    $cancelada->prioridad = 'urgente';
+    expect(fn () => $cancelada->save())->toThrow(DomainException::class, 'cancelada');
+
+    // Cerrada: forzamos el estado por SQL para no depender del flujo completo
+    DB::table('ordenes_trabajo')->where('id', $ot->id)->update(['estado' => EstadoOt::Cerrada->value]);
+    $cerrada = OrdenTrabajo::find($ot->id);
+
+    $cerrada->prioridad = 'urgente';
+    expect(fn () => $cerrada->save())->toThrow(DomainException::class, 'cerrada');
+
+    expect(DB::table('ordenes_trabajo')->where('id', $ot->id)->value('prioridad'))->not->toBe('urgente');
+});

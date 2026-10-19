@@ -35,7 +35,6 @@ class Equipo extends Model
                 $equipo->token_qr = Str::random(32);
             }
             if (empty($equipo->codigo)) {
-                $prefijo = TipoEquipo::findOrFail($equipo->tipo_equipo_id)->prefijo_codigo;
                 $equipo->codigo = app(GeneradorCodigoEquipo::class)->siguiente();
             }
         });
