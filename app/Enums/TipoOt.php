@@ -10,6 +10,7 @@ enum TipoOt: string implements HasLabel
     case Correctivo = 'correctivo';
     case Instalacion = 'instalacion';
     case Emergencia = 'emergencia';
+    case VisitaTecnica = 'visita_tecnica';
 
     public function getLabel(): string
     {
@@ -18,6 +19,7 @@ enum TipoOt: string implements HasLabel
             self::Correctivo => 'Correctivo',
             self::Instalacion => 'Instalación',
             self::Emergencia => 'Emergencia',
+            self::VisitaTecnica => 'Visita técnica',
         };
     }
 }

@@ -78,6 +78,7 @@ class InformeOtService
             'lineas' => $lineas,
             'generado' => now()->format('d/m/Y H:i'),
             'acta' => $this->acta($ot),
+            'garantias' => $this->garantias($ot),
             'seguridad' => $this->seguridad($ot),
             'adicionales' => $this->adicionales($ot),
             'qr' => $urlVerificacion ? app(GeneradorQr::class)->dataUriDeUrl($urlVerificacion) : null,
@@ -85,6 +86,24 @@ class InformeOtService
         ];
     }
 
+    /** Garantías emitidas por la OT, listas para imprimir. */
+    private function garantias(OrdenTrabajo $ot): array
+    {
+        return \App\Models\Garantia::where('orden_trabajo_id', $ot->id)
+            ->with('equipo')
+            ->orderBy('id')
+            ->get()
+            ->map(fn ($g) => [
+                'numero' => $g->numero,
+                'equipo' => $g->equipo?->codigo,
+                'dias' => $g->dias,
+                'desde' => $g->desde?->format('d/m/Y'),
+                'hasta' => $g->hasta?->format('d/m/Y'),
+                'cubre' => $g->cubre,
+                'no_cubre' => $g->no_cubre,
+                'quien_corrige' => $g->quien_corrige,
+            ])->all();
+    }
     /** Fotos de la línea como data URI (versión reducida si existe). */
     private function fotos(OrdenTrabajoEquipo $l): array
     {

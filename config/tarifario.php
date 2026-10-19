@@ -30,7 +30,7 @@ return [
     'categorias' => [
         'preventivo' => ['dias' => 30, 'corrige' => 'El técnico que hizo el trabajo, sin costo', 'cubre' => 'Fallas por limpieza o revisión mal hechas', 'no_cubre' => 'Piezas gastadas, falta de gas, mal uso'],
         'instalacion' => ['dias' => 90, 'corrige' => 'El técnico que instaló, sin costo', 'cubre' => 'Fugas, drenaje, conexiones y soportes de la instalación', 'no_cubre' => 'Variaciones de voltaje, golpes, mal uso, la garantía del equipo (es del fabricante)'],
-        'correctivo' => ['dias' => 90, 'corrige' => 'El técnico que reparó, sin costo', 'cubre' => 'La reparación realizada y su mano de obra', 'no_cubre' => 'Otras piezas no intervenidas, repuestos (garantía del fabricante)'],
+        'correctivo' => ['dias' => 30, 'corrige' => 'El técnico que reparó, sin costo', 'cubre' => 'La reparación realizada y su mano de obra', 'no_cubre' => 'Otras piezas no intervenidas, repuestos (garantía del fabricante)'],
         'refrigeracion_comercial' => ['dias' => 30, 'corrige' => 'El técnico del servicio, sin costo', 'cubre' => 'El trabajo realizado en el equipo', 'no_cubre' => 'Producto almacenado, mal uso, fallas ajenas al trabajo'],
         'repuestos_gas' => ['dias' => 90, 'corrige' => 'Se gestiona con el proveedor o el fabricante', 'cubre' => 'Defecto de fábrica del repuesto', 'no_cubre' => 'Instalación por terceros, mal uso'],
         'administracion' => ['dias' => 30, 'corrige' => 'El técnico asignado, sin costo', 'cubre' => 'El trabajo ejecutado', 'no_cubre' => 'Lo que no fue parte del trabajo'],

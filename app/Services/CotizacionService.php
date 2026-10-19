@@ -96,6 +96,11 @@ class CotizacionService
 
         $r = $this->calcular($lineas, $c->recargos ?? [], $c->descuento_contrato);
 
+        [$tratamiento, $visita] = $this->visita($c);
+        $subtotal = round($r['subtotal'] + $visita, 2);
+        $isv = $visita > 0 ? round($subtotal * config('tarifario.isv'), 2) : $r['isv'];
+        $total = round($subtotal + $isv, 2);
+
         $c->update([
             'subtotal_servicios' => $r['servicios'],
             'ajuste_minimo' => $r['ajuste_minimo'],
@@ -104,11 +109,38 @@ class CotizacionService
             'descuento_pct' => $r['descuento_pct'],
             'descuento_monto' => $r['descuento_monto'],
             'repuestos_monto' => $r['repuestos'],
-            'subtotal' => $r['subtotal'],
-            'isv' => $r['isv'],
-            'total' => $r['total'],
+            'subtotal' => $subtotal,
+            'isv' => $isv,
+            'total' => $total,
+            'visita_tratamiento' => $tratamiento,
+            'visita_monto' => $visita,
         ]);
 
         return $c->fresh();
+    }
+    /** @return array{0: ?string, 1: float} tratamiento (bonificar|cobrar|gratis|null) y monto a sumar. */
+    private function visita(Cotizacion $c): array
+    {
+        if (! $c->visita_ot_id) {
+            return [null, 0.0];
+        }
+
+        $ot = \App\Models\OrdenTrabajo::find($c->visita_ot_id);
+        if (! $ot) {
+            return [null, 0.0];
+        }
+
+        $categoria = $c->lineas()->with('servicio')->get()->map(fn ($l) => $l->servicio?->categoria)->filter()->first();
+
+        $tratamiento = match (true) {
+            $ot->visita_cobro === 'gratis' => 'gratis',
+            $ot->visita_cobro === 'cobrar' => 'cobrar',
+            $categoria !== null => config("visita.si_aprueba.{$categoria}", 'cobrar'),
+            default => null,
+        };
+
+        $monto = $tratamiento === 'cobrar' ? (float) ($ot->visita_monto ?? config('visita.costo')) : 0.0;
+
+        return [$tratamiento, round($monto, 2)];
     }
 }

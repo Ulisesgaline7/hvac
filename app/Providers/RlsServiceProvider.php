@@ -51,6 +51,20 @@ class RlsServiceProvider extends ServiceProvider
         }
     }
 
+    /** Ejecuta $fn con contexto interno y lo limpia al terminar. Solo para flujos ya autorizados por otro medio (p. ej. un token validado). */
+    public static function comoInterno(callable $fn): mixed
+    {
+        if (DB::connection()->getDriverName() !== 'pgsql') {
+            return $fn();
+        }
+
+        self::fijar('true', '', '');
+        try {
+            return $fn();
+        } finally {
+            self::limpiar();
+        }
+    }
     private static function fijar(string $interno, string $clienteId, string $userId): void
     {
         DB::connection()->select(

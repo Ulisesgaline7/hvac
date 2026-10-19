@@ -32,3 +32,16 @@ Route::middleware(['web', 'throttle:30,1'])
     ->get('/v/{token}', \App\Http\Controllers\VerificarInformeController::class)
     ->whereAlphaNumeric('token')
     ->name('informe.verificar');
+
+Route::get('/cotizaciones/{cotizacion}/pdf', \App\Http\Controllers\CotizacionPdfController::class)
+    ->middleware('web')
+    ->name('cotizaciones.pdf');
+
+Route::middleware(['web', 'throttle:30,1'])->group(function () {
+    Route::get('/cotizacion/{token}', [\App\Http\Controllers\AceptacionCotizacionController::class, 'mostrar'])
+        ->whereAlphaNumeric('token')->name('cotizaciones.aceptacion');
+    Route::post('/cotizacion/{token}/aceptar', [\App\Http\Controllers\AceptacionCotizacionController::class, 'aceptar'])
+        ->whereAlphaNumeric('token')->name('cotizaciones.aceptar');
+    Route::post('/cotizacion/{token}/rechazar', [\App\Http\Controllers\AceptacionCotizacionController::class, 'rechazar'])
+        ->whereAlphaNumeric('token')->name('cotizaciones.rechazar');
+});

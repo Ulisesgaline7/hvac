@@ -70,6 +70,51 @@ class EditOrdenTrabajo extends EditRecord
 
                     Notification::make()->success()->title('Informe publicado')->send();
                 }),
+            Action::make('cotizarVisita')
+                ->label('Crear cotización desde visita')
+                ->icon('heroicon-o-document-currency-dollar')
+                ->color('success')
+                ->visible(fn () => $this->record->tipo === \App\Enums\TipoOt::VisitaTecnica
+                    && $this->record->estado === EstadoOt::Cerrada
+                    && ! \App\Models\Cotizacion::where('visita_ot_id', $this->record->id)->exists()
+                    && (auth()->user()?->hasAnyRole(['administrador', 'coordinador']) ?? false))
+                ->requiresConfirmation()
+                ->modalDescription('Se crea una cotización en borrador con el cliente y la sucursal de la visita. Agregue las líneas; el costo de la visita se calcula según la regla.')
+                ->action(function () {
+                    $ot = $this->record;
+                    $c = \App\Models\Cotizacion::create([
+                        'cliente_id' => $ot->cliente_id,
+                        'sucursal_id' => $ot->sucursal_id,
+                        'vendedor_id' => auth()->id(),
+                        'visita_ot_id' => $ot->id,
+                        'notas' => trim("Visita {$ot->numero}\nDiagnóstico: {$ot->diagnostico}\nRecomendaciones: {$ot->recomendaciones}"),
+                    ]);
+
+                    $this->redirect(\App\Filament\Resources\Cotizacions\CotizacionResource::getUrl('edit', ['record' => $c]));
+                }),
+            Action::make('registrarAnticipo')
+                ->label('Registrar anticipo')
+                ->icon('heroicon-o-banknotes')
+                ->color('warning')
+                ->visible(fn () => ! in_array($this->record->estado, [EstadoOt::Cerrada, EstadoOt::Cancelada], true)
+                    && ! in_array($this->record->tipo, [\App\Enums\TipoOt::Preventivo, \App\Enums\TipoOt::VisitaTecnica], true)
+                    && (auth()->user()?->hasAnyRole(['administrador', 'coordinador']) ?? false))
+                ->modalDescription(fn () => 'Ya cobrado como anticipo: L ' . number_format((float) \App\Models\Pago::where('orden_trabajo_id', $this->record->id)->where('tipo', 'anticipo')->sum('monto'), 2))
+                ->schema(fn () => [
+                    \Filament\Forms\Components\TextInput::make('monto')->label('Monto (L)')->numeric()->required()->minValue(0.01)
+                        ->default(fn () => app(\App\Services\FacturacionService::class)->anticipoSugerido($this->record) ?: null)
+                        ->helperText('Sugerido según config/cobros.php.'),
+                    \Filament\Forms\Components\Select::make('metodo')->label('Método')->options([
+                        'efectivo' => 'Efectivo', 'transferencia' => 'Transferencia', 'cheque' => 'Cheque', 'tarjeta' => 'Tarjeta',
+                    ])->required(),
+                    \Filament\Forms\Components\TextInput::make('referencia')->label('Referencia / comprobante'),
+                ])
+                ->action(function (array $data) {
+                    app(\App\Services\FacturacionService::class)->registrarAnticipo(
+                        $this->record, (float) $data['monto'], $data['metodo'], $data['referencia'] ?? null
+                    );
+                    Notification::make()->success()->title('Anticipo registrado')->send();
+                }),
             Action::make('asignar')
                 ->label('Asignar técnico')
                 ->icon('heroicon-o-user-plus')

@@ -34,7 +34,7 @@ function lineaParaFicha(): array
     $sucursal = Sucursal::create(['cliente_id' => $cliente->id, 'nombre' => 'Matriz']);
     $area = Area::create(['sucursal_id' => $sucursal->id, 'nombre' => 'Cocina']);
     $equipo = Equipo::create(['area_id' => $area->id, 'tipo_equipo_id' => $tipo->id]);
-    $ot = OrdenTrabajo::create(['tipo' => 'correctivo', 'cliente_id' => $cliente->id, 'sucursal_id' => $sucursal->id]);
+    $ot = OrdenTrabajo::create(['tipo' => 'preventivo', 'cliente_id' => $cliente->id, 'sucursal_id' => $sucursal->id]);
     $ot->equipos()->attach($equipo->id);
 
     return [$plantilla, OrdenTrabajoEquipo::where('orden_trabajo_id', $ot->id)->first()];

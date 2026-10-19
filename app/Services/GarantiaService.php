@@ -27,6 +27,10 @@ class GarantiaService
     /** Emite una garantía por cada equipo de la OT. Es idempotente: no duplica. */
     public function emitir(OrdenTrabajo $ot): Collection
     {
+        if ($ot->tipo === TipoOt::VisitaTecnica) {
+            return collect();
+        }
+
         $desde = ($ot->cerrada_en ?? now())->copy()->startOfDay();
 
         return $ot->lineas()->with('equipo.tipo')->get()->map(function ($linea) use ($ot, $desde) {

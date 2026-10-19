@@ -60,6 +60,18 @@ class FichaService
                 ?? throw new DomainException('No existe la plantilla de instalación.');
         }
 
+        // Correctivo, emergencia y diagnóstico tienen su propia ficha; si no existe, se usa la del tipo de equipo.
+        $tipoTrabajo = match ($ot->tipo) {
+            TipoOt::Correctivo, TipoOt::Emergencia => 'correctivo',
+            TipoOt::VisitaTecnica => 'diagnostico',
+            default => null,
+        };
+        if ($tipoTrabajo) {
+            $propia = PlantillaFormulario::where('tipo_trabajo', $tipoTrabajo)->first();
+            if ($propia && $propia->ultimaVersion) {
+                return $propia;
+            }
+        }
         $tipoId = $linea->equipo?->tipo_equipo_id ?? $linea->tipo_equipo_id;
         $plantillaId = $tipoId ? TipoEquipo::find($tipoId)?->plantilla_id : null;
 

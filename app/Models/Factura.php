@@ -1,0 +1,97 @@
+<?php
+
+namespace App\Models;
+
+use App\Models\Concerns\Auditable;
+use App\Models\Concerns\RegistraCreador;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
+
+class Factura extends Model
+{
+    use Auditable, RegistraCreador;
+
+    protected $table = 'facturas';
+    protected $guarded = [];
+
+    protected $casts = [
+        'fecha' => 'date',
+        'vence' => 'date',
+        'periodo' => 'date',
+        'subtotal' => 'decimal:2',
+        'isv' => 'decimal:2',
+        'total' => 'decimal:2',
+        'pagado' => 'decimal:2',
+    ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Factura $f) {
+            if (empty($f->numero)) {
+                $f->numero = 'TMP-' . Str::uuid();
+            }
+            $f->fecha ??= now()->toDateString();
+            $f->estado ??= 'emitida';
+        });
+
+        static::created(function (Factura $f) {
+            if (str_starts_with($f->numero, 'TMP-')) {
+                $f->numero = sprintf('FAC-%s-%06d', now()->format('Y'), $f->id);
+                $f->saveQuietly();
+            }
+        });
+    }
+
+    public function cliente(): BelongsTo
+    {
+        return $this->belongsTo(Cliente::class);
+    }
+
+    public function sucursal(): BelongsTo
+    {
+        return $this->belongsTo(Sucursal::class);
+    }
+
+    public function ordenTrabajo(): BelongsTo
+    {
+        return $this->belongsTo(OrdenTrabajo::class, 'orden_trabajo_id');
+    }
+
+    public function cotizacion(): BelongsTo
+    {
+        return $this->belongsTo(Cotizacion::class);
+    }
+
+    public function pagos(): HasMany
+    {
+        return $this->hasMany(Pago::class);
+    }
+
+    public function getSaldoAttribute(): float
+    {
+        return round((float) $this->total - (float) $this->pagado, 2);
+    }
+
+    public function getVencidaAttribute(): bool
+    {
+        return $this->estado !== 'pagada' && $this->estado !== 'anulada'
+            && $this->saldo > 0 && $this->vence->lt(now()->startOfDay());
+    }
+
+    /** Recalcula lo pagado y el estado a partir de los pagos. */
+    public function recalcular(): void
+    {
+        $pagado = round((float) $this->pagos()->sum('monto'), 2);
+        $estado = $this->estado;
+
+        if ($estado !== 'anulada') {
+            $estado = $pagado >= (float) $this->total && (float) $this->total > 0
+                ? 'pagada'
+                : ($pagado > 0 ? 'parcial' : 'emitida');
+        }
+
+        $this->forceFill(['pagado' => $pagado, 'estado' => $estado])->saveQuietly();
+    }
+}

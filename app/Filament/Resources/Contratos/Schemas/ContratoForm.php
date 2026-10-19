@@ -37,6 +37,14 @@ class ContratoForm
                 ->numeric()
                 ->minValue(0)
                 ->default(30),
+            TextInput::make('cuota_monto')
+                ->label('Cuota por periodo (L, antes de ISV)')
+                ->numeric()->prefix('L')->minValue(0)
+                ->helperText('Se factura sola al inicio de cada periodo con el contrato activo. Vacío = no factura.'),
+            Select::make('periodicidad')
+                ->label('Periodicidad de cobro')
+                ->options(['mensual' => 'Mensual', 'trimestral' => 'Trimestral', 'semestral' => 'Semestral', 'anual' => 'Anual'])
+                ->default(config('cobros.contrato_periodicidad')),
             KeyValue::make('sla')->label('SLA')->keyLabel('Concepto')->valueLabel('Valor')->columnSpanFull(),
             Textarea::make('servicios_incluidos')->columnSpanFull(),
             Textarea::make('exclusiones')->columnSpanFull(),

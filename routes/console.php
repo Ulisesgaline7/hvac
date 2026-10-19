@@ -8,3 +8,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 \Illuminate\Support\Facades\Schedule::command('ot:generar-preventivas')->dailyAt('02:00');
+\Illuminate\Support\Facades\Schedule::command('cobros:facturar-contratos')->dailyAt('03:00');

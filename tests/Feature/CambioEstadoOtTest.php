@@ -169,3 +169,43 @@ it('un correctivo se cierra sin acta', function () {
 
     expect($ot->fresh()->estado)->toBe(EstadoOt::Cerrada);
 });
+
+it('al cerrar la OT se emite una garantía por equipo, una sola vez', function () {
+    $ot = otListaParaCerrar();
+
+    foreach ([EstadoOt::Asignada, EstadoOt::EnProceso, EstadoOt::CompletadaTecnico, EstadoOt::EnRevision] as $e) {
+        $ot->cambiarEstado($e);
+    }
+    expect(\App\Models\Garantia::where('orden_trabajo_id', $ot->id)->count())->toBe(0);
+
+    $ot->cambiarEstado(EstadoOt::Cerrada);
+
+    $g = \App\Models\Garantia::where('orden_trabajo_id', $ot->id)->get();
+    expect($g)->toHaveCount(1)
+        ->and($g->first()->categoria)->toBe('correctivo')
+        ->and($g->first()->dias)->toBe(30)
+        ->and($g->first()->numero)->not->toBeEmpty();
+
+    app(\App\Services\GarantiaService::class)->emitir($ot->fresh());
+    expect(\App\Models\Garantia::where('orden_trabajo_id', $ot->id)->count())->toBe(1);
+});
+
+it('una visita técnica cierra con diagnóstico, sin equipos, sin acta y sin garantía', function () {
+    $cliente = Cliente::create(['razon_social' => 'C ' . uniqid()]);
+    $sucursal = Sucursal::create(['cliente_id' => $cliente->id, 'nombre' => 'Centro']);
+    $ot = OrdenTrabajo::create(['tipo' => 'visita_tecnica', 'cliente_id' => $cliente->id, 'sucursal_id' => $sucursal->id, 'prioridad' => 'normal']);
+
+    foreach ([EstadoOt::Asignada, EstadoOt::EnProceso] as $e) {
+        $ot->cambiarEstado($e);
+    }
+
+    expect(fn () => $ot->cambiarEstado(EstadoOt::CompletadaTecnico))->toThrow(DomainException::class, 'diagnóstico');
+
+    $ot->update(['diagnostico' => 'Tubería de 12 m, tablero con capacidad libre.', 'recomendaciones' => 'Mini split 18,000 BTU']);
+    foreach ([EstadoOt::CompletadaTecnico, EstadoOt::EnRevision, EstadoOt::Cerrada] as $e) {
+        $ot->cambiarEstado($e);
+    }
+
+    expect($ot->fresh()->estado)->toBe(EstadoOt::Cerrada)
+        ->and(\App\Models\Garantia::where('orden_trabajo_id', $ot->id)->count())->toBe(0);
+});

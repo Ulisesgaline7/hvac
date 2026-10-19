@@ -158,6 +158,14 @@ class OrdenTrabajo extends Model
             return;
         }
 
+        if ($this->tipo === TipoOt::VisitaTecnica) {
+            if (blank($this->diagnostico)) {
+                throw new \DomainException('Registre el diagnóstico de la visita antes de completarla.');
+            }
+
+            return;
+        }
+
         $lineas = $this->lineas()->with('ficha')->get();
 
         if ($lineas->isEmpty()) {
@@ -215,9 +223,16 @@ class OrdenTrabajo extends Model
             $this->tardia = $this->fecha_programada ? now()->startOfDay()->gt($this->fecha_programada) : false;
         }
 
-        $this->motivoCambio = $motivo;
-        $this->estado = $nuevo;
-        $this->save();
-        $this->motivoCambio = null;
+        DB::transaction(function () use ($nuevo, $motivo) {
+            $this->motivoCambio = $motivo;
+            $this->estado = $nuevo;
+            $this->save();
+            $this->motivoCambio = null;
+
+            if ($nuevo === EstadoOt::Cerrada) {
+                app(\App\Services\GarantiaService::class)->emitir($this);
+                app(\App\Services\FacturacionService::class)->generarDesdeOt($this);
+            }
+        });
     }
 }

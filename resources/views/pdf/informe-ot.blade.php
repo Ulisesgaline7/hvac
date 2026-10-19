@@ -118,4 +118,19 @@
             </td>
         </tr></table>
     @endif
+
+    @if (! empty($garantias))
+    <div style="margin-top: 8mm; border: 1px solid #ccc; padding: 6px; page-break-inside: avoid;">
+        <strong>Certificado de garantía</strong>
+        @foreach ($garantias as $g)
+            <div style="margin-top: 4px; padding-top: 4px; border-top: 1px solid #ddd; font-size: 8.5pt;">
+                <strong>{{ $g['numero'] }}</strong>@if ($g['equipo']) · Equipo {{ $g['equipo'] }}@endif
+                · {{ $g['dias'] }} días (del {{ $g['desde'] }} al {{ $g['hasta'] }})<br>
+                @if ($g['cubre'])<strong>Cubre:</strong> {{ $g['cubre'] }}<br>@endif
+                @if ($g['no_cubre'])<strong>No cubre:</strong> {{ $g['no_cubre'] }}<br>@endif
+                @if ($g['quien_corrige'])<strong>Quién corrige:</strong> {{ $g['quien_corrige'] }}@endif
+            </div>
+        @endforeach
+    </div>
+    @endif
 @endsection
