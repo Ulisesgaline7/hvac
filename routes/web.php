@@ -37,6 +37,11 @@ Route::get('/cotizaciones/{cotizacion}/pdf', \App\Http\Controllers\CotizacionPdf
     ->middleware('web')
     ->name('cotizaciones.pdf');
 
+Route::get('/pagos/{pago}/recibo', \App\Http\Controllers\PagoReciboController::class)
+    ->middleware('web')
+    ->whereNumber('pago')
+    ->name('pagos.recibo');
+
 Route::middleware(['web', 'throttle:30,1'])->group(function () {
     Route::get('/cotizacion/{token}', [\App\Http\Controllers\AceptacionCotizacionController::class, 'mostrar'])
         ->whereAlphaNumeric('token')->name('cotizaciones.aceptacion');

@@ -110,10 +110,18 @@ class EditOrdenTrabajo extends EditRecord
                     \Filament\Forms\Components\TextInput::make('referencia')->label('Referencia / comprobante'),
                 ])
                 ->action(function (array $data) {
-                    app(\App\Services\FacturacionService::class)->registrarAnticipo(
+                    $pago = app(\App\Services\FacturacionService::class)->registrarAnticipo(
                         $this->record, (float) $data['monto'], $data['metodo'], $data['referencia'] ?? null
                     );
-                    Notification::make()->success()->title('Anticipo registrado')->send();
+                    Notification::make()->success()->title('Anticipo registrado')
+                        ->body("Comprobante {$pago->fresh()->numero}")
+                        ->actions([
+                            \Filament\Actions\Action::make('comprobante')
+                                ->label('Ver comprobante')
+                                ->url(route('pagos.recibo', $pago->id))
+                                ->openUrlInNewTab(),
+                        ])
+                        ->send();
                 }),
             Action::make('asignar')
                 ->label('Asignar técnico')

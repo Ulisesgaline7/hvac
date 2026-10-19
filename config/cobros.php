@@ -20,4 +20,8 @@ return [
 
     // Periodicidad de cobro de contratos preventivos (se usará al activar contratos).
     'contrato_periodicidad' => 'mensual',
+
+    // true = los recibos y facturas llevan la leyenda «sin validez fiscal».
+    // Pasar a false solo cuando exista autorización de numeración (CAI) del SAR.
+    'documentos_prueba' => true,
 ];

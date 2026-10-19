@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\Auditable;
 use App\Models\Concerns\RegistraCreador;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Pago extends Model
@@ -24,6 +25,14 @@ class Pago extends Model
         static::creating(function (Pago $p) {
             $p->fecha ??= now()->toDateString();
             $p->tipo ??= 'pago';
+            $p->numero ??= 'TMP-' . Str::uuid();
+        });
+
+        static::created(function (Pago $p) {
+            if (str_starts_with((string) $p->numero, 'TMP-')) {
+                $p->numero = sprintf('REC-%s-%06d', now()->format('Y'), $p->id);
+                $p->saveQuietly();
+            }
         });
 
         static::saved(fn (Pago $p) => $p->factura?->recalcular());
