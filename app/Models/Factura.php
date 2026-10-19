@@ -64,6 +64,11 @@ class Factura extends Model
         return $this->belongsTo(Cotizacion::class);
     }
 
+    public function cuotas(): HasMany
+    {
+        return $this->hasMany(FacturaCuota::class)->orderBy('numero');
+    }
+
     public function pagos(): HasMany
     {
         return $this->hasMany(Pago::class);
