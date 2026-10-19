@@ -30,4 +30,8 @@ return [
     //   al_pagar_completo = con crédito, al cerrar; sin crédito, cuando lo cobrado cubre el total.
     // Decisión pendiente de validar con el contador.
     'momento_factura' => 'al_cerrar',
+
+    // Clase que asigna el número de factura. Debe implementar App\Services\Numeracion\NumeradorFactura.
+    // Hoy: numeración interna de prueba. Con CAI del SAR se cambia por un numerador basado en el rango autorizado.
+    'numerador' => \App\Services\Numeracion\NumeradorInterno::class,
 ];

@@ -37,6 +37,11 @@ Route::get('/cotizaciones/{cotizacion}/pdf', \App\Http\Controllers\CotizacionPdf
     ->middleware('web')
     ->name('cotizaciones.pdf');
 
+Route::get('/facturas/{factura}/pdf', \App\Http\Controllers\FacturaPdfController::class)
+    ->middleware('web')
+    ->whereNumber('factura')
+    ->name('facturas.pdf');
+
 Route::get('/pagos/{pago}/recibo', \App\Http\Controllers\PagoReciboController::class)
     ->middleware('web')
     ->whereNumber('pago')

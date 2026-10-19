@@ -23,6 +23,13 @@ class ViewFactura extends ViewRecord
         return [
             FacturasTable::accionRegistrarPago(),
 
+            Action::make('pdf')
+                ->label('Descargar PDF')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('gray')
+                ->url(fn () => route('facturas.pdf', $this->record->id))
+                ->openUrlInNewTab(),
+
             Action::make('planCuotas')
                 ->label('Plan de cuotas')
                 ->icon('heroicon-o-calendar-days')

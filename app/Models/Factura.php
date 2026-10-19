@@ -20,6 +20,7 @@ class Factura extends Model
         'fecha' => 'date',
         'vence' => 'date',
         'periodo' => 'date',
+        'fecha_limite_emision' => 'date',
         'subtotal' => 'decimal:2',
         'isv' => 'decimal:2',
         'total' => 'decimal:2',
@@ -38,7 +39,7 @@ class Factura extends Model
 
         static::created(function (Factura $f) {
             if (str_starts_with($f->numero, 'TMP-')) {
-                $f->numero = sprintf('FAC-%s-%06d', now()->format('Y'), $f->id);
+                app(config('cobros.numerador'))->asignar($f);
                 $f->saveQuietly();
             }
         });
