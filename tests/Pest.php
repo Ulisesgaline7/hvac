@@ -1,5 +1,13 @@
 <?php
 
+use App\Models\Area;
+use App\Models\Cliente;
+use App\Models\Equipo;
+use App\Models\OrdenTrabajo;
+use App\Models\OrdenTrabajoEquipo;
+use App\Models\PlantillaFormulario;
+use App\Models\Sucursal;
+use App\Models\TipoEquipo;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
