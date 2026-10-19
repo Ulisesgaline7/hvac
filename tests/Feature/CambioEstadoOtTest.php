@@ -111,3 +111,61 @@ it('una OT cerrada o cancelada es de solo lectura', function () {
 
     expect(DB::table('ordenes_trabajo')->where('id', $ot->id)->value('prioridad'))->not->toBe('urgente');
 });
+
+/** Lleva la OT hasta «En revisión» (último paso antes de cerrar). */
+function llevarARevision(OrdenTrabajo $ot): OrdenTrabajo
+{
+    foreach ([EstadoOt::Asignada, EstadoOt::EnProceso, EstadoOt::CompletadaTecnico, EstadoOt::EnRevision] as $e) {
+        $ot->cambiarEstado($e);
+    }
+
+    return $ot;
+}
+
+function firmarActa(OrdenTrabajo $ot): void
+{
+    $acta = App\Models\ActaConformidad::create(['orden_trabajo_id' => $ot->id, 'recibe_nombre' => 'Cliente Prueba']);
+    $png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+    $acta->addMediaFromBase64($png, ['image/png'])->usingFileName('firma_cliente.png')->toMediaCollection('firma_cliente', 'local');
+}
+
+it('instalación y emergencia no cierran sin acta firmada por el cliente', function (string $tipo) {
+    $ot = otListaParaCerrar();
+    $ot->update(['tipo' => $tipo]);
+    llevarARevision($ot->fresh());
+
+    expect(fn () => $ot->fresh()->cambiarEstado(EstadoOt::Cerrada))
+        ->toThrow(DomainException::class, 'acta de conformidad firmada');
+
+    expect($ot->fresh()->estado)->toBe(EstadoOt::EnRevision);
+})->with(['instalacion', 'emergencia']);
+
+it('un acta sin firma del cliente tampoco permite cerrar', function () {
+    $ot = otListaParaCerrar();
+    $ot->update(['tipo' => 'instalacion']);
+    llevarARevision($ot->fresh());
+    App\Models\ActaConformidad::create(['orden_trabajo_id' => $ot->id, 'recibe_nombre' => 'Sin firma']);
+
+    expect(fn () => $ot->fresh()->cambiarEstado(EstadoOt::Cerrada))->toThrow(DomainException::class);
+});
+
+it('con el acta firmada por el cliente la instalación se cierra', function () {
+    Illuminate\Support\Facades\Storage::fake('local');
+
+    $ot = otListaParaCerrar();
+    $ot->update(['tipo' => 'instalacion']);
+    llevarARevision($ot->fresh());
+    firmarActa($ot);
+
+    $ot->fresh()->cambiarEstado(EstadoOt::Cerrada);
+
+    expect($ot->fresh()->estado)->toBe(EstadoOt::Cerrada);
+});
+
+it('un correctivo se cierra sin acta', function () {
+    $ot = llevarARevision(otListaParaCerrar());
+
+    $ot->cambiarEstado(EstadoOt::Cerrada);
+
+    expect($ot->fresh()->estado)->toBe(EstadoOt::Cerrada);
+});
