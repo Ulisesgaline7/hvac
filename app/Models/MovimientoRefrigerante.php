@@ -19,6 +19,10 @@ class MovimientoRefrigerante extends Model
     protected static function booted(): void
     {
         static::creating(function (self $m) {
+            if ($m->tipo === 'carga' && ! $m->cilindro_id) {
+                throw new DomainException('Una carga de refrigerante requiere indicar el cilindro.');
+            }
+
             if ($m->tipo === 'carga' && $m->cilindro_id) {
                 $saldo = CilindroRefrigerante::findOrFail($m->cilindro_id)->saldoKg();
                 if ((float) $m->cantidad_kg > $saldo) {

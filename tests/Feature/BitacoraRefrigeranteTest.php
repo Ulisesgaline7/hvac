@@ -7,8 +7,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-require_once __DIR__ . '/CambioEstadoOtTest.php';
-
 function cilindroDePrueba(float $kg = 10): CilindroRefrigerante
 {
     $ref = Refrigerante::create(['nombre' => 'R-410A ' . uniqid()]);
@@ -50,5 +48,5 @@ it('una carga exige cilindro y una recuperación puede no tenerlo', function () 
     movimiento($linea, null, 'recuperacion', 2);
     expect(MovimientoRefrigerante::count())->toBe(1);
 
-    expect(fn () => movimiento($linea, null, 'carga', 1))->toThrow(Illuminate\Database\QueryException::class);
+    expect(fn () => movimiento($linea, null, 'carga', 1))->toThrow(DomainException::class, 'cilindro');
 });
