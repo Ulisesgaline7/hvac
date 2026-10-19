@@ -18,8 +18,8 @@ it('genera código interno consecutivo y token QR opaco', function () {
     $a = Equipo::create(['area_id' => $area->id, 'tipo_equipo_id' => $tipo->id]);
     $b = Equipo::create(['area_id' => $area->id, 'tipo_equipo_id' => $tipo->id]);
 
-    expect($a->codigo)->toBe('HVAC-001')
-        ->and($b->codigo)->toBe('HVAC-002')
+    expect($a->codigo)->toBe('EQ-0001')
+        ->and($b->codigo)->toBe('EQ-0002')
         ->and($a->token_qr)->toHaveLength(32)
         ->and($a->token_qr)->not->toBe($b->token_qr);
 });

@@ -20,15 +20,15 @@ class CatalogosSeeder extends Seeder
         }
 
         $tipos = [
-            ['Split', 'aire_acondicionado', 'HVAC'],
-            ['Cassette', 'aire_acondicionado', 'HVAC'],
-            ['Paquete', 'aire_acondicionado', 'HVAC'],
-            ['Chiller', 'aire_acondicionado', 'HVAC'],
-            ['Cuarto frío', 'cuartos_frios', 'REF'],
-            ['Congelador', 'cuartos_frios', 'REF'],
-            ['Mesa fría', 'refrigeracion_comercial', 'REF'],
-            ['Vitrina', 'refrigeracion_comercial', 'REF'],
-            ['Máquina de hielo', 'refrigeracion_comercial', 'REF'],
+            ['Split', 'aire_acondicionado', 'EQ'],
+            ['Cassette', 'aire_acondicionado', 'EQ'],
+            ['Paquete', 'aire_acondicionado', 'EQ'],
+            ['Chiller', 'aire_acondicionado', 'EQ'],
+            ['Cuarto frío', 'cuartos_frios', 'EQ'],
+            ['Congelador', 'cuartos_frios', 'EQ'],
+            ['Mesa fría', 'refrigeracion_comercial', 'EQ'],
+            ['Vitrina', 'refrigeracion_comercial', 'EQ'],
+            ['Máquina de hielo', 'refrigeracion_comercial', 'EQ'],
         ];
 
         foreach ($tipos as [$nombre, $familia, $prefijo]) {

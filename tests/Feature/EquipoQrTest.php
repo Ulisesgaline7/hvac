@@ -37,7 +37,7 @@ it('un token inexistente muestra mensaje genérico', function () {
 
     $this->actingAs($admin)->get('/e/' . str_repeat('a', 32))
         ->assertNotFound()
-        ->assertDontSee('HVAC-');
+        ->assertDontSee('EQ-');
 });
 
 it('el coordinador ve la ficha completa', function () {
