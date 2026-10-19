@@ -8,11 +8,31 @@ use App\Models\Informe;
 use App\Models\OrdenTrabajo;
 use App\Models\OrdenTrabajoEquipo;
 use App\Models\Sucursal;
+use App\Models\TrabajoAdicional;
 use App\Models\TipoEquipo;
 use Dompdf\Dompdf;
 
 class InformeOtService
 {
+    private const CONFIRMACIONES_ACTA = [
+        'servicio_realizado' => 'El servicio descrito fue realizado en su presencia o en la de su representante.',
+        'recibio_reporte' => 'Recibió el reporte de servicio y las recomendaciones del técnico.',
+        'equipos_funcionando' => 'Los equipos quedaron funcionando, salvo lo indicado en las observaciones.',
+        'recibio_garantia' => 'Recibió el certificado de garantía del trabajo.',
+    ];
+
+    private const SEGURIDAD_PREVIA = [
+        'epp_listo' => 'Equipo de protección listo',
+        'energia_bloqueada' => 'Energía bloqueada antes de intervenir',
+        'altura_evaluada' => 'Trabajo en altura evaluado',
+    ];
+
+    private const DECISION_ADICIONAL = [
+        'pendiente' => 'Pendiente de decisión del cliente',
+        'aprobado' => 'Aprobado por el cliente',
+        'rechazado' => 'Rechazado por el cliente',
+    ];
+
     public function pdf(OrdenTrabajo $ot, ?Informe $informe = null): string
     {
         $dompdf = new Dompdf(['defaultFont' => 'DejaVu Sans', 'isRemoteEnabled' => false]);
@@ -58,6 +78,8 @@ class InformeOtService
             'lineas' => $lineas,
             'generado' => now()->format('d/m/Y H:i'),
             'acta' => $this->acta($ot),
+            'seguridad' => $this->seguridad($ot),
+            'adicionales' => $this->adicionales($ot),
             'qr' => $urlVerificacion ? app(GeneradorQr::class)->dataUriDeUrl($urlVerificacion) : null,
             'verificacion_url' => $urlVerificacion,
         ];
@@ -148,6 +170,12 @@ class InformeOtService
         }
 
         $filas = [];
+        if (is_array($conf) && array_is_list($conf)) {
+            foreach ($conf as $clave) {
+                $filas[] = ['etiqueta' => self::CONFIRMACIONES_ACTA[$clave] ?? (string) $clave, 'valor' => 'Sí'];
+            }
+            $conf = [];
+        }
         foreach ((array) $conf as $k => $v) {
             $filas[] = [
                 'etiqueta' => is_string($k) ? ucfirst(str_replace('_', ' ', $k)) : '•',
@@ -162,6 +190,67 @@ class InformeOtService
             'calificacion' => $a->calificacion,
             'observaciones' => $a->observaciones_cliente,
             'confirmaciones' => $filas,
+            'firmas' => $this->firmasDe($a),
         ];
+    }
+
+    /** Firmas (cliente y técnico) guardadas como archivos del modelo, como data URI. */
+    private function firmasDe($modelo): array
+    {
+        $titulos = ['firma_tecnico' => 'Firma del técnico', 'firma_cliente' => 'Firma del cliente'];
+        $salida = [];
+
+        foreach ($titulos as $coleccion => $titulo) {
+            $m = $modelo->getFirstMedia($coleccion);
+            if ($m && is_file($m->getPath())) {
+                $salida[] = ['titulo' => $titulo, 'src' => 'data:image/png;base64,' . base64_encode(file_get_contents($m->getPath()))];
+            }
+        }
+
+        return $salida;
+    }
+
+    /** Lista de seguridad previa con su estado marcado o no. */
+    private function seguridad(OrdenTrabajo $ot): array
+    {
+        $marcadas = (array) ($ot->seguridad_previa ?? []);
+
+        return collect(self::SEGURIDAD_PREVIA)
+            ->map(fn ($texto, $clave) => ['etiqueta' => $texto, 'ok' => in_array($clave, $marcadas, true)])
+            ->values()->all();
+    }
+
+    /** Trabajos adicionales con su costo, decisión y firmas. */
+    private function adicionales(OrdenTrabajo $ot): array
+    {
+        return TrabajoAdicional::where('orden_trabajo_id', $ot->id)->orderBy('id')->get()->map(function ($t) {
+            $lineas = collect($t->detalle_costo ?? [])->map(function ($l) {
+                $cantidad = (float) ($l['cantidad'] ?? 0);
+                $precio = (float) ($l['precio_unitario'] ?? 0);
+
+                return [
+                    'concepto' => $l['concepto'] ?? '',
+                    'cantidad' => rtrim(rtrim(number_format($cantidad, 2, '.', ''), '0'), '.'),
+                    'precio' => number_format($precio, 2),
+                    'importe' => number_format($cantidad * $precio, 2),
+                ];
+            })->all();
+
+            return [
+                'fecha' => $t->fecha?->format('d/m/Y'),
+                'hallazgo' => $t->hallazgo,
+                'trabajo' => $t->trabajo_propuesto,
+                'consecuencias' => $t->consecuencias,
+                'lineas' => $lineas,
+                'subtotal' => number_format((float) $t->subtotal, 2),
+                'isv' => number_format((float) $t->isv, 2),
+                'total' => number_format((float) $t->total, 2),
+                'tiempo' => $t->tiempo_adicional,
+                'nueva_fecha' => $t->nueva_fecha?->format('d/m/Y'),
+                'decision' => self::DECISION_ADICIONAL[$t->decision] ?? $t->decision,
+                'decidido_por' => trim(($t->decidido_por_nombre ?? '') . ($t->decidido_por_cargo ? ' · ' . $t->decidido_por_cargo : '')),
+                'firmas' => $this->firmasDe($t),
+            ];
+        })->all();
     }
 }
