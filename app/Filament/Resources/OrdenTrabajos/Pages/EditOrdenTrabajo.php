@@ -154,6 +154,27 @@ class EditOrdenTrabajo extends EditRecord
                         ])
                         ->send();
                 }),
+            Action::make('facturarVisita')
+                ->label('Facturar visita')
+                ->icon('heroicon-o-receipt-percent')
+                ->color('success')
+                ->visible(fn () => (auth()->user()?->hasAnyRole(['administrador', 'coordinador']) ?? false)
+                    && app(\App\Services\FacturacionService::class)->motivoNoFacturarVisita($this->record) === null)
+                ->requiresConfirmation()
+                ->modalHeading('Facturar visita técnica')
+                ->modalDescription(fn () => 'Se emitirá una factura por L '
+                    . number_format(app(\App\Services\FacturacionService::class)->montoVisita($this->record)['total'], 2)
+                    . ' (ISV incluido). Si después se cotiza un trabajo, la visita no se volverá a cobrar.')
+                ->action(function () {
+                    try {
+                        $factura = app(\App\Services\FacturacionService::class)->facturarVisita($this->record);
+                    } catch (\DomainException $e) {
+                        Notification::make()->danger()->title($e->getMessage())->send();
+
+                        return;
+                    }
+                    Notification::make()->success()->title("Visita facturada · {$factura->numero}")->send();
+                }),
             Action::make('asignar')
                 ->label('Asignar técnico')
                 ->icon('heroicon-o-user-plus')

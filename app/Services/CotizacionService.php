@@ -130,6 +130,11 @@ class CotizacionService
             return [null, 0.0];
         }
 
+        // Visita ya facturada por separado: no se vuelve a sumar ni a bonificar.
+        if (\App\Models\Factura::where('orden_trabajo_id', $ot->id)->exists()) {
+            return [null, 0.0];
+        }
+
         $categoria = $c->lineas()->with('servicio')->get()->map(fn ($l) => $l->servicio?->categoria)->filter()->first();
 
         $tratamiento = match (true) {

@@ -177,6 +177,63 @@ class FacturacionService
         ]);
     }
 
+    /** @return array{subtotal: float, isv: float, total: float} */
+    public function montoVisita(OrdenTrabajo $visita): array
+    {
+        $subtotal = round((float) ($visita->visita_monto ?? config('visita.costo')), 2);
+        $isv = round($subtotal * config('tarifario.isv'), 2);
+
+        return ['subtotal' => $subtotal, 'isv' => $isv, 'total' => round($subtotal + $isv, 2)];
+    }
+
+    /** null = se puede facturar; si no, el motivo en texto. */
+    public function motivoNoFacturarVisita(OrdenTrabajo $visita): ?string
+    {
+        $estado = $visita->estado instanceof \BackedEnum ? $visita->estado->value : (string) $visita->estado;
+
+        return match (true) {
+            $this->tipo($visita) !== 'visita_tecnica' => 'La OT no es una visita técnica.',
+            $estado !== 'cerrada' => 'La visita aún no está cerrada.',
+            $visita->visita_cobro === 'gratis' => 'La visita está marcada sin costo.',
+            Factura::where('orden_trabajo_id', $visita->id)->exists() => 'La visita ya fue facturada.',
+            Cotizacion::where('visita_ot_id', $visita->id)->exists() => 'La visita tiene una cotización asociada: se cobra por esa vía (incluida en el trabajo, bonificada o al rechazarla).',
+            $this->montoVisita($visita)['subtotal'] <= 0 => 'La visita no tiene monto.',
+            default => null,
+        };
+    }
+
+    /** Factura una visita técnica sin cotización posterior. Lanza DomainException si no corresponde cobrarla. */
+    public function facturarVisita(OrdenTrabajo $visita): Factura
+    {
+        if ($motivo = $this->motivoNoFacturarVisita($visita)) {
+            throw new \DomainException($motivo);
+        }
+
+        $m = $this->montoVisita($visita);
+        $fecha = now()->startOfDay();
+
+        try {
+            $factura = Factura::create([
+                'cliente_id' => $visita->cliente_id,
+                'sucursal_id' => $visita->sucursal_id,
+                'orden_trabajo_id' => $visita->id,
+                'fecha' => $fecha->toDateString(),
+                'vence' => $fecha->copy()->addDays($this->diasCredito($visita))->toDateString(),
+                'subtotal' => $m['subtotal'],
+                'isv' => $m['isv'],
+                'total' => $m['total'],
+                'notas' => "Visita técnica {$visita->numero}",
+            ]);
+        } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+            throw new \DomainException('La visita ya fue facturada.');
+        }
+
+        Pago::where('orden_trabajo_id', $visita->id)->whereNull('factura_id')->update(['factura_id' => $factura->id]);
+        $factura->recalcular();
+
+        return $factura->fresh();
+    }
+
     private function tipo(OrdenTrabajo $ot): string
     {
         return $ot->tipo instanceof \BackedEnum ? $ot->tipo->value : (string) $ot->tipo;
