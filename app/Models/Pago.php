@@ -35,7 +35,14 @@ class Pago extends Model
             }
         });
 
-        static::saved(fn (Pago $p) => $p->factura?->recalcular());
+        static::saved(function (Pago $p) {
+            $p->factura?->recalcular();
+
+            // Cobro sin crédito: la factura nace al completarse el pago (cobros.momento_factura).
+            if (! $p->factura_id && $p->orden_trabajo_id && $p->wasRecentlyCreated) {
+                app(\App\Services\FacturacionService::class)->facturarSiPagoCompleto($p->ordenTrabajo);
+            }
+        });
         static::deleted(fn (Pago $p) => $p->factura?->recalcular());
     }
 

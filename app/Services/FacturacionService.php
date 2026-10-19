@@ -30,6 +30,12 @@ class FacturacionService
             return null;
         }
 
+        // Sin crédito y con momento «al_pagar_completo»: queda como cobro pendiente
+        // y la factura nace al completarse el pago.
+        if (! $this->debeFacturarAhora($ot, $montos)) {
+            return null;
+        }
+
         $fecha = now()->startOfDay();
 
         $factura = Factura::create([
@@ -129,6 +135,46 @@ class FacturacionService
         $cotizacion ??= $ot->cotizacion_id ? Cotizacion::find($ot->cotizacion_id) : null;
 
         return (float) ($ot->anticipo_pct ?? $cotizacion?->anticipo_pct ?? config('cobros.anticipo_pct.' . $this->tipo($ot), 0));
+    }
+
+    /** ¿Corresponde emitir la factura ahora? Con crédito o con momento «al_cerrar», sí; si no, cuando lo cobrado cubre el total. */
+    public function debeFacturarAhora(OrdenTrabajo $ot, array $montos): bool
+    {
+        if (config('cobros.momento_factura') === 'al_cerrar' || $this->diasCredito($ot) > 0) {
+            return true;
+        }
+
+        $cobrado = round((float) Pago::where('orden_trabajo_id', $ot->id)->whereNull('factura_id')->sum('monto'), 2);
+
+        return $cobrado >= round((float) $montos['total'], 2);
+    }
+
+    /** Se llama al registrar un pago de una OT sin factura: si la OT está cerrada y el pago ya cubre el total, factura. */
+    public function facturarSiPagoCompleto(?OrdenTrabajo $ot): ?Factura
+    {
+        if (! $ot) {
+            return null;
+        }
+
+        $estado = $ot->estado instanceof \BackedEnum ? $ot->estado->value : (string) $ot->estado;
+        if ($estado !== 'cerrada') {
+            return null;
+        }
+
+        return $this->generarDesdeOt($ot);
+    }
+
+    /** Pago contra una OT cerrada que aún no tiene factura. */
+    public function registrarPago(OrdenTrabajo $ot, float $monto, ?string $metodo = null, ?string $referencia = null): Pago
+    {
+        return Pago::create([
+            'orden_trabajo_id' => $ot->id,
+            'cliente_id' => $ot->cliente_id,
+            'tipo' => 'pago',
+            'monto' => $monto,
+            'metodo' => $metodo,
+            'referencia' => $referencia,
+        ]);
     }
 
     private function tipo(OrdenTrabajo $ot): string

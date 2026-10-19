@@ -123,6 +123,37 @@ class EditOrdenTrabajo extends EditRecord
                         ])
                         ->send();
                 }),
+            Action::make('registrarPagoOt')
+                ->label('Registrar pago')
+                ->icon('heroicon-o-currency-dollar')
+                ->color('success')
+                ->visible(fn () => $this->record->estado === EstadoOt::Cerrada
+                    && config('cobros.momento_factura') === 'al_pagar_completo'
+                    && ! \App\Models\Factura::where('orden_trabajo_id', $this->record->id)->exists()
+                    && (auth()->user()?->hasAnyRole(['administrador', 'coordinador']) ?? false))
+                ->modalDescription(fn () => 'Cobrado hasta ahora: L ' . number_format((float) \App\Models\Pago::where('orden_trabajo_id', $this->record->id)->sum('monto'), 2))
+                ->schema([
+                    \Filament\Forms\Components\TextInput::make('monto')->label('Monto (L)')->numeric()->required()->minValue(0.01),
+                    \Filament\Forms\Components\Select::make('metodo')->label('Método')->options([
+                        'efectivo' => 'Efectivo', 'transferencia' => 'Transferencia', 'cheque' => 'Cheque', 'tarjeta' => 'Tarjeta',
+                    ])->required(),
+                    \Filament\Forms\Components\TextInput::make('referencia')->label('Referencia / comprobante'),
+                ])
+                ->action(function (array $data) {
+                    $pago = app(\App\Services\FacturacionService::class)->registrarPago(
+                        $this->record, (float) $data['monto'], $data['metodo'], $data['referencia'] ?? null
+                    );
+                    $factura = \App\Models\Factura::where('orden_trabajo_id', $this->record->id)->first();
+
+                    Notification::make()->success()
+                        ->title($factura ? "Pago registrado · factura {$factura->numero}" : 'Pago registrado · aún hay saldo por cobrar')
+                        ->body("Recibo {$pago->fresh()->numero}")
+                        ->actions([
+                            \Filament\Actions\Action::make('recibo')->label('Ver recibo')
+                                ->url(route('pagos.recibo', $pago->id))->openUrlInNewTab(),
+                        ])
+                        ->send();
+                }),
             Action::make('asignar')
                 ->label('Asignar técnico')
                 ->icon('heroicon-o-user-plus')

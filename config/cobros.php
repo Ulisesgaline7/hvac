@@ -24,4 +24,10 @@ return [
     // true = los recibos y facturas llevan la leyenda «sin validez fiscal».
     // Pasar a false solo cuando exista autorización de numeración (CAI) del SAR.
     'documentos_prueba' => true,
+
+    // Cuándo nace la factura:
+    //   al_cerrar         = al cerrar la OT (comportamiento actual).
+    //   al_pagar_completo = con crédito, al cerrar; sin crédito, cuando lo cobrado cubre el total.
+    // Decisión pendiente de validar con el contador.
+    'momento_factura' => 'al_cerrar',
 ];
