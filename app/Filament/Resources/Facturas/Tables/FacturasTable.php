@@ -47,7 +47,8 @@ class FacturasTable
                 Filter::make('por_cobrar')->label('Con saldo pendiente')
                     ->query(fn ($q) => $q->whereIn('estado', ['emitida', 'parcial'])),
                 Filter::make('vencidas')->label('Vencidas')
-                    ->query(fn ($q) => $q->whereIn('estado', ['emitida', 'parcial'])->whereDate('vence', '<', now())),
+                    ->query(fn ($q) => $q->whereIn('id', Factura::with('cuotas')->whereIn('estado', ['emitida', 'parcial'])
+                        ->get()->filter(fn (Factura $f) => $f->vencida)->pluck('id'))),
             ])
             ->recordActions([
                 Action::make('ver')->label('Ver')->url(fn (Factura $r) => \App\Filament\Resources\Facturas\FacturaResource::getUrl('view', ['record' => $r])),

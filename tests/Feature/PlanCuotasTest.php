@@ -91,3 +91,29 @@ it('una cuota sin cubrir y con fecha pasada figura como vencida', function () {
 
     expect($svc->estado($f->fresh())->first()['estado'])->toBe('vencida');
 });
+
+it('sin plan, la factura vence cuando pasa su fecha', function () {
+    expect(facturaParaCuotas(1150, now()->subDays(3)->toDateString())->fresh()->vencida)->toBeTrue()
+        ->and(facturaParaCuotas(1150, now()->addDays(3)->toDateString())->fresh()->vencida)->toBeFalse();
+});
+
+it('con plan, no está vencida aunque pasó su fecha si las cuotas aún no vencen', function () {
+    $f = facturaParaCuotas(1150, now()->subDays(5)->toDateString());
+    app(PlanCuotasService::class)->crear($f, 2, now()->addDays(10));
+
+    expect($f->fresh()->vencida)->toBeFalse();
+});
+
+it('con plan, una cuota sin cubrir y pasada la deja vencida', function () {
+    $f = facturaParaCuotas(1150, now()->addDays(30)->toDateString());
+    app(PlanCuotasService::class)->crear($f, 2, now()->subDay());
+
+    expect($f->fresh()->vencida)->toBeTrue();
+});
+
+it('una factura pagada nunca figura como vencida', function () {
+    $f = facturaParaCuotas(1150, now()->subDays(3)->toDateString());
+    $f->update(['estado' => 'pagada']);
+
+    expect($f->fresh()->vencida)->toBeFalse();
+});

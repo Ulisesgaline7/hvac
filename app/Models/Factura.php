@@ -80,10 +80,19 @@ class Factura extends Model
         return round((float) $this->total - (float) $this->pagado, 2);
     }
 
+    /** Sin plan: vence la factura. Con plan: alguna cuota sin cubrir ya pasó su fecha. */
     public function getVencidaAttribute(): bool
     {
-        return $this->estado !== 'pagada' && $this->estado !== 'anulada'
-            && $this->saldo > 0 && $this->vence->lt(now()->startOfDay());
+        if (in_array($this->estado, ['pagada', 'anulada'], true) || $this->saldo <= 0) {
+            return false;
+        }
+
+        if ($this->cuotas()->exists()) {
+            return app(\App\Services\PlanCuotasService::class)->estado($this)
+                ->contains(fn ($fila) => $fila['estado'] === 'vencida');
+        }
+
+        return $this->vence->lt(now()->startOfDay());
     }
 
     /** Recalcula lo pagado y el estado a partir de los pagos. */
