@@ -74,3 +74,14 @@ it('sugiere la composición del tarifario', function () {
         ->and($s->composicionSugerida(1, true))->toBe(['tecnicos' => 1, 'ayudantes' => 1, 'supervisor' => false])
         ->and($s->composicionSugerida(3))->toBe(['tecnicos' => 3, 'ayudantes' => 0, 'supervisor' => false]);
 });
+
+it('asignar el técnico desde el formulario sincroniza al líder en la cuadrilla', function () {
+    $ot = otParaCuadrilla();
+    [$a, $b] = [tecnicoCuadrilla(), tecnicoCuadrilla()];
+
+    $ot->update(['tecnico_id' => $a->id]);
+    expect($ot->fresh()->cuadrilla->pluck('pivot.rol', 'id')->all())->toBe([$a->id => 'lider']);
+
+    $ot->fresh()->update(['tecnico_id' => $b->id]);
+    expect($ot->fresh()->cuadrilla->pluck('pivot.rol', 'id')->all())->toBe([$b->id => 'lider']);
+});

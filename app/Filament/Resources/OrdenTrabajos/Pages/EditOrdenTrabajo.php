@@ -176,27 +176,52 @@ class EditOrdenTrabajo extends EditRecord
                     Notification::make()->success()->title("Visita facturada · {$factura->numero}")->send();
                 }),
             Action::make('asignar')
-                ->label('Asignar técnico')
-                ->icon('heroicon-o-user-plus')
+                ->label('Asignar cuadrilla')
+                ->icon('heroicon-o-user-group')
                 ->visible(fn () => in_array($this->record->estado, [EstadoOt::Pendiente, EstadoOt::Asignada], true))
+                ->fillForm(fn () => [
+                    'lider' => $this->record->tecnico_id,
+                    'miembros' => $this->record->cuadrilla()->wherePivot('rol', '!=', 'lider')->get()
+                        ->map(fn ($t) => ['tecnico_id' => $t->id, 'rol' => $t->pivot->rol])->all(),
+                ])
                 ->schema([
-                    Select::make('tecnico_id')
-                        ->label('Técnico aprobado')
+                    Select::make('lider')
+                        ->label('Líder de la cuadrilla')
                         ->options(fn () => Tecnico::where('estado_homologacion', 'aprobado')->with('user')->get()->pluck('user.name', 'id'))
                         ->searchable()
-                        ->required(),
+                        ->required()
+                        ->helperText('El líder cambia el estado de la OT y firma el cierre. Solo técnicos aprobados.'),
+                    \Filament\Forms\Components\Repeater::make('miembros')
+                        ->label('Otros miembros')
+                        ->defaultItems(0)
+                        ->addActionLabel('Agregar miembro')
+                        ->columns(2)
+                        ->schema([
+                            Select::make('tecnico_id')
+                                ->label('Técnico')
+                                ->options(fn () => Tecnico::where('estado_homologacion', 'aprobado')->with('user')->get()->pluck('user.name', 'id'))
+                                ->searchable()
+                                ->required(),
+                            Select::make('rol')
+                                ->label('Rol')
+                                ->options(['tecnico' => 'Técnico', 'ayudante' => 'Ayudante', 'supervisor' => 'Supervisor'])
+                                ->default('tecnico')
+                                ->required(),
+                        ])
+                        ->helperText('Tarifario: instalaciones mínimo 2 personas; en altura, 1 ayudante por cada 2 técnicos; supervisor desde 4 técnicos.'),
                 ])
                 ->action(function (array $data) {
-                    $this->record->tecnico_id = $data['tecnico_id'];
+                    try {
+                        $miembros = collect($data['miembros'] ?? [])->pluck('rol', 'tecnico_id')->all();
+                        app(\App\Services\CuadrillaService::class)->asignar($this->record, (int) $data['lider'], $miembros);
+                    } catch (\DomainException $e) {
+                        Notification::make()->danger()->title($e->getMessage())->send();
 
-                    if ($this->record->estado === EstadoOt::Pendiente) {
-                        $this->record->cambiarEstado(EstadoOt::Asignada, 'Asignación de técnico');
-                    } else {
-                        $this->record->save();
+                        return;
                     }
 
                     $this->refreshFormData(self::CAMPOS);
-                    Notification::make()->success()->title('Técnico asignado')->send();
+                    Notification::make()->success()->title('Cuadrilla asignada')->send();
                 }),
             Action::make('reprogramar')
                 ->label('Reprogramar')

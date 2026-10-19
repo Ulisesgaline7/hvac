@@ -21,13 +21,20 @@ class ViewMiOrden extends ViewRecord
         ];
     }
 
+    /** Con RLS solo se ven las filas propias de la cuadrilla: si aparece una fila «lider», es la mía. */
+    private function esLider(): bool
+    {
+        return \Illuminate\Support\Facades\DB::table('orden_trabajo_tecnico')
+            ->where('orden_trabajo_id', $this->record->id)->where('rol', 'lider')->exists();
+    }
+
     private function transicion(string $nombre, string $etiqueta, EstadoOt $desde, EstadoOt $hacia, string $icono): Action
     {
         return Action::make($nombre)
             ->label($etiqueta)
             ->icon($icono)
             ->requiresConfirmation()
-            ->visible(fn () => $this->record->estado === $desde)
+            ->visible(fn () => $this->record->estado === $desde && $this->esLider())
             ->action(function () use ($hacia) {
                 try {
                     $this->record->cambiarEstado($hacia);

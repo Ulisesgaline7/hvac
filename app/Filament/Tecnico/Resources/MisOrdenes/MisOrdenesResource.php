@@ -39,6 +39,10 @@ class MisOrdenesResource extends Resource
             ->columns([
                 TextColumn::make('numero')->label('OT')->searchable(),
                 TextColumn::make('estado')->badge(),
+                TextColumn::make('mi_rol')->label('Mi rol')->badge()
+                    ->state(fn ($record) => [
+                        'lider' => 'Líder', 'tecnico' => 'Técnico', 'ayudante' => 'Ayudante', 'supervisor' => 'Supervisor',
+                    ][\Illuminate\Support\Facades\DB::table('orden_trabajo_tecnico')->where('orden_trabajo_id', $record->id)->value('rol')] ?? '—'),
                 TextColumn::make('cliente.razon_social')->label('Cliente'),
                 TextColumn::make('sucursal.nombre')->label('Sucursal'),
                 TextColumn::make('fecha_programada')->label('Programada')->date()->sortable(),

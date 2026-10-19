@@ -71,6 +71,22 @@ class OrdenTrabajo extends Model
             self::registrarEstado($ot, null, $ot->estado);
         });
 
+        static::saved(function (OrdenTrabajo $ot) {
+            // El tecnico_id es el líder: la cuadrilla lo refleja siempre con rol «lider».
+            if (! $ot->tecnico_id || ! ($ot->wasRecentlyCreated || $ot->wasChanged('tecnico_id'))) {
+                return;
+            }
+
+            DB::table('orden_trabajo_tecnico')
+                ->where('orden_trabajo_id', $ot->id)->where('rol', 'lider')->where('tecnico_id', '!=', $ot->tecnico_id)
+                ->delete();
+
+            DB::table('orden_trabajo_tecnico')->updateOrInsert(
+                ['orden_trabajo_id' => $ot->id, 'tecnico_id' => $ot->tecnico_id],
+                ['rol' => 'lider', 'created_at' => now(), 'updated_at' => now()],
+            );
+        });
+
         static::updated(function (OrdenTrabajo $ot) {
             if ($ot->wasChanged('estado')) {
                 self::registrarEstado($ot, $ot->getOriginal('estado'), $ot->estado);
