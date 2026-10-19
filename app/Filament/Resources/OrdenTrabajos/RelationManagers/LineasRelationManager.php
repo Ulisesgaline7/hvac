@@ -63,6 +63,42 @@ class LineasRelationManager extends RelationManager
                         $record->update(['datos_previstos' => array_merge($record->datos_previstos ?? [], ['tareas' => $data['tareas']])]);
                         Notification::make()->success()->title('Tareas previstas guardadas')->send();
                     }),
+                Action::make('movimiento')
+                    ->label('Refrigerante')
+                    ->icon('heroicon-o-beaker')
+                    ->visible(fn ($record) => in_array($record->ordenTrabajo?->estado, [\App\Enums\EstadoOt::EnProceso, \App\Enums\EstadoOt::EnEspera], true))
+                    ->schema([
+                        \Filament\Forms\Components\Select::make('cilindro_id')
+                            ->label('Cilindro')
+                            ->options(fn () => \App\Models\CilindroRefrigerante::with('refrigerante')
+                                ->where('estado', 'activo')->get()
+                                ->mapWithKeys(fn ($c) => [$c->id => "{$c->codigo} · {$c->refrigerante?->nombre} · saldo {$c->saldoKg()} kg"]))
+                            ->searchable(),
+                        \Filament\Forms\Components\Select::make('tipo')
+                            ->options(['carga' => 'Carga (agregado)', 'recuperacion' => 'Recuperación'])
+                            ->required(),
+                        \Filament\Forms\Components\TextInput::make('cantidad_kg')
+                            ->label('Cantidad')->numeric()->minValue(0.01)->suffix('kg')->required(),
+                        \Filament\Forms\Components\Textarea::make('observaciones'),
+                    ])
+                    ->action(function (array $data, $record) {
+                        try {
+                            \App\Models\MovimientoRefrigerante::create([
+                                'orden_trabajo_id' => $record->orden_trabajo_id,
+                                'orden_trabajo_equipo_id' => $record->id,
+                                'cilindro_id' => $data['cilindro_id'] ?? null,
+                                'tipo' => $data['tipo'],
+                                'cantidad_kg' => $data['cantidad_kg'],
+                                'observaciones' => $data['observaciones'] ?? null,
+                            ]);
+                        } catch (DomainException $e) {
+                            Notification::make()->danger()->title($e->getMessage())->send();
+
+                            return;
+                        }
+
+                        Notification::make()->success()->title('Movimiento registrado')->send();
+                    }),
                 Action::make('ficha')
                     ->label('Llenar ficha')
                     ->icon('heroicon-o-clipboard-document-list')
