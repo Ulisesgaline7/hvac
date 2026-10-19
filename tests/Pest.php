@@ -48,3 +48,21 @@ function something()
 {
     // ..
 }
+
+function lineaConPlantilla(): array
+{
+    $plantilla = PlantillaFormulario::create(['nombre' => 'Prueba ' . uniqid(), 'familia' => 'cuartos_frios']);
+    $plantilla->publicar([
+        ['clave' => 'motivo', 'etiqueta' => 'Motivo', 'tipo' => 'texto', 'obligatorio' => true],
+    ]);
+
+    $tipo = TipoEquipo::create(['nombre' => 'Cámara ' . uniqid(), 'familia' => 'cuartos_frios', 'prefijo_codigo' => 'REF', 'plantilla_id' => $plantilla->id]);
+    $cliente = Cliente::create(['razon_social' => 'C ' . uniqid()]);
+    $sucursal = Sucursal::create(['cliente_id' => $cliente->id, 'nombre' => 'Matriz']);
+    $area = Area::create(['sucursal_id' => $sucursal->id, 'nombre' => 'Cocina']);
+    $equipo = Equipo::create(['area_id' => $area->id, 'tipo_equipo_id' => $tipo->id]);
+    $ot = OrdenTrabajo::create(['tipo' => 'correctivo', 'cliente_id' => $cliente->id, 'sucursal_id' => $sucursal->id]);
+    $ot->equipos()->attach($equipo->id);
+
+    return [$plantilla, OrdenTrabajoEquipo::where('orden_trabajo_id', $ot->id)->first()];
+}
