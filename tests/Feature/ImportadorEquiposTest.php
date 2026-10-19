@@ -39,7 +39,7 @@ it('importa filas válidas con código y QR generados', function () {
 
     expect($r['errores'])->toBeEmpty()
         ->and($r['creados'])->toBe(2)
-        ->and(Equipo::orderBy('id')->pluck('codigo')->all())->toBe(['HVAC-001', 'HVAC-002'])
+        ->and(Equipo::orderBy('id')->pluck('codigo')->all())->toBe(['EQ-0001', 'EQ-0002'])
         ->and(Equipo::first()->capacidad_unidad)->toBe('BTU')
         ->and((float) Equipo::latest('id')->first()->capacidad_valor)->toBe(12.5)
         ->and(Equipo::first()->token_qr)->toHaveLength(32);

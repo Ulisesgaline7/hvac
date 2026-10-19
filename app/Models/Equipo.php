@@ -36,7 +36,7 @@ class Equipo extends Model
             }
             if (empty($equipo->codigo)) {
                 $prefijo = TipoEquipo::findOrFail($equipo->tipo_equipo_id)->prefijo_codigo;
-                $equipo->codigo = app(GeneradorCodigoEquipo::class)->siguiente($prefijo);
+                $equipo->codigo = app(GeneradorCodigoEquipo::class)->siguiente();
             }
         });
     }
