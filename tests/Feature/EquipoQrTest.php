@@ -107,3 +107,53 @@ it('un cliente no puede generar etiquetas', function () {
 
     $this->actingAs($usuario)->get("/etiquetas/equipo/{$this->equipoA->id}")->assertForbidden();
 });
+
+function otConEquipo(\App\Models\Equipo $equipo): \App\Models\OrdenTrabajo
+{
+    $ot = \App\Models\OrdenTrabajo::create([
+        'tipo' => \App\Enums\TipoOt::Correctivo,
+        'prioridad' => 'normal',
+        'estado' => \App\Enums\EstadoOt::Pendiente,
+        'cliente_id' => $equipo->area->sucursal->cliente_id,
+        'sucursal_id' => $equipo->area->sucursal_id,
+    ]);
+    $ot->lineas()->create(['equipo_id' => $equipo->id, 'tipo_equipo_id' => $equipo->tipo_equipo_id, 'area_id' => $equipo->area_id]);
+
+    return $ot->fresh();
+}
+
+function tecnicoDePrueba(): array
+{
+    $user = User::factory()->create();
+    $user->assignRole('tecnico');
+
+    return [$user, \App\Models\Tecnico::create(['user_id' => $user->id, 'estado_homologacion' => 'aprobado'])];
+}
+
+it('el líder y el ayudante ven la ficha completa con su rol; un técnico ajeno solo la mínima', function () {
+    [$uLider, $lider] = tecnicoDePrueba();
+    [$uAyudante, $ayudante] = tecnicoDePrueba();
+    [$uAjeno] = tecnicoDePrueba();
+
+    $ot = otConEquipo($this->equipoA);
+    app(\App\Services\CuadrillaService::class)->asignar($ot, $lider->id, [$ayudante->id => 'ayudante']);
+
+    $this->actingAs($uLider)->get("/e/{$this->equipoA->token_qr}")
+        ->assertOk()->assertSee('Cliente A')->assertSee($ot->fresh()->numero)->assertSee('Mi rol: Lider');
+
+    $this->actingAs($uAyudante)->get("/e/{$this->equipoA->token_qr}")
+        ->assertOk()->assertSee('Cliente A')->assertSee('Mi rol: Ayudante');
+
+    $this->actingAs($uAjeno)->get("/e/{$this->equipoA->token_qr}")
+        ->assertOk()->assertDontSee('Cliente A')->assertDontSee($ot->fresh()->numero)
+        ->assertSee('no está en ninguna de sus órdenes');
+});
+
+it('un técnico con una OT del equipo A no ve datos del equipo B de otro cliente', function () {
+    [$u, $t] = tecnicoDePrueba();
+    $ot = otConEquipo($this->equipoA);
+    app(\App\Services\CuadrillaService::class)->asignar($ot, $t->id, []);
+
+    $this->actingAs($u)->get("/e/{$this->equipoB->token_qr}")
+        ->assertOk()->assertDontSee('Cliente B')->assertSee('no está en ninguna de sus órdenes');
+});
