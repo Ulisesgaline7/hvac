@@ -27,8 +27,12 @@ beforeEach(function () {
     [$this->clienteB, $this->equipoB] = cadena('Cliente B', $tipo);
 });
 
-it('sin sesión el QR redirige al login', function () {
-    $this->get("/e/{$this->equipoA->token_qr}")->assertRedirect();
+it('sin sesión el QR lleva a elegir cómo ingresar y recuerda el destino', function () {
+    $this->get("/e/{$this->equipoA->token_qr}")->assertRedirect(route('equipo.ingreso'));
+
+    expect(session('url.intended'))->toContain("/e/{$this->equipoA->token_qr}");
+
+    $this->get('/ingresar')->assertOk()->assertSee('Soy técnico')->assertSee('Soy cliente');
 });
 
 it('un token inexistente muestra mensaje genérico', function () {

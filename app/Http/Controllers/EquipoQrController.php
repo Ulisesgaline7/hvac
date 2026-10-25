@@ -14,7 +14,7 @@ class EquipoQrController extends Controller
     public function __invoke(Request $request, string $token)
     {
         if (! Auth::check()) {
-            return redirect()->guest(route('filament.admin.auth.login'));
+            return redirect()->guest(route('equipo.ingreso'));
         }
 
         $usuario = Auth::user();

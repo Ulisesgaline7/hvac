@@ -14,6 +14,17 @@ Route::get('/e/{token}', EquipoQrController::class)
     ->where('token', '[A-Za-z0-9]{32}')
     ->name('equipo.qr');
 
+Route::get('/ingresar', function () {
+    $opciones = collect([
+        'tecnico' => 'Soy técnico',
+        'portal' => 'Soy cliente',
+        'admin' => 'Administración',
+    ])->map(fn ($nombre, $id) => ['nombre' => $nombre, 'url' => \Filament\Facades\Filament::getPanel($id)->getLoginUrl()])
+        ->filter(fn ($o) => filled($o['url']))->values();
+
+    return view('equipo.ingreso', ['opciones' => $opciones]);
+})->middleware(['web', 'throttle:60,1'])->name('equipo.ingreso');
+
 Route::middleware('web')->group(function () {
     Route::get('/etiquetas/lote', [EtiquetaController::class, 'lote'])->name('etiquetas.lote');
     Route::get('/etiquetas/equipo/{equipo}', [EtiquetaController::class, 'equipo'])->name('etiquetas.equipo');
