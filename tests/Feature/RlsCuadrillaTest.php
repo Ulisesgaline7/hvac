@@ -107,3 +107,38 @@ it('al quitarlo de la cuadrilla el técnico pierde el acceso', function () {
 
     comoTecnicoRls($this->u['lider'], fn ($c) => expect($c->table('ordenes_trabajo')->count())->toBe(1));
 });
+
+it('registro en campo: el técnico no inserta equipos por sí solo; en modo interno sí, y después los ve', function () {
+    $dueno = DB::connection('rls_owner');
+    $tipo = $dueno->table('tipos_equipo')->value('id');
+    $area = $dueno->table('areas')->value('id');
+
+    foreach (['lider' => 'n', 'miembro' => 'm'] as $k => $letra) {
+        comoTecnicoRls($this->u[$k], function ($c) use ($k, $letra, $tipo, $area) {
+            $fila = ['codigo' => "HVAC-N-$letra", 'token_qr' => str_repeat($letra, 32), 'area_id' => $area, 'tipo_equipo_id' => $tipo];
+
+            // Con sus propios permisos, el técnico no puede crear equipos.
+            expect(fn () => $c->table('equipos')->insert($fila))->toThrow(QueryException::class);
+
+            // Sí puede comprobar su pertenencia a la OT.
+            expect($c->table('orden_trabajo_tecnico')->where('orden_trabajo_id', $this->d['ot'])->count())->toBe(1);
+
+            $antes = $c->table('equipos')->count();
+
+            // Lo que hace comoInterno: contexto interno, crear, restaurar el contexto previo.
+            $c->select("select set_config('app.es_interno', 'true', false)");
+            $id = $c->table('equipos')->insertGetId($fila);
+            $c->table('orden_trabajo_equipo')->insert(['orden_trabajo_id' => $this->d['ot'], 'equipo_id' => $id, 'tipo_equipo_id' => $tipo, 'area_id' => $area]);
+            $c->select("select set_config('app.es_interno', 'false', false)");
+
+            // Restaurado el contexto, el técnico ve el equipo nuevo por estar en su OT.
+            expect($c->table('equipos')->count())->toBe($antes + 1)
+                ->and($c->table('equipos')->where('id', $id)->exists())->toBeTrue();
+        });
+    }
+
+    // Un técnico ajeno a la OT no ve ninguno de los equipos creados.
+    comoTecnicoRls($this->u['ajeno'], function ($c) {
+        expect($c->table('equipos')->count())->toBe(0);
+    });
+});
