@@ -29,7 +29,7 @@ class TecnicoPanelProvider extends PanelProvider
             ->colors(['primary' => Color::Sky])
             ->discoverResources(in: app_path('Filament/Tecnico/Resources'), for: 'App\Filament\Tecnico\Resources')
             ->discoverWidgets(in: app_path('Filament/Tecnico/Widgets'), for: 'App\Filament\Tecnico\Widgets')
-            ->pages([Dashboard::class])
+            ->pages([Dashboard::class, \App\Filament\Tecnico\Pages\Escanear::class])
             ->widgets([AccountWidget::class])
             ->middleware([
                 EncryptCookies::class,
