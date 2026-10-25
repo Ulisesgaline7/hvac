@@ -286,3 +286,22 @@ it('sin fecha, la OT nace con equipos pero sin fecha programada', function () {
 
     expect($ot->fecha_programada)->toBeNull()->and($ot->lineas()->count())->toBe(1);
 });
+
+it('al aprobar con descuento de contrato, los equipos de la cotización quedan en el contrato', function () {
+    $c = cotizacionDe('preventivo', ['descuento_contrato' => 'CONTRATO_4']);
+    $area = \App\Models\Area::create(['sucursal_id' => $c->sucursal_id, 'nombre' => 'Azotea']);
+    $tipo = \App\Models\TipoEquipo::firstOrCreate(['nombre' => 'Tipo de prueba'], ['familia' => 'climatizacion', 'prefijo_codigo' => 'TP']);
+    $e1 = \App\Models\Equipo::create(['area_id' => $area->id, 'tipo_equipo_id' => $tipo->id]);
+    $e2 = \App\Models\Equipo::create(['area_id' => $area->id, 'tipo_equipo_id' => $tipo->id]);
+    $c->equipos()->attach([$e1->id, $e2->id]);
+
+    $flujo = app(CotizacionFlujo::class);
+    $flujo->enviar($c);
+    $r = $flujo->aprobar($c->fresh(), 'Pedro Gómez');
+
+    $ids = \Illuminate\Support\Facades\DB::table('contrato_equipo')
+        ->where('contrato_id', $r['contrato']->id)->pluck('equipo_id')->sort()->values()->all();
+
+    expect($ids)->toBe([$e1->id, $e2->id])
+        ->and($r['ordenes'])->toHaveCount(0);
+});
