@@ -61,11 +61,23 @@ it('el cliente ve su equipo pero no el de otro cliente', function () {
         ->assertDontSee('Cliente B');
 });
 
-it('un técnico recibe el mensaje genérico hasta que existan las OT', function () {
+it('un técnico sin OT con ese equipo ve solo la ficha mínima, sin datos del cliente', function () {
     $tecnico = User::factory()->create();
     $tecnico->assignRole('tecnico');
 
-    $this->actingAs($tecnico)->get("/e/{$this->equipoA->token_qr}")->assertNotFound();
+    $this->actingAs($tecnico)->get("/e/{$this->equipoA->token_qr}")
+        ->assertOk()
+        ->assertSee($this->equipoA->codigo)
+        ->assertSee('no está en ninguna de sus órdenes')
+        ->assertDontSee('Cliente A')
+        ->assertDontSee('Cocina');
+});
+
+it('un técnico con un token inexistente recibe 404', function () {
+    $tecnico = User::factory()->create();
+    $tecnico->assignRole('tecnico');
+
+    $this->actingAs($tecnico)->get('/e/' . str_repeat('b', 32))->assertNotFound();
 });
 
 it('el coordinador descarga la etiqueta en PDF', function () {
