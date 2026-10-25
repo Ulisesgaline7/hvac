@@ -66,3 +66,8 @@ Route::middleware(['web', 'throttle:30,1'])->group(function () {
     Route::post('/cotizacion/{token}/rechazar', [\App\Http\Controllers\AceptacionCotizacionController::class, 'rechazar'])
         ->whereAlphaNumeric('token')->name('cotizaciones.rechazar');
 });
+
+Route::middleware(['web', 'auth', 'throttle:120,1'])->prefix('api-tecnico')->group(function () {
+    Route::post('/paquete', [\App\Http\Controllers\OfflineTecnicoController::class, 'paquete'])->name('offline.paquete');
+    Route::post('/ficha', [\App\Http\Controllers\OfflineTecnicoController::class, 'ficha'])->name('offline.ficha');
+});
