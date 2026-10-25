@@ -15,7 +15,7 @@ class EtiquetaController extends Controller
 
     public function equipo(Equipo $equipo)
     {
-        $this->autorizar();
+        $this->autorizar($equipo);
 
         return $this->responder(collect([$equipo]), "etiqueta-{$equipo->codigo}.pdf");
     }
@@ -38,13 +38,31 @@ class EtiquetaController extends Controller
         return $this->responder($equipos, 'etiquetas-lote.pdf');
     }
 
-    private function autorizar(): void
+    private function autorizar(?Equipo $equipo = null): void
     {
         if (! Auth::check()) {
-            abort(redirect()->guest(route('filament.admin.auth.login')));
+            abort(redirect()->guest(route('equipo.ingreso')));
         }
 
-        abort_unless(Auth::user()->hasAnyRole(['administrador', 'coordinador']), 403);
+        $usuario = Auth::user();
+
+        if ($usuario->hasAnyRole(['administrador', 'coordinador'])) {
+            return;
+        }
+
+        // El técnico solo imprime etiquetas de equipos que están en una OT de su cuadrilla.
+        abort_unless($equipo && $usuario->hasRole('tecnico') && $this->esDeSusOt($usuario->id, $equipo), 403);
+    }
+
+    private function esDeSusOt(int $userId, Equipo $equipo): bool
+    {
+        $tecnicoId = \App\Models\Tecnico::where('user_id', $userId)->value('id');
+
+        return $tecnicoId && \Illuminate\Support\Facades\DB::table('orden_trabajo_equipo')
+            ->where('equipo_id', $equipo->id)
+            ->whereIn('orden_trabajo_id', \Illuminate\Support\Facades\DB::table('orden_trabajo_tecnico')
+                ->where('tecnico_id', $tecnicoId)->select('orden_trabajo_id'))
+            ->exists();
     }
 
     private function responder($equipos, string $nombre)

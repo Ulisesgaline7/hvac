@@ -161,3 +161,67 @@ it('un técnico con una OT del equipo A no ve datos del equipo B de otro cliente
     $this->actingAs($u)->get("/e/{$this->equipoB->token_qr}")
         ->assertOk()->assertDontSee('Cliente B')->assertSee('no está en ninguna de sus órdenes');
 });
+
+function datosEquipoNuevo($area, $tipo): array
+{
+    return ['area_id' => $area->id, 'tipo_equipo_id' => $tipo->id, 'modelo' => 'XR-1', 'serie' => 'S123'];
+}
+
+it('el líder y el ayudante registran un equipo en campo: nace con código, QR y línea en la OT', function () {
+    [$uLider, $lider] = tecnicoDePrueba();
+    [$uAyudante, $ayudante] = tecnicoDePrueba();
+    $ot = otConEquipo($this->equipoA);
+    $ot = app(\App\Services\CuadrillaService::class)->asignar($ot, $lider->id, [$ayudante->id => 'ayudante']);
+    $servicio = app(\App\Services\RegistroEquipoCampo::class);
+
+    foreach ([$uLider, $uAyudante] as $u) {
+        $e = $servicio->registrar($ot, $u, datosEquipoNuevo($this->equipoA->area, $this->equipoA->tipo));
+
+        expect($e->codigo)->not->toBeEmpty()
+            ->and($e->token_qr)->toHaveLength(32)
+            ->and($ot->lineas()->where('equipo_id', $e->id)->exists())->toBeTrue();
+    }
+
+    expect($ot->lineas()->count())->toBe(3);
+});
+
+it('un técnico ajeno a la OT no puede agregarle equipos', function () {
+    [, $lider] = tecnicoDePrueba();
+    [$uAjeno] = tecnicoDePrueba();
+    $ot = app(\App\Services\CuadrillaService::class)->asignar(otConEquipo($this->equipoA), $lider->id, []);
+
+    expect(fn () => app(\App\Services\RegistroEquipoCampo::class)
+        ->registrar($ot, $uAjeno, datosEquipoNuevo($this->equipoA->area, $this->equipoA->tipo)))
+        ->toThrow(DomainException::class);
+
+    expect($ot->lineas()->count())->toBe(1);
+});
+
+it('no se registra un equipo en un área de otra sucursal ni en una OT cerrada o pendiente', function () {
+    [$u, $t] = tecnicoDePrueba();
+    $ot = app(\App\Services\CuadrillaService::class)->asignar(otConEquipo($this->equipoA), $t->id, []);
+    $servicio = app(\App\Services\RegistroEquipoCampo::class);
+
+    expect(fn () => $servicio->registrar($ot, $u, datosEquipoNuevo($this->equipoB->area, $this->equipoB->tipo)))
+        ->toThrow(DomainException::class, 'sucursal');
+
+    $pendiente = otConEquipo($this->equipoA);
+    $pendiente->lineas()->delete();
+    \Illuminate\Support\Facades\DB::table('orden_trabajo_tecnico')->insert([
+        'orden_trabajo_id' => $pendiente->id, 'tecnico_id' => $t->id, 'rol' => 'tecnico', 'created_at' => now(), 'updated_at' => now(),
+    ]);
+
+    expect(fn () => $servicio->registrar($pendiente->fresh(), $u, datosEquipoNuevo($this->equipoA->area, $this->equipoA->tipo)))
+        ->toThrow(DomainException::class, 'asignada');
+});
+
+it('el técnico imprime la etiqueta de equipos de su OT, no de otros, y el lote sigue cerrado', function () {
+    [$u, $t] = tecnicoDePrueba();
+    app(\App\Services\CuadrillaService::class)->asignar(otConEquipo($this->equipoA), $t->id, []);
+
+    $r = $this->actingAs($u)->get("/etiquetas/equipo/{$this->equipoA->id}");
+    $r->assertOk()->assertHeader('Content-Type', 'application/pdf');
+
+    $this->actingAs($u)->get("/etiquetas/equipo/{$this->equipoB->id}")->assertForbidden();
+    $this->actingAs($u)->get("/etiquetas/lote?ids={$this->equipoA->id}")->assertForbidden();
+});

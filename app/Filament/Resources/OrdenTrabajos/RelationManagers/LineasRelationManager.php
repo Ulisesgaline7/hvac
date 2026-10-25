@@ -53,6 +53,54 @@ class LineasRelationManager extends RelationManager
                 IconColumn::make('ficha.completa')->label('Ficha completa')->boolean(),
                 TextColumn::make('ficha.version.version')->label('Versión')->prefix('v')->placeholder('—'),
             ])
+            ->headerActions([
+                Action::make('agregar_equipo')
+                    ->label('Agregar equipo')
+                    ->icon('heroicon-o-plus')
+                    ->visible(fn () => in_array($this->getOwnerRecord()->estado, [
+                        \App\Enums\EstadoOt::Asignada, \App\Enums\EstadoOt::EnProceso, \App\Enums\EstadoOt::EnEspera,
+                    ], true))
+                    ->modalWidth('2xl')
+                    ->schema(fn () => [
+                        \Filament\Forms\Components\Select::make('area_id')->label('Área')->required()
+                            // Se lee en modo interno: el técnico solo ve las áreas de sus equipos.
+                            ->options(fn () => \App\Providers\RlsServiceProvider::comoInterno(
+                                fn () => \App\Models\Area::where('sucursal_id', $this->getOwnerRecord()->sucursal_id)
+                                    ->orderBy('nombre')->pluck('nombre', 'id')->all()
+                            )),
+                        \Filament\Forms\Components\Select::make('tipo_equipo_id')->label('Tipo de equipo')->required()->searchable()
+                            ->options(fn () => \App\Models\TipoEquipo::orderBy('nombre')->pluck('nombre', 'id')->all()),
+                        \Filament\Forms\Components\Select::make('marca_id')->label('Marca')->searchable()
+                            ->options(fn () => \App\Models\Marca::orderBy('nombre')->pluck('nombre', 'id')->all()),
+                        \Filament\Forms\Components\TextInput::make('modelo'),
+                        \Filament\Forms\Components\TextInput::make('serie'),
+                        \Filament\Forms\Components\TextInput::make('capacidad_valor')->label('Capacidad')->numeric(),
+                        \Filament\Forms\Components\TextInput::make('capacidad_unidad')->label('Unidad (BTU, TR, kW)'),
+                        \Filament\Forms\Components\Select::make('refrigerante_id')->label('Refrigerante')
+                            ->options(fn () => \App\Models\Refrigerante::orderBy('nombre')->pluck('nombre', 'id')->all()),
+                        \Filament\Forms\Components\TextInput::make('voltaje'),
+                        \Filament\Forms\Components\TextInput::make('corriente'),
+                    ])
+                    ->action(function (array $data) {
+                        try {
+                            $equipo = app(\App\Services\RegistroEquipoCampo::class)
+                                ->registrar($this->getOwnerRecord(), auth()->user(), $data);
+                        } catch (DomainException $e) {
+                            Notification::make()->danger()->title($e->getMessage())->send();
+
+                            return;
+                        }
+
+                        Notification::make()->success()
+                            ->title("Equipo {$equipo->codigo} registrado y agregado a la OT")
+                            ->actions([
+                                Action::make('etiqueta')->label('Imprimir etiqueta')
+                                    ->url(route('etiquetas.equipo', $equipo))->openUrlInNewTab(),
+                            ])
+                            ->persistent()
+                            ->send();
+                    }),
+            ])
             ->recordActions([
                 Action::make('tareas')
                     ->label('Tareas previstas')
