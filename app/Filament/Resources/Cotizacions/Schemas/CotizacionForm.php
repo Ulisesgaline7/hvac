@@ -49,6 +49,30 @@ class CotizacionForm
 
             TextInput::make('estado')->label('Estado')->disabled()->dehydrated(false)->visibleOn('edit'),
 
+            Select::make('equipos')->label('Equipos a atender')->columnSpanFull()
+                ->relationship(
+                    'equipos',
+                    'codigo',
+                    modifyQueryUsing: fn ($query, Get $get) => $query->whereIn(
+                        'equipos.area_id',
+                        \App\Models\Area::where('sucursal_id', $get('sucursal_id') ?: 0)->select('id')
+                    ),
+                )
+                ->getOptionLabelFromRecordUsing(fn ($r) => trim("{$r->codigo} · " . ($r->tipo?->nombre ?? '') . ' ' . ($r->modelo ?? '')))
+                ->multiple()->searchable(['codigo', 'modelo', 'serie'])->preload()
+                ->helperText('Elija la sucursal primero. Si el equipo no existe, regístrelo aquí mismo: se crea con su código y QR.')
+                ->createOptionForm(fn (Get $get) => [
+                    Select::make('area_id')->label('Área')->required()
+                        ->options(\App\Models\Area::where('sucursal_id', $get('sucursal_id') ?: 0)->orderBy('nombre')->pluck('nombre', 'id')->all()),
+                    Select::make('tipo_equipo_id')->label('Tipo de equipo')->required()
+                        ->options(\App\Models\TipoEquipo::orderBy('nombre')->pluck('nombre', 'id')->all())->searchable(),
+                    Select::make('marca_id')->label('Marca')
+                        ->options(\App\Models\Marca::orderBy('nombre')->pluck('nombre', 'id')->all())->searchable(),
+                    TextInput::make('modelo'),
+                    TextInput::make('serie'),
+                ])
+                ->disabled($bloqueada),
+
             Repeater::make('lineas')->label('Líneas')->relationship('lineas')->columnSpanFull()
                 ->defaultItems(1)->addActionLabel('Agregar línea')->columns(4)
                 ->disabled($bloqueada)

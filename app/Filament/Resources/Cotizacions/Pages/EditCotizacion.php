@@ -9,6 +9,7 @@ use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\RestoreAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -48,9 +49,13 @@ class EditCotizacion extends EditRecord
             Action::make('aprobar')->label('Registrar aprobación')->icon('heroicon-o-check-circle')->color('success')
                 ->visible(fn () => $this->record->estado === 'enviada')
                 ->modalDescription('Registre la aprobación recibida del cliente. Se creará el contrato en borrador o las órdenes de trabajo que correspondan.')
-                ->schema([TextInput::make('aprobada_por')->label('Nombre de quien aprueba (cliente)')->required()])
+                ->schema([
+                    TextInput::make('aprobada_por')->label('Nombre de quien aprueba (cliente)')->required(),
+                    DatePicker::make('fecha_programada')->label('Fecha programada del trabajo')
+                        ->minDate(now()->startOfDay())->helperText('Opcional. Si la deja vacía, la OT queda sin fecha para que el coordinador la programe.'),
+                ])
                 ->action(fn (array $data) => $this->ejecutar(function () use ($data) {
-                    $r = app(CotizacionFlujo::class)->aprobar($this->record, $data['aprobada_por']);
+                    $r = app(CotizacionFlujo::class)->aprobar($this->record, $data['aprobada_por'], $data['fecha_programada'] ?? null);
 
                     $partes = [];
                     if ($r['contrato']) {
