@@ -254,3 +254,35 @@ it('la visita aparece en el PDF y en el enlace del cliente, cobrada o sin costo'
     $this->get(route('cotizaciones.aceptacion', $cobrada->token_aceptacion))->assertSee('Visita técnica')->assertSee('500.00');
     $this->get(route('cotizaciones.aceptacion', $bonificada->token_aceptacion))->assertSee('Visita técnica (sin costo)');
 });
+
+it('al aprobar, la OT nace con los equipos de la cotización y la fecha indicada', function () {
+    $c = cotizacionDe('preventivo');
+    $area = \App\Models\Area::create(['sucursal_id' => $c->sucursal_id, 'nombre' => 'Azotea']);
+    $tipo = \App\Models\TipoEquipo::firstOrCreate(['nombre' => 'Tipo de prueba'], ['familia' => 'climatizacion', 'prefijo_codigo' => 'TP']);
+    $e1 = \App\Models\Equipo::create(['area_id' => $area->id, 'tipo_equipo_id' => $tipo->id]);
+    $e2 = \App\Models\Equipo::create(['area_id' => $area->id, 'tipo_equipo_id' => $tipo->id]);
+    $c->equipos()->attach([$e1->id, $e2->id]);
+
+    $flujo = app(CotizacionFlujo::class);
+    $flujo->enviar($c);
+    $r = $flujo->aprobar($c->fresh(), 'María Pérez', '2026-12-01');
+
+    $ot = $r['ordenes']->first()->fresh();
+
+    expect($ot->fecha_programada->toDateString())->toBe('2026-12-01')
+        ->and($ot->lineas()->pluck('equipo_id')->sort()->values()->all())->toBe([$e1->id, $e2->id]);
+});
+
+it('sin fecha, la OT nace con equipos pero sin fecha programada', function () {
+    $c = cotizacionDe('correctivo');
+    $area = \App\Models\Area::create(['sucursal_id' => $c->sucursal_id, 'nombre' => 'Sótano']);
+    $tipo = \App\Models\TipoEquipo::firstOrCreate(['nombre' => 'Tipo de prueba'], ['familia' => 'climatizacion', 'prefijo_codigo' => 'TP']);
+    $e = \App\Models\Equipo::create(['area_id' => $area->id, 'tipo_equipo_id' => $tipo->id]);
+    $c->equipos()->attach($e->id);
+
+    $flujo = app(CotizacionFlujo::class);
+    $flujo->enviar($c);
+    $ot = $flujo->aprobar($c->fresh(), 'Pedro Gómez')['ordenes']->first()->fresh();
+
+    expect($ot->fecha_programada)->toBeNull()->and($ot->lineas()->count())->toBe(1);
+});

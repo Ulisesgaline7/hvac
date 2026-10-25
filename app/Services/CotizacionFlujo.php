@@ -65,6 +65,17 @@ class CotizacionFlujo
 
             if ($c->descuento_contrato && $porTipo->has('preventivo')) {
                 $contrato = $this->crearContrato($c, $porTipo->get('preventivo'));
+
+                foreach ($c->equipos()->get() as $e) {
+                    DB::table('contrato_equipo')->insert([
+                        'contrato_id' => $contrato->id,
+                        'equipo_id' => $e->id,
+                        'fecha_inicio' => now()->toDateString(),
+                        'creado_por' => \Illuminate\Support\Facades\Auth::id(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
                 $porTipo->forget('preventivo');
             }
 
@@ -135,7 +146,7 @@ class CotizacionFlujo
             'vigencia_inicio' => $inicio->toDateString(),
             'vigencia_fin' => $inicio->copy()->addYear()->subDay()->toDateString(),
             'servicios_incluidos' => $this->resumen($c, $lineas),
-            'notas' => "Generado desde la cotización {$c->numero} ({$nombre}). Falta asociar los equipos, definir la frecuencia y activarlo.",
+            'notas' => "Generado desde la cotización {$c->numero} ({$nombre}). Equipos asociados desde la cotización. Falta definir la frecuencia de cada uno y activarlo.",
         ]);
     }
 
