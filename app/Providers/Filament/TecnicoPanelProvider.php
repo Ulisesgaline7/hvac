@@ -42,6 +42,7 @@ class TecnicoPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
+            ->renderHook(\Filament\View\PanelsRenderHook::HEAD_END, fn () => view('pwa.head-tecnico'))
             ->authMiddleware([Authenticate::class]);
     }
 }
