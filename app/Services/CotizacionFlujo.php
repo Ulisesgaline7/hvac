@@ -48,7 +48,7 @@ class CotizacionFlujo
     }
 
     /** @return array{contrato: ?Contrato, ordenes: Collection<int, OrdenTrabajo>} */
-    public function aprobar(Cotizacion $c, string $aprobadaPor): array
+    public function aprobar(Cotizacion $c, string $aprobadaPor, ?string $fechaProgramada = null): array
     {
         $this->exigirEstado($c, 'enviada', 'aprobar');
 
@@ -59,7 +59,7 @@ class CotizacionFlujo
             throw new DomainException('Indique la sucursal antes de aprobar la cotización.');
         }
 
-        return DB::transaction(function () use ($c, $aprobadaPor) {
+        return DB::transaction(function () use ($c, $aprobadaPor, $fechaProgramada) {
             $porTipo = $this->lineasPorTipoOt($c);
             $contrato = null;
 
@@ -68,15 +68,30 @@ class CotizacionFlujo
                 $porTipo->forget('preventivo');
             }
 
-            $ordenes = $porTipo->map(fn (Collection $lineas, string $tipo) => OrdenTrabajo::create([
-                'tipo' => TipoOt::from($tipo),
-                'prioridad' => 'normal',
-                'estado' => EstadoOt::Pendiente,
-                'cliente_id' => $c->cliente_id,
-                'sucursal_id' => $c->sucursal_id,
-                'cotizacion_id' => $c->id,
-                'descripcion' => $this->resumen($c, $lineas),
-            ]))->values();
+            $equipos = $c->equipos()->get();
+
+            $ordenes = $porTipo->map(function (Collection $lineas, string $tipo) use ($c, $fechaProgramada, $equipos) {
+                $ot = OrdenTrabajo::create([
+                    'tipo' => TipoOt::from($tipo),
+                    'prioridad' => 'normal',
+                    'estado' => EstadoOt::Pendiente,
+                    'cliente_id' => $c->cliente_id,
+                    'sucursal_id' => $c->sucursal_id,
+                    'cotizacion_id' => $c->id,
+                    'fecha_programada' => $fechaProgramada,
+                    'descripcion' => $this->resumen($c, $lineas),
+                ]);
+
+                foreach ($equipos as $e) {
+                    $ot->lineas()->create([
+                        'equipo_id' => $e->id,
+                        'tipo_equipo_id' => $e->tipo_equipo_id,
+                        'area_id' => $e->area_id,
+                    ]);
+                }
+
+                return $ot;
+            })->values();
 
             $c->update([
                 'estado' => 'aprobada',

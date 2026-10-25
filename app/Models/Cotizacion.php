@@ -58,4 +58,9 @@ class Cotizacion extends Model
     {
         return $this->hasMany(CotizacionLinea::class, 'cotizacion_id');
     }
+
+    public function equipos(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Equipo::class, 'cotizacion_equipo')->withTimestamps();
+    }
 }
