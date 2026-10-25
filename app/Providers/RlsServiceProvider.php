@@ -58,11 +58,17 @@ class RlsServiceProvider extends ServiceProvider
             return $fn();
         }
 
+        $previo = DB::connection()->selectOne(
+            "select coalesce(current_setting('app.es_interno', true), '') as interno,
+                    coalesce(current_setting('app.cliente_id', true), '') as cliente,
+                    coalesce(current_setting('app.user_id', true), '') as usuario"
+        );
+
         self::fijar('true', '', '');
         try {
             return $fn();
         } finally {
-            self::limpiar();
+            self::fijar($previo->interno, $previo->cliente, $previo->usuario);
         }
     }
     private static function fijar(string $interno, string $clienteId, string $userId): void
