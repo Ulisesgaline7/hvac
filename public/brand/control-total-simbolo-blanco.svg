@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="220" viewBox="0 0 220 220">
+  <title>Control Total - símbolo</title>
+  
+    <g id="marca">
+      <path fill="#FFFFFF" d="M110 7 L145 43 L126 43 L126 72 L94 72 L94 43 L75 43 Z"/>
+      <path fill="#FFFFFF" d="M213 110 L177 145 L177 126 L148 126 L148 94 L177 94 L177 75 Z"/>
+      <path fill="#FFFFFF" d="M110 213 L75 177 L94 177 L94 148 L126 148 L126 177 L145 177 Z"/>
+      <path fill="#FFFFFF" d="M7 110 L43 75 L43 94 L72 94 L72 126 L43 126 L43 145 Z"/>
+      <path fill="#FFFFFF" d="M47 48 L80 48 L80 80 L48 80 Z"/>
+      <path fill="#FFFFFF" d="M140 48 L173 48 L173 80 L140 80 Z"/>
+      <path fill="#FFFFFF" d="M47 140 L80 140 L80 173 L47 173 Z"/>
+      <path fill="#FFFFFF" d="M140 140 L173 140 L173 173 L140 173 Z"/>
+      <path fill="#FFFFFF" d="M110 70 L150 110 L110 150 L70 110 Z"/>
+    </g>
+</svg>

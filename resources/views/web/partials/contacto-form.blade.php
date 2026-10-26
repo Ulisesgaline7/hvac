@@ -1,35 +1,31 @@
-<section id="contacto" class="py-5">
-  <div class="container">
-    <h2 class="mb-2">Solicita tu cotización</h2>
-    <p class="mb-4">Cuéntanos qué necesitas y te respondemos lo antes posible.</p>
+@if(session('ok'))
+    <div class="ok" role="status">{{ session('ok') }}</div>
+@endif
+@if($errors->any())
+    <div class="err" role="alert">
+        <ul>@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+    </div>
+@endif
 
-    @if(session('ok'))
-      <div class="alert alert-success">{{ session('ok') }}</div>
-    @endif
-    @if($errors->any())
-      <div class="alert alert-danger">
-        <ul class="mb-0">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
-      </div>
-    @endif
-
-    <form method="POST" action="{{ route('contacto.enviar') }}" class="row g-3">
-      @csrf
-      <input type="text" name="sitio_web" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
-      <div class="col-md-6"><label class="form-label">Nombre</label><input name="nombre" class="form-control" value="{{ old('nombre') }}" required></div>
-      <div class="col-md-6"><label class="form-label">Teléfono</label><input name="telefono" class="form-control" value="{{ old('telefono') }}" required></div>
-      <div class="col-md-6"><label class="form-label">Correo (opcional)</label><input type="email" name="email" class="form-control" value="{{ old('email') }}"></div>
-      <div class="col-md-6"><label class="form-label">Ciudad</label><input name="ciudad" class="form-control" value="{{ old('ciudad') }}"></div>
-      <div class="col-12"><label class="form-label">Servicio</label>
-        <select name="servicio" class="form-select">
-          <option>Aire acondicionado</option>
-          <option>Refrigeración</option>
-          <option>Ventilación</option>
-          <option>Mantenimiento</option>
-          <option>Cotización</option>
+<form method="POST" action="{{ route('contacto.enviar') }}" class="card">
+    @csrf
+    <input type="text" name="sitio_web" class="trap" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <div class="row2">
+        <div class="fld"><label for="nombre">Nombre</label><input id="nombre" name="nombre" value="{{ old('nombre') }}" autocomplete="name" required></div>
+        <div class="fld"><label for="telefono">Teléfono</label><input id="telefono" name="telefono" type="tel" value="{{ old('telefono') }}" autocomplete="tel" required></div>
+    </div>
+    <div class="row2">
+        <div class="fld"><label for="email">Correo (opcional)</label><input id="email" name="email" type="email" value="{{ old('email') }}" autocomplete="email"></div>
+        <div class="fld"><label for="ciudad">Ciudad</label><input id="ciudad" name="ciudad" value="{{ old('ciudad') }}"></div>
+    </div>
+    <div class="fld">
+        <label for="servicio">¿Qué necesitas?</label>
+        <select id="servicio" name="servicio">
+            @foreach(['Aire acondicionado','Refrigeración comercial o industrial','Ventilación','Mantenimiento y contratos','Reparación o emergencia','Otro'] as $s)
+                <option @selected(old('servicio') === $s)>{{ $s }}</option>
+            @endforeach
         </select>
-      </div>
-      <div class="col-12"><label class="form-label">Mensaje</label><textarea name="mensaje" rows="4" class="form-control" required>{{ old('mensaje') }}</textarea></div>
-      <div class="col-12"><button class="btn btn-primary">Enviar mensaje</button></div>
-    </form>
-  </div>
-</section>
+    </div>
+    <div class="fld"><label for="mensaje">Mensaje</label><textarea id="mensaje" name="mensaje" required>{{ old('mensaje') }}</textarea></div>
+    <button class="btn btn-n" type="submit">Enviar mensaje</button>
+</form>
