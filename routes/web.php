@@ -71,3 +71,10 @@ Route::middleware(['web', 'auth', 'throttle:120,1'])->prefix('api-tecnico')->gro
     Route::post('/paquete', [\App\Http\Controllers\OfflineTecnicoController::class, 'paquete'])->name('offline.paquete');
     Route::post('/ficha', [\App\Http\Controllers\OfflineTecnicoController::class, 'ficha'])->name('offline.ficha');
 });
+
+Route::view('/', 'web.index')->name('home');
+
+
+Route::post('/contacto', [\App\Http\Controllers\ContactoController::class, 'store'])
+    ->middleware(['web', 'throttle:5,1'])
+    ->name('contacto.enviar');
