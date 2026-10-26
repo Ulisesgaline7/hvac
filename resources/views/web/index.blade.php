@@ -559,7 +559,7 @@
   <section id="services">
     <div class="service-block position-relative bg-secondary">
       <div class="jarallax service-bg"
-        style="background-image: url(images/services2.jpg); background-size: cover; background-repeat: no-repeat;  background-position: center; ">
+        style="background-image: url({{ asset('template/images/services2.jpg') }}); background-size: cover; background-repeat: no-repeat;  background-position: center; ">
       </div>
       <div class="container service-content position-absolute top-50 start-50 translate-middle">
         <div class="row align-items-center">
@@ -576,7 +576,7 @@
     </div>
     <div class="service-block position-relative bg-secondary">
       <div class="jarallax service-bg"
-        style="background-image: url(images/services1.jpg); background-size: cover; background-repeat: no-repeat;  background-position: center; ">
+        style="background-image: url({{ asset('template/images/services1.jpg') }}); background-size: cover; background-repeat: no-repeat;  background-position: center; ">
       </div>
       <div class="container service-content position-absolute top-50 start-50 translate-middle">
         <div class="row align-items-center">
@@ -593,7 +593,7 @@
     </div>
     <div class="service-block position-relative bg-secondary">
       <div class="jarallax service-bg"
-        style="background-image: url(images/services3.jpg); background-size: cover; background-repeat: no-repeat;  background-position: center; ">
+        style="background-image: url({{ asset('template/images/services3.jpg') }}); background-size: cover; background-repeat: no-repeat;  background-position: center; ">
       </div>
       <div class="container service-content position-absolute top-50 start-50 translate-middle">
         <div class="row align-items-center">
@@ -610,7 +610,7 @@
     </div>
     <div class="service-block position-relative bg-secondary">
       <div class="jarallax service-bg"
-        style="background-image: url(images/services4.jpg); background-size: cover; background-repeat: no-repeat;  background-position: center; ">
+        style="background-image: url({{ asset('template/images/services4.jpg') }}); background-size: cover; background-repeat: no-repeat;  background-position: center; ">
       </div>
       <div class="container service-content position-absolute top-50 start-50 translate-middle">
         <div class="row align-items-center">
@@ -994,7 +994,7 @@
   </section>
 
   <section id="cta"
-    style="background-image: url(images/cta-bg.jpg); background-size: cover; background-repeat: no-repeat;  background-position: center">
+    style="background-image: url({{ asset('template/images/cta-bg.jpg') }}); background-size: cover; background-repeat: no-repeat;  background-position: center">
     <div class="container padding-medium">
       <div class="row g-lg-5 align-items-center">
         <div class="col-lg-6 mb-5 mb-lg-0">
