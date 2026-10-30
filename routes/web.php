@@ -78,3 +78,9 @@ Route::view('/', 'web.index')->name('home');
 Route::post('/contacto', [\App\Http\Controllers\ContactoController::class, 'store'])
     ->middleware(['web', 'throttle:5,1'])
     ->name('contacto.enviar');
+
+// Páginas del sitio público (administradas desde el panel). Debe ir al final.
+Route::get('/{slug}', [\App\Http\Controllers\PaginaWebController::class, 'show'])
+    ->middleware('web')
+    ->where('slug', \App\Models\WebPagina::patronRuta())
+    ->name('web.pagina');

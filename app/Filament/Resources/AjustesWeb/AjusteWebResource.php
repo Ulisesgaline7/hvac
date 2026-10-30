@@ -6,6 +6,7 @@ use App\Filament\Resources\AjustesWeb\Pages\ManageAjustesWeb;
 use App\Models\AjusteWeb;
 use BackedEnum;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
@@ -23,11 +24,11 @@ class AjusteWebResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Sitio web';
 
-    protected static ?string $navigationLabel = 'Textos y contacto del sitio';
+    protected static ?string $navigationLabel = 'Identidad, textos y contacto';
 
     protected static ?string $modelLabel = 'ajuste';
 
-    protected static ?string $pluralModelLabel = 'textos y contacto del sitio';
+    protected static ?string $pluralModelLabel = 'identidad, textos y contacto del sitio';
 
     protected static ?string $recordTitleAttribute = 'etiqueta';
 
@@ -40,7 +41,14 @@ class AjusteWebResource extends Resource
     {
         return $schema->components([
             TextInput::make('etiqueta')->label('Campo')->disabled()->dehydrated(false),
+
             Textarea::make('valor')->label('Contenido')->rows(4)
+                ->visible(fn (?AjusteWeb $record) => $record?->tipo !== 'imagen')
+                ->helperText(fn (?AjusteWeb $record) => $record?->ayuda),
+
+            FileUpload::make('valor')->label('Imagen')->image()
+                ->disk('public')->directory('sitio')->visibility('public')->maxSize(3072)
+                ->visible(fn (?AjusteWeb $record) => $record?->tipo === 'imagen')
                 ->helperText(fn (?AjusteWeb $record) => $record?->ayuda),
         ]);
     }
@@ -51,7 +59,8 @@ class AjusteWebResource extends Resource
             ->columns([
                 TextColumn::make('grupo')->label('Sección')->badge(),
                 TextColumn::make('etiqueta')->label('Campo'),
-                TextColumn::make('valor')->label('Contenido')->limit(70)->placeholder('(vacío)'),
+                TextColumn::make('valor')->label('Contenido')->limit(70)->placeholder('(vacío)')
+                    ->formatStateUsing(fn ($state, AjusteWeb $record) => $record->tipo === 'imagen' && filled($state) ? 'Imagen: ' . basename($state) : $state),
             ])
             ->defaultSort('orden')
             ->paginated(false)

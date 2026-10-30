@@ -1,3 +1,6 @@
+@extends('web.layout')
+
+@section('contenido')
 @php
     $aj = \App\Models\AjusteWeb::valores();
     $servicios = \App\Models\ServicioWeb::where('visible', true)->orderBy('orden')->orderBy('id')->get();
@@ -10,41 +13,6 @@
     ];
     $ciudades = collect(explode(',', $aj['ciudades'] ?? ''))->map(fn ($c) => trim($c))->filter()->values()->all();
 @endphp
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Control Total | Refrigeración y aire acondicionado</title>
-    <meta name="description" content="Instalación, mantenimiento y reparación de aire acondicionado, refrigeración y ventilación. Cotizaciones en línea, informes verificables y seguimiento de tus equipos.">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta property="og:title" content="Control Total | Refrigeración y aire acondicionado">
-    <meta property="og:type" content="website">
-    <link rel="icon" type="image/svg+xml" href="{{ asset('brand/control-total-simbolo.svg') }}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('template/controltotal.css') }}">
-</head>
-<body>
-
-<header class="hd">
-    <div class="wrap">
-        <a href="#inicio" aria-label="Control Total, inicio">
-            <img src="{{ asset('brand/control-total-fondo-oscuro.svg') }}" alt="Control Total. Refrigeración y aire acondicionado">
-        </a>
-        <button class="menu-b" id="menuB" aria-expanded="false" aria-controls="nav">Menú</button>
-        <nav class="nav" id="nav" aria-label="Principal">
-            <a href="#servicios">Servicios</a>
-            <a href="#proceso">Cómo trabajamos</a>
-            <a href="#control">Por qué Control Total</a>
-            <a href="#contacto">Contacto</a>
-            <a class="btn btn-o" href="{{ route('equipo.ingreso') }}">Ingresar</a>
-        </nav>
-    </div>
-</header>
-
-<main id="inicio">
     <section class="hero">
         <div class="wrap">
             <div>
@@ -137,33 +105,4 @@
             </div>
         </div>
     </section>
-</main>
-
-<footer class="ft">
-    <div class="wrap">
-        <img src="{{ asset('brand/control-total-fondo-oscuro.svg') }}" alt="Control Total">
-        <nav aria-label="Pie de página">
-            <a href="#servicios">Servicios</a>
-            <a href="#proceso">Cómo trabajamos</a>
-            <a href="#control">Por qué Control Total</a>
-            <a href="#contacto">Contacto</a>
-            <a href="{{ route('equipo.ingreso') }}">Ingresar</a>
-        </nav>
-        <small>© {{ date('Y') }} Control Total. Todos los derechos reservados.</small>
-    </div>
-</footer>
-
-<script>
-    (function () {
-        var b = document.getElementById('menuB'), n = document.getElementById('nav');
-        b.addEventListener('click', function () {
-            var o = n.classList.toggle('open');
-            b.setAttribute('aria-expanded', o);
-        });
-        n.addEventListener('click', function (e) {
-            if (e.target.tagName === 'A') { n.classList.remove('open'); b.setAttribute('aria-expanded', 'false'); }
-        });
-    })();
-</script>
-</body>
-</html>
+@endsection
