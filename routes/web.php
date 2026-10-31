@@ -2,10 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
 use App\Http\Controllers\EquipoQrController;
 use App\Http\Controllers\EtiquetaController;
 
