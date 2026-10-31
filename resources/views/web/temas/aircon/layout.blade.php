@@ -5,8 +5,8 @@
     $descripcion = trim($__env->yieldContent('descripcion')) ?: ($aj['seo_descripcion'] ?? 'Instalación, mantenimiento y reparación de aire acondicionado, refrigeración y ventilación.');
     $ogImagen = trim($__env->yieldContent('imagen_og'));
     // Logos: los que subas en «Identidad»; si no hay, los de la marca (encabezado claro → logo para fondo claro; pie oscuro → logo para fondo oscuro).
-    $logo = \App\Support\SitioWeb::imagen($aj['logo_encabezado'] ?? null, 'brand/control-total-fondo-claro.svg');
-    $logoPie = \App\Support\SitioWeb::imagen($aj['logo_pie'] ?? null, 'brand/control-total-fondo-oscuro.svg');
+    $logo = \App\Support\SitioWeb::imagen($aj['logo_encabezado'] ?? null, 'brand/control-total-fondo-claro.png');
+    $logoPie = \App\Support\SitioWeb::imagen($aj['logo_pie'] ?? null, 'brand/control-total-fondo-oscuro.png');
     $favicon = \App\Support\SitioWeb::imagen($aj['favicon'] ?? null, 'brand/control-total-simbolo.svg');
     $faviconTipo = filled($aj['favicon'] ?? null) ? \App\Support\SitioWeb::tipoImagen($aj['favicon']) : 'image/svg+xml';
     $menuPrincipal = \App\Support\SitioWeb::menu('principal');

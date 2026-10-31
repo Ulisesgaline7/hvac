@@ -42,13 +42,13 @@ final class Marca
     /** Logo para fondos claros (modo claro del panel). */
     public static function logoClaro(): string
     {
-        return asset('brand/control-total-fondo-claro.svg');
+        return asset('brand/control-total-fondo-claro.png');
     }
 
     /** Logo para fondos oscuros (modo oscuro del panel). */
     public static function logoOscuro(): string
     {
-        return asset('brand/control-total-fondo-oscuro.svg');
+        return asset('brand/control-total-fondo-oscuro.png');
     }
 
     public static function favicon(): string
