@@ -19,6 +19,8 @@ class ManageMenusWeb extends ManageRecords
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('ubicacion', 'principal')),
             'pie' => Tab::make('Pie de página')
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('ubicacion', 'pie')),
+            'barra' => Tab::make('Barra superior')
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('ubicacion', 'barra')),
         ];
     }
 

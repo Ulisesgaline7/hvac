@@ -1,5 +1,21 @@
-@extends('web.layout')
+@extends(\App\Support\SitioWeb::vista('layout'))
+@php
+    $inicio = \App\Models\WebPagina::inicio();
+    $esAircon = \App\Support\SitioWeb::tema() === 'aircon';
+    $paginaInicio = $inicio ?? ($esAircon ? new \App\Models\WebPagina(['bloques' => \App\Support\PlantillasWeb::bloques('inicio_aircon')]) : null);
+@endphp
 
+@if($paginaInicio)
+    @section('titulo', $inicio?->meta_titulo ?: '')
+    @section('descripcion', $inicio?->meta_descripcion ?: '')
+    @if($inicio?->imagen)
+        @section('imagen_og', asset('storage/' . $inicio->imagen))
+    @endif
+
+    @section('contenido')
+        @include('web.partials.bloques', ['pagina' => $paginaInicio])
+    @endsection
+@else
 @section('contenido')
 @php
     $aj = \App\Models\AjusteWeb::valores();
@@ -106,3 +122,4 @@
         </div>
     </section>
 @endsection
+@endif

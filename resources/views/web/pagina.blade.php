@@ -1,21 +1,23 @@
-@extends('web.layout')
+@extends(\App\Support\SitioWeb::vista('layout'))
 
 @section('titulo', ($pagina->meta_titulo ?: $pagina->titulo) . ' | ' . \App\Support\SitioWeb::nombre())
-@section('descripcion', $pagina->meta_descripcion ?: \Illuminate\Support\Str::limit(trim(strip_tags((string) $pagina->contenido)), 160))
+@section('descripcion', $pagina->meta_descripcion ?: $pagina->resumen())
 @if($pagina->imagen)
     @section('imagen_og', asset('storage/' . $pagina->imagen))
 @endif
 
 @section('contenido')
-    <section class="sec">
-        <div class="wrap">
-            <article class="pagina">
-                <h1>{{ $pagina->titulo }}</h1>
-                @if($pagina->imagen)
-                    <img class="portada" src="{{ asset('storage/' . $pagina->imagen) }}" alt="{{ $pagina->titulo }}">
-                @endif
-                <div class="pagina-contenido">{!! $pagina->contenido !!}</div>
-            </article>
-        </div>
-    </section>
+    @unless($pagina->publicada)
+        <div style="background:#fef3c7;color:#92400e;padding:10px 16px;text-align:center;font-weight:600">Vista previa: esta página todavía no está publicada.</div>
+    @endunless
+
+    @if($pagina->mostrar_titulo)
+        @include(\App\Support\SitioWeb::vista('partials.titulo-pagina'))
+    @endif
+
+    @if(! empty($pagina->bloques))
+        @include('web.partials.bloques')
+    @elseif(filled($pagina->contenido))
+        @include(\App\Support\SitioWeb::vista('partials.contenido-legacy'))
+    @endif
 @endsection

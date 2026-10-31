@@ -54,9 +54,28 @@
         .pagina-contenido table{border-collapse:collapse;width:100%}
         .pagina-contenido td,.pagina-contenido th{border:1px solid #e2e8f0;padding:8px 10px;text-align:left}
         .ft .redes{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin:10px 0}
+        .img-texto{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
+        .img-texto.inv .img-texto-img{order:2}
+        .img-texto-img img{display:block;width:100%;height:auto;border-radius:12px}
+        .galeria{display:grid;gap:14px;grid-template-columns:repeat(var(--cols,3),1fr);margin-top:20px}
+        .galeria figure{margin:0}
+        .galeria img{display:block;width:100%;height:220px;object-fit:cover;border-radius:10px}
+        .galeria figcaption{font-size:14px;color:#64748b;margin-top:6px}
+        .faq{max-width:820px;margin:20px auto 0}
+        .faq details{border:1px solid var(--line,#e2e8f0);border-radius:10px;padding:14px 18px;margin-bottom:10px;background:#fff}
+        .faq summary{cursor:pointer;font-weight:700}
+        .faq details p{margin:10px 0 0}
+        .cta-banda{text-align:center}
+        .cta-banda .cta{justify-content:center}
+        .embed{margin-top:20px}
+        .embed iframe{max-width:100%;border:0}
+        @media (max-width:760px){.img-texto{grid-template-columns:1fr}.img-texto.inv .img-texto-img{order:0}.galeria{grid-template-columns:repeat(2,1fr)}}
     </style>
 </head>
 <body>
+@if($vp = \App\Support\SitioWeb::avisoVistaPrevia())
+    <div style="background:#fde68a;color:#78350f;text-align:center;padding:6px 12px;font-size:14px">Vista previa del diseño «{{ $vp['nombre'] }}» (solo la ves tú). <a href="?tema=salir" style="text-decoration:underline">Salir de la vista previa</a></div>
+@endif
 
 <header class="hd">
     <div class="wrap">

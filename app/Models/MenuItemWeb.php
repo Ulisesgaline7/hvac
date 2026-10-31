@@ -43,8 +43,11 @@ class MenuItemWeb extends Model
     {
         if ($this->tipo === 'pagina') {
             $p = $this->pagina;
+            if (! $p || ! $p->publicada) {
+                return null;
+            }
 
-            return $p && $p->publicada ? url('/' . $p->slug) : null;
+            return $p->es_inicio ? url('/') : url('/' . $p->slug);
         }
 
         $u = trim((string) $this->url);

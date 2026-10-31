@@ -45,7 +45,7 @@ class MenuItemWebResource extends Resource
     {
         return $schema->components([
             Select::make('ubicacion')->label('Menú')->required()->default('principal')->live()
-                ->options(['principal' => 'Menú superior', 'pie' => 'Pie de página']),
+                ->options(['principal' => 'Menú superior', 'barra' => 'Barra superior (enlaces pequeños, solo AirCon)', 'pie' => 'Pie de página']),
             TextInput::make('etiqueta')->label('Texto que se ve')->required()->maxLength(80),
             Select::make('tipo')->label('Lleva a')->required()->default('pagina')->live()
                 ->options(['pagina' => 'Una página del sitio', 'url' => 'Un enlace o sección']),
