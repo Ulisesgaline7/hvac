@@ -11,7 +11,8 @@ use Throwable;
 
 final class SitioWeb
 {
-    public const TEMAS = ['clasico' => 'Clásico (diseño anterior)', 'aircon' => 'AirCon'];
+    /** El sitio usa un solo diseño: AirCon. */
+    public const TEMAS = ['aircon' => 'AirCon'];
 
     public static function ajustes(): array
     {
@@ -25,58 +26,26 @@ final class SitioWeb
 
     // ---------------------------------------------------------------- tema
 
-    /** Tema publicado (el que ve todo el mundo). */
     public static function temaPublicado(): string
     {
-        $t = self::ajustes()['tema'] ?? 'clasico';
-
-        return array_key_exists($t, self::TEMAS) ? $t : 'clasico';
+        return 'aircon';
     }
 
-    /**
-     * Tema a usar en esta visita. Quien entra al panel puede probar otro con «?tema=aircon»
-     * (queda en su sesión) y salir con «?tema=salir». El resto siempre ve el publicado.
-     */
     public static function tema(): string
     {
-        $attrs = request()->attributes;
-        if ($attrs->has('web_tema')) {
-            return $attrs->get('web_tema');
-        }
-
-        $tema = self::temaPublicado();
-
-        if (self::puedePrevisualizar()) {
-            $pedido = request()->query('tema');
-            if ($pedido === 'salir') {
-                session()->forget('tema_preview');
-            } elseif (is_string($pedido) && array_key_exists($pedido, self::TEMAS)) {
-                session(['tema_preview' => $pedido]);
-            }
-
-            $guardado = session('tema_preview');
-            if (is_string($guardado) && array_key_exists($guardado, self::TEMAS)) {
-                $tema = $guardado;
-            }
-        }
-
-        $attrs->set('web_tema', $tema);
-
-        return $tema;
+        return 'aircon';
     }
 
-    /** Si alguien está probando un tema distinto al publicado, devuelve su nombre; si no, null. */
+    /** Ya no hay vista previa de otros diseños. */
     public static function avisoVistaPrevia(): ?array
     {
-        $tema = self::tema();
-
-        return $tema !== self::temaPublicado() ? ['nombre' => self::TEMAS[$tema]] : null;
+        return null;
     }
 
-    /** Nombre de la vista según el tema: vista('layout'), vista('bloques.hero')… */
+    /** Nombre de la vista del tema: vista('layout'), vista('bloques.hero')… */
     public static function vista(string $nombre): string
     {
-        return self::tema() === 'aircon' ? 'web.temas.aircon.' . $nombre : 'web.' . $nombre;
+        return 'web.temas.aircon.' . $nombre;
     }
 
     public static function puedePrevisualizar(): bool
@@ -230,7 +199,7 @@ final class SitioWeb
 
     // ------------------------------------------------------------ secciones
 
-    /** Atributos de la etiqueta <section> en el tema clásico: clase, ancla y fondo. */
+    /** Atributos de la etiqueta <section> del diseño anterior: clase, ancla y fondo. */
     public static function seccion(array $d): HtmlString
     {
         $fondo = $d['fondo'] ?? 'claro';

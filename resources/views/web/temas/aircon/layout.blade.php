@@ -95,10 +95,6 @@
 </head>
 
 <body>
-    @if($vp)
-        <div class="bg-warning text-dark text-center py-1 small">Vista previa del diseño «{{ $vp['nombre'] }}» (solo la ves tú). <a class="text-dark text-decoration-underline" href="?tema=salir">Salir de la vista previa</a></div>
-    @endif
-
     <!-- Spinner Start -->
     <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
         <div class="spinner-grow text-primary" role="status"></div>
