@@ -23,6 +23,8 @@ class Cotizacion extends Model
         'enviada_en' => 'datetime',
         'aprobada_en' => 'datetime',
         'recargos' => 'array',
+        'logistica' => 'array',
+        'logistica_detalle' => 'array',
         'descuento_pct' => 'decimal:4',
     ];
 

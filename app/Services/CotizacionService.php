@@ -97,8 +97,10 @@ class CotizacionService
         $r = $this->calcular($lineas, $c->recargos ?? [], $c->descuento_contrato);
 
         [$tratamiento, $visita] = $this->visita($c);
-        $subtotal = round($r['subtotal'] + $visita, 2);
-        $isv = $visita > 0 ? round($subtotal * config('tarifario.isv'), 2) : $r['isv'];
+        $extra = (new LogisticaViaticos)->calcular($c->logistica ?? [], config('tarifario'));
+        $adicional = round($visita + $extra['total'], 2);
+        $subtotal = round($r['subtotal'] + $adicional, 2);
+        $isv = $adicional > 0 ? round($subtotal * config('tarifario.isv'), 2) : $r['isv'];
         $total = round($subtotal + $isv, 2);
 
         $c->update([
@@ -114,6 +116,9 @@ class CotizacionService
             'total' => $total,
             'visita_tratamiento' => $tratamiento,
             'visita_monto' => $visita,
+            'logistica_monto' => $extra['movilizacion'],
+            'viaticos_monto' => $extra['viaticos'],
+            'logistica_detalle' => $extra['total'] > 0 ? $extra['detalle'] : null,
         ]);
 
         return $c->fresh();

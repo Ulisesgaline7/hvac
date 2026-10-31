@@ -6,6 +6,11 @@ return [
     'servicio_minimo' => 1500,
     'minimo_si_menos_de' => 3,
     'viaticos_dia' => 600,
+    // Movilización y viáticos detallados (propuesta). 0 = desactivado, 1 = activado. Se editan en el panel.
+    'viaticos_detallados' => 0,
+    'km_tarifa' => 12,
+    'alimentacion_dia' => 350,
+    'hospedaje_noche' => 900,
     'validez_dias_habiles' => 5,
 
     // Recargos sobre el servicio. Por defecto se usa el mínimo; se puede indicar otro dentro del rango.
@@ -24,6 +29,9 @@ return [
         'VOL_40' => ['nombre' => '40 equipos o más', 'min' => 0.10, 'max' => 0.10, 'desde' => 40],
         'CONTRATO_2' => ['nombre' => 'Contrato anual (2 visitas por equipo)', 'min' => 0.08, 'max' => 0.08],
         'CONTRATO_4' => ['nombre' => 'Contrato anual (4 visitas por equipo)', 'min' => 0.12, 'max' => 0.15],
+        'PLAN_ESENCIAL' => ['nombre' => 'Plan Esencial (4 visitas al año, cada 3 meses)', 'min' => 0.10, 'max' => 0.10],
+        'PLAN_EMPRESARIAL' => ['nombre' => 'Plan Empresarial (6 visitas al año, cada 2 meses)', 'min' => 0.12, 'max' => 0.12],
+        'PLAN_PREMIUM' => ['nombre' => 'Plan Premium (12 visitas al año, mensual)', 'min' => 0.15, 'max' => 0.15],
     ],
 
     // Garantía de mano de obra por categoría (hoja Garantía del Excel).

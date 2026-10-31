@@ -109,6 +109,22 @@ class CotizacionForm
                 ->helperText('El descuento por volumen se calcula solo. No se acumulan: se aplica el mayor.')
                 ->disabled($bloqueada),
 
+            TextInput::make('visitas_anuales')->label('Visitas al año (solo planes)')->numeric()->integer()->minValue(1)->maxValue(24)
+                ->helperText('Si se indica, el PDF muestra también el total anual.')
+                ->disabled($bloqueada),
+            TextInput::make('logistica.km')->label('Kilómetros adicionales de la ruta')->numeric()->minValue(0)->suffix('km')
+                ->helperText('Recorrido adicional que genera la ruta, no un viaje completo por sede.')
+                ->visible(fn () => (bool) config('tarifario.viaticos_detallados'))->disabled($bloqueada),
+            TextInput::make('logistica.tecnicos')->label('Técnicos que viajan')->numeric()->integer()->minValue(0)
+                ->visible(fn () => (bool) config('tarifario.viaticos_detallados'))->disabled($bloqueada),
+            TextInput::make('logistica.dias')->label('Días de trabajo fuera de la zona')->numeric()->integer()->minValue(0)
+                ->visible(fn () => (bool) config('tarifario.viaticos_detallados'))->disabled($bloqueada),
+            TextInput::make('logistica.noches')->label('Noches de hospedaje')->numeric()->integer()->minValue(0)
+                ->helperText('Déjelo en 0 si regresan el mismo día.')
+                ->visible(fn () => (bool) config('tarifario.viaticos_detallados'))->disabled($bloqueada),
+            TextInput::make('logistica.peajes')->label('Peajes y estacionamiento')->numeric()->minValue(0)->prefix('L')
+                ->visible(fn () => (bool) config('tarifario.viaticos_detallados'))->disabled($bloqueada),
+
             TextInput::make('subtotal')->label('Subtotal')->prefix('L')->disabled()->dehydrated(false)->visibleOn('edit'),
             TextInput::make('isv')->label('ISV 15 %')->prefix('L')->disabled()->dehydrated(false)->visibleOn('edit'),
             TextInput::make('total')->label('Total')->prefix('L')->disabled()->dehydrated(false)->visibleOn('edit'),
