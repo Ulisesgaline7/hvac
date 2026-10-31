@@ -4,10 +4,11 @@
     $titulo = trim($__env->yieldContent('titulo')) ?: ($aj['seo_titulo'] ?? ($sitio . ' | Refrigeración y aire acondicionado'));
     $descripcion = trim($__env->yieldContent('descripcion')) ?: ($aj['seo_descripcion'] ?? 'Instalación, mantenimiento y reparación de aire acondicionado, refrigeración y ventilación.');
     $ogImagen = trim($__env->yieldContent('imagen_og'));
-    $logo = filled($aj['logo_encabezado'] ?? null) ? asset('storage/' . ltrim($aj['logo_encabezado'], '/')) : null;
-    $logoPie = filled($aj['logo_pie'] ?? null) ? asset('storage/' . ltrim($aj['logo_pie'], '/')) : null;
-    $favicon = \App\Support\SitioWeb::imagen($aj['favicon'] ?? null, 'aircon/img/icon/icon-02-primary.png');
-    $faviconTipo = filled($aj['favicon'] ?? null) ? \App\Support\SitioWeb::tipoImagen($aj['favicon']) : 'image/png';
+    // Logos: los que subas en «Identidad»; si no hay, los de la marca (encabezado claro → logo para fondo claro; pie oscuro → logo para fondo oscuro).
+    $logo = \App\Support\SitioWeb::imagen($aj['logo_encabezado'] ?? null, 'brand/control-total-fondo-claro.svg');
+    $logoPie = \App\Support\SitioWeb::imagen($aj['logo_pie'] ?? null, 'brand/control-total-fondo-oscuro.svg');
+    $favicon = \App\Support\SitioWeb::imagen($aj['favicon'] ?? null, 'brand/control-total-simbolo.svg');
+    $faviconTipo = filled($aj['favicon'] ?? null) ? \App\Support\SitioWeb::tipoImagen($aj['favicon']) : 'image/svg+xml';
     $menuPrincipal = \App\Support\SitioWeb::menu('principal');
     $menuBarra = \App\Support\SitioWeb::menu('barra');
     $menuPie = \App\Support\SitioWeb::menu('pie');
@@ -16,7 +17,6 @@
     $redes = \App\Support\SitioWeb::redes();
     $colores = \App\Support\SitioWeb::coloresCss();
     $topbar = ($aj['topbar_mostrar'] ?? '1') !== '0';
-    $vp = \App\Support\SitioWeb::avisoVistaPrevia();
     $telefono = $aj['telefono'] ?? null;
     $correo = $aj['correo'] ?? null;
     $direccion = $aj['direccion'] ?? null;
@@ -90,7 +90,8 @@
         .contenido-rico td, .contenido-rico th { border: 1px solid #dee2e6; padding: .5rem; }
         .contenido-rico blockquote { border-left: 4px solid var(--primary); padding-left: 1rem; color: #696E77; }
         .contenido-embed iframe { max-width: 100%; border: 0; }
-        .navbar .navbar-brand h1 img { max-height: 60px; }
+        .navbar .navbar-brand h1 img { height: 52px; width: auto; max-height: 60px; }
+        .footer h1 img { height: 52px; width: auto; max-height: 60px; }
     </style>
 </head>
 
@@ -139,11 +140,7 @@
     <nav class="navbar navbar-expand-lg bg-white navbar-light sticky-top px-4 px-lg-5">
         <a href="{{ route('home') }}" class="navbar-brand d-flex align-items-center">
             <h1 class="m-0">
-                @if($logo)
-                    <img class="img-fluid" src="{{ $logo }}" alt="{{ $sitio }}">
-                @else
-                    <img class="img-fluid me-3" src="{{ asset('aircon/img/icon/icon-02-primary.png') }}" alt="">{{ $sitio }}
-                @endif
+                <img class="img-fluid" src="{{ $logo }}" alt="{{ $sitio }}">
             </h1>
         </a>
         <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
@@ -195,11 +192,7 @@
             <div class="row g-5">
                 <div class="col-md-6">
                     <h1 class="text-white mb-4">
-                        @if($logoPie)
-                            <img class="img-fluid" style="max-height: 60px;" src="{{ $logoPie }}" alt="{{ $sitio }}">
-                        @else
-                            <img class="img-fluid me-3" src="{{ asset('aircon/img/icon/icon-02-light.png') }}" alt="">{{ $sitio }}
-                        @endif
+                        <img class="img-fluid" src="{{ $logoPie }}" alt="{{ $sitio }}">
                     </h1>
                     <span>{{ $aj['pie_descripcion'] ?? '' }}</span>
                 </div>
@@ -223,7 +216,7 @@
                 <div class="col-lg-3 col-md-6">
                     <h5 class="text-light mb-4">Nuestros servicios</h5>
                     @foreach($serviciosPie as $nombre)
-                        <a class="btn btn-link" href="/#servicios">{{ $nombre }}</a>
+                        <a class="btn btn-link" href="/servicios">{{ $nombre }}</a>
                     @endforeach
                 </div>
                 <div class="col-lg-3 col-md-6">

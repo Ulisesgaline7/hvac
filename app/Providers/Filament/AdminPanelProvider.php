@@ -28,8 +28,13 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => \App\Support\Marca::primario(),
             ])
+            ->brandName(\App\Support\Marca::nombre())
+            ->brandLogo(\App\Support\Marca::logoClaro())
+            ->darkModeBrandLogo(\App\Support\Marca::logoOscuro())
+            ->brandLogoHeight(\App\Support\Marca::alturaLogo())
+            ->favicon(\App\Support\Marca::favicon())
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
