@@ -76,6 +76,21 @@
     @if ((float) $c->repuestos_monto > 0)
         <tr><td>Repuestos y materiales</td><td class="r">L {{ number_format((float) $c->repuestos_monto, 2) }}</td></tr>
     @endif
+    @if ((float) $c->logistica_monto > 0 || (float) $c->viaticos_monto > 0)
+        @php($lg = $c->logistica_detalle ?? [])
+        @if ((float) $c->logistica_monto > 0)
+            <tr><td>Movilización ({{ rtrim(rtrim(number_format((float) ($lg['km'] ?? 0), 2, '.', ''), '0'), '.') }} km × L {{ number_format((float) ($lg['tarifa_km'] ?? 0), 2) }})</td><td class="r">L {{ number_format((float) $c->logistica_monto, 2) }}</td></tr>
+        @endif
+        @if ((float) ($lg['alimentacion'] ?? 0) > 0)
+            <tr><td>Alimentación ({{ $lg['tecnicos'] ?? 0 }} técnicos × {{ $lg['dias'] ?? 0 }} días × L {{ number_format((float) ($lg['tarifa_alimentacion'] ?? 0), 2) }})</td><td class="r">L {{ number_format((float) $lg['alimentacion'], 2) }}</td></tr>
+        @endif
+        @if ((float) ($lg['hospedaje'] ?? 0) > 0)
+            <tr><td>Hospedaje ({{ $lg['tecnicos'] ?? 0 }} técnicos × {{ $lg['noches'] ?? 0 }} noches × L {{ number_format((float) ($lg['tarifa_hospedaje'] ?? 0), 2) }})</td><td class="r">L {{ number_format((float) $lg['hospedaje'], 2) }}</td></tr>
+        @endif
+        @if ((float) ($lg['peajes'] ?? 0) > 0)
+            <tr><td>Peajes y estacionamiento</td><td class="r">L {{ number_format((float) $lg['peajes'], 2) }}</td></tr>
+        @endif
+    @endif
     @if ($c->visita_tratamiento === 'cobrar' && (float) $c->visita_monto > 0)
         <tr><td>Visita técnica</td><td class="r">L {{ number_format((float) $c->visita_monto, 2) }}</td></tr>
     @elseif (in_array($c->visita_tratamiento, ['bonificar', 'gratis'], true))
@@ -84,6 +99,13 @@
     <tr><td>Subtotal</td><td class="r">L {{ number_format((float) $c->subtotal, 2) }}</td></tr>
     <tr><td>ISV ({{ (int) (config('tarifario.isv') * 100) }} %)</td><td class="r">L {{ number_format((float) $c->isv, 2) }}</td></tr>
     <tr class="total"><td>TOTAL</td><td class="r">L {{ number_format((float) $c->total, 2) }}</td></tr>
+    @if ((int) $c->visitas_anuales > 1)
+        @php($anual = \App\Services\LogisticaViaticos::anual((float) $c->subtotal, (int) $c->visitas_anuales, (float) config('tarifario.isv')))
+        <tr><td>Visitas al año</td><td class="r">{{ (int) $c->visitas_anuales }}</td></tr>
+        <tr><td>Subtotal anual</td><td class="r">L {{ number_format($anual['subtotal'], 2) }}</td></tr>
+        <tr><td>ISV anual ({{ (int) (config('tarifario.isv') * 100) }} %)</td><td class="r">L {{ number_format($anual['isv'], 2) }}</td></tr>
+        <tr class="total"><td>TOTAL ANUAL</td><td class="r">L {{ number_format($anual['total'], 2) }}</td></tr>
+    @endif
 </table>
 
 <strong>Condiciones</strong>

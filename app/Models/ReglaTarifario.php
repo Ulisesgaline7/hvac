@@ -37,8 +37,8 @@ class ReglaTarifario extends Model
 
         return match ($clave) {
             'isv' => (float) $valor,
-            'servicio_minimo', 'viaticos_dia' => $num($valor),
-            'minimo_si_menos_de', 'validez_dias_habiles' => (int) $valor,
+            'servicio_minimo', 'viaticos_dia', 'km_tarifa', 'alimentacion_dia', 'hospedaje_noche' => $num($valor),
+            'minimo_si_menos_de', 'validez_dias_habiles', 'viaticos_detallados' => (int) $valor,
             'recargos', 'descuentos' => collect((array) $valor)->mapWithKeys(fn ($r) => [
                 $r['codigo'] => array_filter([
                     'nombre' => $r['nombre'] ?? '',
