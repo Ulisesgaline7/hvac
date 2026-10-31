@@ -7,7 +7,7 @@
 <style>
     body { font-family: system-ui, sans-serif; display: grid; place-items: center; min-height: 100vh; margin: 0; background: #f4f5f7; color: #1f2937; }
     main { width: 100%; max-width: 360px; padding: 1.25rem; text-align: center; }
-    a { display: block; margin-top: .75rem; padding: .9rem; border-radius: 10px; background: #0284c7; color: #fff; text-decoration: none; font-size: 1.05rem; }
+    a { display: block; margin-top: .75rem; padding: .9rem; border-radius: 10px; background: #087BFF; color: #fff; text-decoration: none; font-size: 1.05rem; }
     a.sec { background: #fff; color: #1f2937; border: 1px solid #d1d5db; }
 </style>
 </head>
