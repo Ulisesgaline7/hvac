@@ -14,7 +14,6 @@ Route::get('/ingresar', function () {
     $opciones = collect([
         'tecnico' => 'Soy técnico',
         'portal' => 'Soy cliente',
-        'admin' => 'Administración',
     ])->map(fn ($nombre, $id) => ['nombre' => $nombre, 'url' => \Filament\Facades\Filament::getPanel($id)->getLoginUrl()])
         ->filter(fn ($o) => filled($o['url']))->values();
 
