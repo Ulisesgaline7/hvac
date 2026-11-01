@@ -31,7 +31,12 @@ class SucursalesRelationManager extends RelationManager
             ->recordTitleAttribute('nombre')
             ->columns([
                 TextColumn::make('nombre')->searchable(),
-                TextColumn::make('direccion')->label('Dirección')->limit(40),
+                TextColumn::make('direccion')
+                    ->label('Dirección')
+                    ->limit(40)
+                    ->icon('heroicon-o-map-pin')
+                    ->url(fn ($record): ?string => $record->urlMapa())
+                    ->openUrlInNewTab(),
             ])
             ->filters([
                 //

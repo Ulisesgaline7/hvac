@@ -9,6 +9,9 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Actions\Action;
+use Filament\Schemas\Components\Utilities\Get;
+use App\Models\Sucursal;
 
 class SucursalForm
 {
@@ -36,9 +39,20 @@ class SucursalForm
                 ->columnSpanFull()
                 ->schema([
                     TextInput::make('nombre')->required()->maxLength(255),
-                    TextInput::make('direccion')->label('Dirección')->maxLength(255),
-                    TextInput::make('latitud')->numeric(),
-                    TextInput::make('longitud')->numeric(),
+                    TextInput::make('direccion')
+                        ->label('Dirección')
+                        ->maxLength(255)
+                        ->live(onBlur: true)
+                        ->suffixAction(
+                            Action::make('verEnMapa')
+                                ->label('Ver en Google Maps')
+                                ->icon('heroicon-o-map-pin')
+                                ->url(fn (Get $get): ?string => Sucursal::mapaUrl($get('direccion'), $get('latitud'), $get('longitud')))
+                                ->openUrlInNewTab()
+                                ->disabled(fn (Get $get): bool => blank($get('direccion')) && blank($get('latitud')))
+                        ),
+                    TextInput::make('latitud')->numeric()->live(onBlur: true),
+                    TextInput::make('longitud')->numeric()->live(onBlur: true),
                     Textarea::make('horarios_acceso')
                         ->label('Horarios de acceso')
                         ->columnSpanFull(),

@@ -28,6 +28,25 @@ class Sucursal extends Model
         return $propios ?: array_values($this->cliente?->contactos ?? []);
     }
 
+    /** URL de Google Maps: por coordenadas si existen, si no por dirección. */
+    public static function mapaUrl(?string $direccion, $latitud, $longitud): ?string
+    {
+        if (filled($latitud) && filled($longitud)) {
+            $q = $latitud . ',' . $longitud;
+        } elseif (filled($direccion)) {
+            $q = $direccion;
+        } else {
+            return null;
+        }
+
+        return 'https://www.google.com/maps/search/?api=1&query=' . urlencode($q);
+    }
+
+    public function urlMapa(): ?string
+    {
+        return self::mapaUrl($this->direccion, $this->latitud, $this->longitud);
+    }
+
     public function cliente(): BelongsTo
     {
         return $this->belongsTo(Cliente::class);
