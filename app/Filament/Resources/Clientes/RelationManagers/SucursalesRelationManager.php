@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Clientes\RelationManagers;
 
+use App\Filament\Resources\Sucursals\Schemas\SucursalForm;
 use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
@@ -10,7 +11,6 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\DissociateAction;
 use Filament\Actions\DissociateBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -22,12 +22,7 @@ class SucursalesRelationManager extends RelationManager
 
     public function form(Schema $schema): Schema
     {
-        return $schema
-            ->components([
-                TextInput::make('nombre')
-                    ->required()
-                    ->maxLength(255),
-            ]);
+        return $schema->components(SucursalForm::campos());
     }
 
     public function table(Table $table): Table
@@ -35,8 +30,8 @@ class SucursalesRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('nombre')
             ->columns([
-                TextColumn::make('nombre')
-                    ->searchable(),
+                TextColumn::make('nombre')->searchable(),
+                TextColumn::make('direccion')->label('Dirección')->limit(40),
             ])
             ->filters([
                 //

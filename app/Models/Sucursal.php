@@ -20,6 +20,14 @@ class Sucursal extends Model
     protected $guarded = [];
     protected $casts = ['contactos' => 'array'];
 
+    /** Contactos propios de la sucursal; si no tiene, usa los del cliente. */
+    public function contactosEfectivos(): array
+    {
+        $propios = array_values(array_filter($this->contactos ?? []));
+
+        return $propios ?: array_values($this->cliente?->contactos ?? []);
+    }
+
     public function cliente(): BelongsTo
     {
         return $this->belongsTo(Cliente::class);
