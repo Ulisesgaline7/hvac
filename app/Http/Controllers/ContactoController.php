@@ -20,7 +20,10 @@ class ContactoController extends Controller
             'ciudad'   => 'nullable|string|max:80',
             'servicio' => 'nullable|string|max:80',
             'mensaje'  => 'required|string|max:2000',
+            'g-recaptcha-response' => [new \App\Rules\Recaptcha],
         ]);
+
+        unset($datos['g-recaptcha-response']);
 
         Contacto::create($datos + ['ip' => $request->ip()]);
 

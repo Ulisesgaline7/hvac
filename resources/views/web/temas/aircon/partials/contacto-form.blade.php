@@ -49,6 +49,7 @@
             </div>
         </div>
         <div class="col-12">
+            @include('web.partials.recaptcha')
             <button class="btn btn-primary py-3 px-5" type="submit">Enviar mensaje</button>
         </div>
     </div>

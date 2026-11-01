@@ -27,5 +27,6 @@
         </select>
     </div>
     <div class="fld"><label for="mensaje">Mensaje</label><textarea id="mensaje" name="mensaje" required>{{ old('mensaje') }}</textarea></div>
+    @include('web.partials.recaptcha')
     <button class="btn btn-n" type="submit">Enviar mensaje</button>
 </form>

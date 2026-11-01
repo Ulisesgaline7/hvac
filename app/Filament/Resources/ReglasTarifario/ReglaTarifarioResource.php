@@ -77,6 +77,7 @@ class ReglaTarifarioResource extends Resource
                 ->helperText(fn (?ReglaTarifario $record) => $record?->ayuda),
 
             Repeater::make('valor')->label('Recargos')->visible(static::esTipo('recargos'))
+                ->formatStateUsing(fn ($state) => is_array($state) ? $state : [])
                 ->helperText(fn (?ReglaTarifario $record) => $record?->ayuda)
                 ->columns(3)->collapsible()->reorderable()->addActionLabel('Agregar recargo')
                 ->itemLabel(fn (array $state): ?string => $state['nombre'] ?? null)
@@ -90,6 +91,7 @@ class ReglaTarifarioResource extends Resource
                 ]),
 
             Repeater::make('valor')->label('Descuentos')->visible(static::esTipo('descuentos'))
+                ->formatStateUsing(fn ($state) => is_array($state) ? $state : [])
                 ->helperText(fn (?ReglaTarifario $record) => $record?->ayuda)
                 ->columns(4)->collapsible()->reorderable()->addActionLabel('Agregar descuento')
                 ->itemLabel(fn (array $state): ?string => $state['nombre'] ?? null)
@@ -105,6 +107,7 @@ class ReglaTarifarioResource extends Resource
                 ]),
 
             Repeater::make('valor')->label('Categorías de garantía')->visible(static::esTipo('categorias'))
+                ->formatStateUsing(fn ($state) => is_array($state) ? $state : [])
                 ->helperText(fn (?ReglaTarifario $record) => $record?->ayuda)
                 ->columns(2)->collapsible()->reorderable()->addActionLabel('Agregar categoría')
                 ->itemLabel(fn (array $state): ?string => $state['clave'] ?? null)
@@ -119,6 +122,7 @@ class ReglaTarifarioResource extends Resource
                 ]),
 
             Repeater::make('valor')->label('Condiciones')->visible(static::esTipo('condiciones'))
+                ->formatStateUsing(fn ($state) => is_array($state) ? $state : [])
                 ->helperText(fn (?ReglaTarifario $record) => $record?->ayuda)
                 ->reorderable()->addActionLabel('Agregar condición')
                 ->simple(Textarea::make('texto')->label('Condición')->rows(2)->required()),
