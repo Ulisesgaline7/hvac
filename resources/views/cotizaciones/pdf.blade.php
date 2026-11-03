@@ -1,40 +1,32 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
+@extends('pdf.layout-marca')
+
+@section('documento', $c->numero)
+@section('titulo-documento', 'Cotización')
+@section('subtitulo-documento', $c->numero)
+
+@push('estilos')
 <style>
-    @page { margin: 18mm 14mm; }
-    body { font-family: 'DejaVu Sans', sans-serif; font-size: 8.5pt; color: #222; }
-    h1 { font-size: 15pt; margin: 0 0 2mm 0; }
-    .muted { color: #666; }
-    table { width: 100%; border-collapse: collapse; }
-    th { background: #eef1f5; text-align: left; padding: 4px; border: 1px solid #ccc; }
-    td { padding: 4px; border: 1px solid #ddd; vertical-align: top; }
+    .muted { color: #6B7280; }
     .r { text-align: right; }
-    .sin-borde td { border: none; padding: 1px 0; }
-    .caja { border: 1px solid #ccc; padding: 6px; margin: 0 0 8px 0; }
-    .total td { font-weight: bold; font-size: 10pt; background: #eef1f5; }
-    .firma { width: 45%; border-top: 1px solid #333; padding-top: 3px; text-align: center; }
+    th { color: #6B7280; font-size: 6.8pt; text-transform: uppercase; letter-spacing: 0.4pt; text-align: left; padding: 4pt 5pt; border-bottom: 0.8pt solid {{ \App\Support\DocumentoMarca::c('oscuro') }}; }
+    td { padding: 4pt 5pt; border-bottom: 0.4pt solid #E5E7EB; vertical-align: top; }
+    .sin-borde td { border: none; padding: 1pt 0; }
+    .total td { font-weight: bold; font-size: 10pt; border-bottom: none; border-top: 0.8pt solid {{ \App\Support\DocumentoMarca::c('oscuro') }}; }
+    .firma { width: 45%; }
     ol { margin: 2mm 0 0 4mm; padding: 0; }
 </style>
-</head>
-<body>
+@endpush
+
+@section('contenido')
 @php($recargos = collect($c->recargos ?? [])->map(fn ($v, $k) => config('tarifario.recargos.' . (is_int($k) ? $v : $k) . '.nombre'))->filter()->values())
 @php($descuento = $c->descuento_codigo ? config('tarifario.descuentos.' . $c->descuento_codigo . '.nombre') : null)
 
+<h1 class="doc">Cotización {{ $c->numero }}</h1>
 <table class="sin-borde">
     <tr>
-        <td>
-            <h1>{{ $empresa['nombre'] }}</h1>
-            <div class="muted">{{ $empresa['direccion'] }}<br>Tel: {{ $empresa['telefono'] }} · {{ $empresa['correo'] }}<br>RTN: {{ $empresa['rtn'] }}</div>
-        </td>
-        <td class="r">
-            <h1>COTIZACIÓN</h1>
-            <strong>{{ $c->numero }}</strong><br>
-            Fecha: {{ $c->fecha?->format('d/m/Y') }}<br>
-            Válida hasta: {{ $c->valida_hasta?->format('d/m/Y') ?? '—' }}<br>
-            @if ($vendedor)Vendedor: {{ $vendedor }}@endif
-        </td>
+        <td><span class="etiqueta">Fecha</span><br>{{ $c->fecha?->format('d/m/Y') }}</td>
+        <td><span class="etiqueta">Válida hasta</span><br>{{ $c->valida_hasta?->format('d/m/Y') ?? '—' }}</td>
+        <td><span class="etiqueta">Vendedor</span><br>{{ $vendedor ?: '—' }}</td>
     </tr>
 </table>
 
@@ -143,5 +135,4 @@
     </span>
 </div>
 @endif
-</body>
-</html>
+@endsection
