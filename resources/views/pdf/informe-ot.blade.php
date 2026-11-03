@@ -12,8 +12,8 @@
     .filas td { border-bottom: 0.6pt solid #E6F0FF; padding: 4px 6px; vertical-align: top; }
     .filas td.k { width: 55%; color: #4B5A6E; }
     .fuera { color: #b91c1c; font-weight: bold; }
-    .equipo { margin-top: 12px; border: 0.6pt solid #D9D9D9; border-top: 2.5pt solid #087BFF; padding: 8px; page-break-inside: avoid; }
-    .equipo-titulo { font-size: 10pt; font-weight: bold; color: #082A4A; }
+    .equipo { margin-top: 12px; border: 0.6pt solid #D9D9D9; border-top: 2.5pt solid {{ \App\Support\DocumentoMarca::c('primario') }}; padding: 8px; page-break-inside: avoid; }
+    .equipo-titulo { font-size: 10pt; font-weight: bold; color: {{ \App\Support\DocumentoMarca::c('oscuro') }}; }
     .badge { font-size: 7pt; padding: 1px 6px; border-radius: 8px; color: #fff; }
     .ok { background: #15803d; } .borrador { background: #b45309; } .sin { background: #4B5A6E; }
     .alerta { background: #fef2f2; border-left: 3px solid #b91c1c; padding: 3px 6px; margin: 3px 0; color: #991b1b; }

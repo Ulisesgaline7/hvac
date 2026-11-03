@@ -33,7 +33,7 @@
     </table>
 
     <div class="seccion">Monto recibido</div>
-    <div class="caja" style="font-size:15pt; font-weight:bold; color:#082A4A;">
+    <div class="caja" style="font-size:15pt; font-weight:bold; color:{{ \App\Support\DocumentoMarca::c('oscuro') }};">
         L {{ number_format((float) $pago->monto, 2) }}
     </div>
 

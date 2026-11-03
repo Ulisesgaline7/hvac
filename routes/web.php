@@ -74,6 +74,10 @@ Route::post('/contacto', [\App\Http\Controllers\ContactoController::class, 'stor
     ->middleware(['web', 'throttle:5,1'])
     ->name('contacto.enviar');
 
+Route::get('/documentos/previa/{tipo}', \App\Http\Controllers\DocumentoPreviaController::class)
+    ->middleware(['web', 'auth'])
+    ->name('documentos.previa');
+
 // Páginas del sitio público (administradas desde el panel). Debe ir al final.
 Route::get('/{slug}', [\App\Http\Controllers\PaginaWebController::class, 'show'])
     ->middleware('web')
