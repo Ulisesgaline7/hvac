@@ -71,22 +71,22 @@ class OrdenTrabajosTable
                 Filter::make('atrasadas')
                     ->label('Atrasadas / SLA vencido')
                     ->toggle()
-                    ->query(fn (Builder $q) => $q->atrasadas()),
+                    ->query(fn (Builder $query) => $query->atrasadas()),
                 Filter::make('sin_asignar')
                     ->label('Sin técnico')
                     ->toggle()
-                    ->query(fn (Builder $q) => $q->sinAsignar()),
+                    ->query(fn (Builder $query) => $query->sinAsignar()),
                 Filter::make('hoy')
                     ->label('Programadas hoy')
                     ->toggle()
-                    ->query(fn (Builder $q) => $q->whereDate('fecha_programada', today())),
+                    ->query(fn (Builder $query) => $query->whereDate('fecha_programada', today())),
                 Filter::make('programacion')
                     ->schema([
                         DatePicker::make('desde')->label('Programada desde'),
                         DatePicker::make('hasta')->label('Programada hasta'),
                     ])
                     ->columns(2)
-                    ->query(fn (Builder $q, array $data) => $q
+                    ->query(fn (Builder $query, array $data) => $query
                         ->when($data['desde'] ?? null, fn ($q, $d) => $q->whereDate('fecha_programada', '>=', $d))
                         ->when($data['hasta'] ?? null, fn ($q, $d) => $q->whereDate('fecha_programada', '<=', $d))),
                 TrashedFilter::make(),

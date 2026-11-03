@@ -24,22 +24,22 @@ class ListOrdenTrabajos extends ListRecords
     {
         return [
             'abiertas' => Tab::make('Abiertas')
-                ->modifyQueryUsing(fn ($q) => $q->abiertas())
+                ->modifyQueryUsing(fn ($query) => $query->abiertas())
                 ->badge(fn () => OrdenTrabajo::abiertas()->count()),
             'sin_asignar' => Tab::make('Sin asignar')
-                ->modifyQueryUsing(fn ($q) => $q->sinAsignar())
+                ->modifyQueryUsing(fn ($query) => $query->sinAsignar())
                 ->badge(fn () => OrdenTrabajo::sinAsignar()->count())
                 ->badgeColor('warning'),
             'atrasadas' => Tab::make('Atrasadas')
-                ->modifyQueryUsing(fn ($q) => $q->atrasadas())
+                ->modifyQueryUsing(fn ($query) => $query->atrasadas())
                 ->badge(fn () => OrdenTrabajo::atrasadas()->count())
                 ->badgeColor('danger'),
             'revision' => Tab::make('En revisión')
-                ->modifyQueryUsing(fn ($q) => $q->where('estado', EstadoOt::EnRevision->value))
+                ->modifyQueryUsing(fn ($query) => $query->where('estado', EstadoOt::EnRevision->value))
                 ->badge(fn () => OrdenTrabajo::where('estado', EstadoOt::EnRevision->value)->count())
                 ->badgeColor('info'),
             'cerradas' => Tab::make('Cerradas')
-                ->modifyQueryUsing(fn ($q) => $q->where('estado', EstadoOt::Cerrada->value)),
+                ->modifyQueryUsing(fn ($query) => $query->where('estado', EstadoOt::Cerrada->value)),
             'todas' => Tab::make('Todas'),
         ];
     }
