@@ -18,8 +18,10 @@ return new class extends Migration {
         // La app usa un usuario sin permisos de dueño: hay que darle acceso a la tabla nueva.
         if (DB::getDriverName() === 'pgsql') {
             $rol = config('database.connections.pgsql_app.username') ?: 'usuario_app';
-            DB::statement("GRANT SELECT, INSERT, UPDATE, DELETE ON ajustes_documentos TO \"{$rol}\"");
-            DB::statement("GRANT USAGE, SELECT ON SEQUENCE ajustes_documentos_id_seq TO \"{$rol}\"");
+            if (DB::table('pg_roles')->where('rolname', $rol)->exists()) {
+                DB::statement("GRANT SELECT, INSERT, UPDATE, DELETE ON ajustes_documentos TO \"{$rol}\"");
+                DB::statement("GRANT USAGE, SELECT ON SEQUENCE ajustes_documentos_id_seq TO \"{$rol}\"");
+            }
         }
     }
 
