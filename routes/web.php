@@ -78,6 +78,11 @@ Route::get('/documentos/previa/{tipo}', \App\Http\Controllers\DocumentoPreviaCon
     ->middleware(['web', 'auth'])
     ->name('documentos.previa');
 
+Route::get('/documentos/{documento}/pdf', \App\Http\Controllers\DocumentoCatalogoPdfController::class)
+    ->middleware(['web', 'auth'])
+    ->whereNumber('documento')
+    ->name('documentos.pdf');
+
 // Páginas del sitio público (administradas desde el panel). Debe ir al final.
 Route::get('/{slug}', [\App\Http\Controllers\PaginaWebController::class, 'show'])
     ->middleware('web')
