@@ -6,8 +6,8 @@
     $ogImagen = trim($__env->yieldContent('imagen_og'));
     $logoEncabezado = \App\Support\SitioWeb::imagen($aj['logo_encabezado'] ?? null, 'brand/control-total-fondo-oscuro.png');
     $logoPie = \App\Support\SitioWeb::imagen($aj['logo_pie'] ?? null, 'brand/control-total-fondo-oscuro.png');
-    $favicon = \App\Support\SitioWeb::imagen($aj['favicon'] ?? null, 'brand/control-total-simbolo.svg');
-    $faviconTipo = filled($aj['favicon'] ?? null) ? \App\Support\SitioWeb::tipoImagen($aj['favicon']) : 'image/svg+xml';
+    $favicon = \App\Support\SitioWeb::imagen($aj['favicon'] ?? null, 'brand/favicon.png');
+    $faviconTipo = filled($aj['favicon'] ?? null) ? \App\Support\SitioWeb::tipoImagen($aj['favicon']) : 'image/png';
     $menuPrincipal = \App\Support\SitioWeb::menu('principal');
     $menuPie = \App\Support\SitioWeb::menu('pie');
     $redes = collect(['facebook' => 'Facebook', 'instagram' => 'Instagram', 'tiktok' => 'TikTok', 'youtube' => 'YouTube'])

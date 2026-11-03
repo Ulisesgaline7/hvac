@@ -7,8 +7,8 @@
     // Logos: los que subas en «Identidad»; si no hay, los de la marca (encabezado claro → logo para fondo claro; pie oscuro → logo para fondo oscuro).
     $logo = \App\Support\SitioWeb::imagen($aj['logo_encabezado'] ?? null, 'brand/control-total-fondo-claro.png');
     $logoPie = \App\Support\SitioWeb::imagen($aj['logo_pie'] ?? null, 'brand/control-total-fondo-oscuro.png');
-    $favicon = \App\Support\SitioWeb::imagen($aj['favicon'] ?? null, 'brand/control-total-simbolo.svg');
-    $faviconTipo = filled($aj['favicon'] ?? null) ? \App\Support\SitioWeb::tipoImagen($aj['favicon']) : 'image/svg+xml';
+    $favicon = \App\Support\SitioWeb::imagen($aj['favicon'] ?? null, 'brand/favicon.png');
+    $faviconTipo = filled($aj['favicon'] ?? null) ? \App\Support\SitioWeb::tipoImagen($aj['favicon']) : 'image/png';
     $menuPrincipal = \App\Support\SitioWeb::menu('principal');
     $menuBarra = \App\Support\SitioWeb::menu('barra');
     $menuPie = \App\Support\SitioWeb::menu('pie');
