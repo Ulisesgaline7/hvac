@@ -7,6 +7,7 @@ use App\Enums\TipoOt;
 use App\Models\Concerns\AislaPorCliente;
 use App\Models\Concerns\Auditable;
 use App\Models\Concerns\RegistraCreador;
+use App\Models\Concerns\TieneSla;
 use BackedEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -19,7 +20,7 @@ use Illuminate\Support\Str;
 
 class OrdenTrabajo extends Model
 {
-    use AislaPorCliente, Auditable, RegistraCreador, SoftDeletes;
+    use AislaPorCliente, Auditable, RegistraCreador, SoftDeletes, TieneSla;
 
     protected $table = 'ordenes_trabajo';
     protected $guarded = [];

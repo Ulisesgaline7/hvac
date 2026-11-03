@@ -18,6 +18,10 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\DB;
+use App\Models\OrdenTrabajo;
+use App\Services\AgendaTecnico;
+use Closure;
+use Illuminate\Database\Eloquent\Model;
 
 class OrdenTrabajoForm
 {
@@ -70,7 +74,7 @@ class OrdenTrabajoForm
                         }
                     }),
                 Select::make('prioridad')
-                    ->options(['baja' => 'Baja', 'normal' => 'Normal', 'alta' => 'Urgente', 'emergencia' => 'Emergencia'])
+                    ->options(OrdenTrabajo::PRIORIDADES)
                     ->default('normal')
                     ->required(),
                 Select::make('cliente_id')
@@ -141,9 +145,51 @@ class OrdenTrabajoForm
                     ->label('Técnico')
                     ->options(fn () => Tecnico::where('estado_homologacion', 'aprobado')->with('user')->get()->pluck('user.name', 'id'))
                     ->searchable()
-                    ->helperText('Solo técnicos aprobados.'),
-                DatePicker::make('fecha_programada')->label('Fecha programada'),
-                TimePicker::make('hora_programada')->label('Hora programada')->seconds(false),
+                    ->live()
+                    ->helperText(function (Get $get, ?Model $record): string {
+                        $base = 'Solo técnicos aprobados.';
+                        if (! $get('tecnico_id') || ! $get('fecha_programada')) {
+                            return $base;
+                        }
+                        $n = AgendaTecnico::delDia((int) $get('tecnico_id'), (string) $get('fecha_programada'), $record?->id)->count();
+                        if ($n === 0) {
+                            return $base . ' Sin otras OT ese día.';
+                        }
+
+                        return $base . " Ese día ya tiene {$n} OT" . ($n >= (int) config('sla.max_ot_por_dia', 4) ? ' (carga alta).' : '.');
+                    })
+                    ->rules([
+                        fn (Get $get, ?Model $record): Closure => function (string $attribute, $value, Closure $fail) use ($get, $record) {
+                            $fecha = (string) $get('fecha_programada');
+                            $hora = (string) $get('hora_programada');
+                            if (blank($value) || blank($fecha) || blank($hora)) {
+                                return;
+                            }
+
+                            // No bloquear ediciones que no tocan la agenda.
+                            $sinCambios = $record
+                                && (int) $record->tecnico_id === (int) $value
+                                && $record->fecha_programada?->toDateString() === substr($fecha, 0, 10)
+                                && substr((string) $record->hora_programada, 0, 5) === substr($hora, 0, 5)
+                                && (int) $record->duracion_estimada_min === (int) $get('duracion_estimada_min');
+                            if ($sinCambios) {
+                                return;
+                            }
+
+                            $choques = AgendaTecnico::choques((int) $value, $fecha, $hora, (int) $get('duracion_estimada_min') ?: null, $record?->id);
+                            if ($choques->isNotEmpty()) {
+                                $fail('Choca con ' . $choques->pluck('numero')->join(', ') . ' en ese horario.');
+                            }
+                        },
+                    ]),
+                DatePicker::make('fecha_programada')->label('Fecha programada')->live(),
+                TimePicker::make('hora_programada')->label('Hora programada')->seconds(false)->live(),
+                TextInput::make('duracion_estimada_min')
+                    ->label('Duración estimada (min)')
+                    ->numeric()->minValue(15)->maxValue(1440)->step(15)
+                    ->live()
+                    ->placeholder(fn () => (string) config('sla.duracion_default_min', 120))
+                    ->helperText('Vacío = duración por defecto. Sirve para detectar choques de horario.'),
             ]),
             Section::make('Cobro de la visita')->columns(2)
                 ->description('Por defecto se aplica la regla de config/visita.php: correctivo aprobado bonifica, los demás cobran.')
