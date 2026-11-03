@@ -15,8 +15,8 @@
     .cuerpo p { margin: 0 0 6pt; }
     .cuerpo ul, .cuerpo ol { margin: 0 0 6pt 14pt; padding: 0; }
     .cuerpo table { width: 100%; border-collapse: collapse; margin: 6pt 0; }
-    .cuerpo th { background: {{ \App\Support\DocumentoMarca::c('oscuro') }}; color: #fff; padding: 3pt 5pt; text-align: left; font-size: 8pt; }
-    .cuerpo td { border: 0.6pt solid #D9D9D9; padding: 3pt 5pt; }
+    .cuerpo th { color: #6B7280; padding: 3pt 5pt; text-align: left; font-size: 7pt; text-transform: uppercase; border-bottom: 0.8pt solid {{ \App\Support\DocumentoMarca::c('oscuro') }}; }
+    .cuerpo td { border-bottom: 0.4pt solid #E5E7EB; padding: 3pt 5pt; }
     .borrador { border-color: #C0392B; color: #C0392B; font-weight: bold; margin-bottom: 8pt; }
     .firmas td { width: 33%; padding: 26pt 8pt 0; vertical-align: bottom; }
 </style>

@@ -46,7 +46,7 @@ class Documentos extends Page implements HasSchemas
                 FileUpload::make('logo')->label('Logo (PNG o JPG)')->disk('public')->directory('documentos')
                     ->acceptedFileTypes(['image/png', 'image/jpeg'])->image()->maxSize(1024)->columnSpanFull(),
                 ColorPicker::make('color_primario')->label('Color principal'),
-                ColorPicker::make('color_oscuro')->label('Color de encabezado y pie'),
+                ColorPicker::make('color_oscuro')->label('Color de títulos y tablas'),
                 ColorPicker::make('color_acento')->label('Color de acento'),
             ]),
             Section::make('Datos de la empresa')->columns(2)->schema([

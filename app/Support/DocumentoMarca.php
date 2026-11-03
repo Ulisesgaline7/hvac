@@ -63,7 +63,7 @@ final class DocumentoMarca
         $ruta = self::todo()['logo'] ?? null;
         $archivo = $ruta && Storage::disk('public')->exists($ruta)
             ? Storage::disk('public')->path($ruta)
-            : public_path('images/pdf/simbolo.png');
+            : collect([public_path('brand/logo-documentos.png'), public_path('brand/control-total-fondo-claro.png'), public_path('images/pdf/simbolo.png')])->first(fn ($p) => is_file($p));
 
         $mime = str_ends_with(strtolower($archivo), '.png') ? 'image/png' : 'image/jpeg';
 
