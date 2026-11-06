@@ -46,12 +46,14 @@ class OrdenTrabajoForm
                     ->visibleOn('edit')
                     ->helperText('Se cambia con la acción «Cambiar estado».'),
                 Select::make('tipo')
-                    ->options([
-                        TipoOt::VisitaTecnica->value => 'Visita técnica (para cotizar)',
-                        TipoOt::Correctivo->value => 'Correctivo',
-                        TipoOt::Instalacion->value => 'Instalación',
-                        TipoOt::Emergencia->value => 'Emergencia',
-                    ])
+                    ->options(fn (string $operation) => $operation === 'edit'
+                        ? TipoOt::class
+                        : [
+                            TipoOt::VisitaTecnica->value => 'Visita técnica (para cotizar)',
+                            TipoOt::Correctivo->value => 'Correctivo',
+                            TipoOt::Instalacion->value => 'Instalación',
+                            TipoOt::Emergencia->value => 'Emergencia',
+                        ])
                     ->required()
                     ->live()
                     ->disabledOn('edit')
