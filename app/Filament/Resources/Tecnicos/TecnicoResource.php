@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Tecnicos;
 use App\Filament\Resources\Tecnicos\Pages\CreateTecnico;
 use App\Filament\Resources\Tecnicos\Pages\EditTecnico;
 use App\Filament\Resources\Tecnicos\Pages\ListTecnicos;
+use App\Filament\Resources\Tecnicos\RelationManagers\AceptacionesRelationManager;
 use App\Filament\Resources\Tecnicos\RelationManagers\DocumentosRelationManager;
 use App\Filament\Resources\Tecnicos\Schemas\TecnicoForm;
 use App\Filament\Resources\Tecnicos\Tables\TecnicosTable;
@@ -40,7 +41,7 @@ class TecnicoResource extends Resource
 
     public static function getRelations(): array
     {
-        return [DocumentosRelationManager::class];
+        return [DocumentosRelationManager::class, AceptacionesRelationManager::class];
     }
 
     public static function getPages(): array

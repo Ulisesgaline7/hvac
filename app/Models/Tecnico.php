@@ -28,6 +28,11 @@ class Tecnico extends Model
         return $this->hasMany(DocumentoTecnico::class);
     }
 
+    public function aceptaciones(): HasMany
+    {
+        return $this->hasMany(AceptacionTecnico::class);
+    }
+
     public function ordenes(): HasMany
     {
         return $this->hasMany(OrdenTrabajo::class);
