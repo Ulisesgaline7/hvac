@@ -22,8 +22,12 @@
         </div>
     </td>
     <td style="width:50%; padding-left:14pt; vertical-align:bottom">
-        <div style="height:60pt"></div>
-        <div class="firma">Por la Empresa<br>{{ $m['empresa_nombre'] ?? '' }}</div>
+        @if($repFirma)
+            <img src="{{ $repFirma }}" style="height:60pt"><br>
+        @else
+            <div style="height:60pt"></div>
+        @endif
+        <div class="firma">Por la Empresa: {{ $rep['nombre'] ?? '' }}<br>{{ $rep['cargo'] ?? '' }}<br>{{ $m['empresa_nombre'] ?? '' }}</div>
     </td>
 </tr>
 </table>

@@ -56,6 +56,20 @@ class Contrato extends Model
         return $this->hasMany(OrdenTrabajo::class);
     }
 
+    protected static function booted(): void
+    {
+        static::updating(function (self $c) {
+            if (blank($c->getOriginal('firmado_at'))) {
+                return;
+            }
+            $permitidos = ['estado', 'notas', 'deleted_at', 'updated_at'];
+            $prohibidos = array_diff(array_keys($c->getDirty()), $permitidos);
+            if ($prohibidos) {
+                throw new \DomainException('El contrato ya fue firmado y no se puede modificar: ' . implode(', ', $prohibidos));
+            }
+        });
+    }
+
     protected static function restringirACliente(Builder $consulta, int $clienteId): void
     {
         $consulta->where('cliente_id', $clienteId);

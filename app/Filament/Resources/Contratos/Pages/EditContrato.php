@@ -67,6 +67,16 @@ class EditContrato extends EditRecord
                 ->visible(fn () => blank($this->record->firmado_at) && $this->record->estado !== EstadoContrato::Cancelado)
                 ->action(function () {
                     $c = $this->record;
+                    $faltan = [];
+                    if (blank($c->servicios_incluidos)) { $faltan[] = 'servicios incluidos'; }
+                    if ((float) $c->cuota_monto <= 0) { $faltan[] = 'cuota'; }
+                    if (blank($c->vigencia_inicio) || blank($c->vigencia_fin)) { $faltan[] = 'vigencia'; }
+                    if ($c->equipos()->count() === 0) { $faltan[] = 'equipos'; }
+                    if ($faltan) {
+                        Notification::make()->danger()->title('Faltan datos para enviar a firma')
+                            ->body('Complete: ' . implode(', ', $faltan))->send();
+                        return;
+                    }
                     if (blank($c->token_firma)) {
                         $c->update(['token_firma' => \Illuminate\Support\Str::random(48)]);
                     }
@@ -87,6 +97,14 @@ class EditContrato extends EditRecord
             ForceDeleteAction::make(),
             RestoreAction::make(),
         ];
+    }
+
+    protected function beforeSave(): void
+    {
+        if (filled($this->record->firmado_at)) {
+            Notification::make()->danger()->title('Contrato firmado: no se puede editar')->send();
+            $this->halt();
+        }
     }
 
     protected function afterSave(): void

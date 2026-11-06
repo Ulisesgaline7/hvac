@@ -20,6 +20,10 @@ class ContratoPdf
             'm' => DocumentoMarca::todo(),
             'firma' => $firmaPng ? 'data:image/png;base64,' . base64_encode($firmaPng) : null,
             'firmante' => $firmante,
+            'rep' => config('contrato.representante'),
+            'repFirma' => \Illuminate\Support\Facades\Storage::disk('local')->exists('firmas/representante.png')
+                ? 'data:image/png;base64,' . base64_encode(\Illuminate\Support\Facades\Storage::disk('local')->get('firmas/representante.png'))
+                : null,
         ])->render();
 
         $opciones = new Options();

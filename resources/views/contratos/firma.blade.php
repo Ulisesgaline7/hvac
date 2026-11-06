@@ -34,7 +34,8 @@
   <form method="POST" action="{{ route('contratos.firma.firmar', $token) }}" id="f">
     @csrf
     <div class="seccion">Firma del cliente</div>
-    <label>Nombre completo</label><input type="text" name="nombre" value="{{ old('nombre') }}" required>
+    <p>Firma en representación de: <strong>{{ $contrato->cliente->razon_social ?? '' }}</strong></p>
+    <label>Nombre completo de quien firma</label><input type="text" name="nombre" value="{{ old('nombre') }}" required>
     <label>Cargo</label><input type="text" name="cargo" value="{{ old('cargo') }}" required>
     <label>Firma</label>
     <canvas id="c"></canvas>
