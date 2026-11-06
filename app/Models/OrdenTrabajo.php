@@ -229,6 +229,10 @@ class OrdenTrabajo extends Model
             throw new \DomainException('Solo coordinador o administrador pueden cerrar o devolver la OT.');
         }
 
+        if ($this->estado === EstadoOt::Asignada && $nuevo === EstadoOt::EnProceso) {
+            app(\App\Services\AcuerdoTecnico::class)->exigirParaUsuario($usuario);
+        }
+
         $this->validarTransicion($nuevo, $motivo);
 
         if ($this->estado === EstadoOt::Asignada && $nuevo === EstadoOt::EnProceso) {
