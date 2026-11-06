@@ -19,6 +19,9 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class CotizacionResource extends Resource
 {
     protected static ?string $model = Cotizacion::class;
+    protected static ?string $modelLabel = 'cotización';
+
+    protected static ?string $pluralModelLabel = 'cotizaciones';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 

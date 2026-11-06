@@ -20,6 +20,9 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class TecnicoResource extends Resource
 {
     protected static ?string $model = Tecnico::class;
+    protected static ?string $modelLabel = 'técnico';
+
+    protected static ?string $pluralModelLabel = 'técnicos';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedWrenchScrewdriver;
 

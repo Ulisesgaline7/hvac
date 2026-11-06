@@ -20,6 +20,9 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class OrdenTrabajoResource extends Resource
 {
     protected static ?string $model = OrdenTrabajo::class;
+    protected static ?string $modelLabel = 'orden de trabajo';
+
+    protected static ?string $pluralModelLabel = 'órdenes de trabajo';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentList;
 

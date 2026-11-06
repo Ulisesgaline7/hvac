@@ -19,6 +19,9 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class AreaResource extends Resource
 {
     protected static ?string $model = Area::class;
+    protected static ?string $modelLabel = 'área';
+
+    protected static ?string $pluralModelLabel = 'áreas';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 

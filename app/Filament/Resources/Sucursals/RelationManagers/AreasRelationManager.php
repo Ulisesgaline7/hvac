@@ -19,6 +19,9 @@ use Filament\Tables\Table;
 class AreasRelationManager extends RelationManager
 {
     protected static string $relationship = 'areas';
+    protected static ?string $modelLabel = 'área';
+
+    protected static ?string $pluralModelLabel = 'áreas';
 
     public function form(Schema $schema): Schema
     {

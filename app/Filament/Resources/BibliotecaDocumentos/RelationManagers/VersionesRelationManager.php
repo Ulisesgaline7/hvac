@@ -11,6 +11,9 @@ use Filament\Tables\Table;
 class VersionesRelationManager extends RelationManager
 {
     protected static string $relationship = 'versiones';
+    protected static ?string $modelLabel = 'versión';
+
+    protected static ?string $pluralModelLabel = 'versiones';
 
     protected static ?string $title = 'Historial de versiones';
 

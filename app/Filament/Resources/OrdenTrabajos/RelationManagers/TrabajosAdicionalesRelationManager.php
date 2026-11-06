@@ -20,6 +20,9 @@ class TrabajosAdicionalesRelationManager extends RelationManager
     use \App\Filament\Concerns\GuardaFirmas;
 
     protected static string $relationship = 'trabajosAdicionales';
+    protected static ?string $modelLabel = 'trabajo adicional';
+
+    protected static ?string $pluralModelLabel = 'trabajos adicionales';
 
     protected static ?string $title = 'Trabajos adicionales';
 

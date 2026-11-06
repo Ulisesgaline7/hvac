@@ -19,6 +19,9 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class RefrigeranteResource extends Resource
 {
     protected static ?string $model = Refrigerante::class;
+    protected static ?string $modelLabel = 'refrigerante';
+
+    protected static ?string $pluralModelLabel = 'refrigerantes';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 

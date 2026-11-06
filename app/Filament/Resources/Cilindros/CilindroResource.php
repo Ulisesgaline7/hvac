@@ -19,6 +19,9 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class CilindroResource extends Resource
 {
     protected static ?string $model = CilindroRefrigerante::class;
+    protected static ?string $modelLabel = 'cilindro';
+
+    protected static ?string $pluralModelLabel = 'cilindros';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBeaker;
 

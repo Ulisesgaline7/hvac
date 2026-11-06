@@ -19,6 +19,9 @@ use Filament\Tables\Table;
 class SucursalesRelationManager extends RelationManager
 {
     protected static string $relationship = 'sucursales';
+    protected static ?string $modelLabel = 'sucursal';
+
+    protected static ?string $pluralModelLabel = 'sucursales';
 
     public function form(Schema $schema): Schema
     {

@@ -17,6 +17,9 @@ use Filament\Tables\Table;
 class DocumentosRelationManager extends RelationManager
 {
     protected static string $relationship = 'documentos';
+    protected static ?string $modelLabel = 'documento';
+
+    protected static ?string $pluralModelLabel = 'documentos';
 
     protected static ?string $title = 'Documentos';
 

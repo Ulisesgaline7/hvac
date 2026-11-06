@@ -9,6 +9,9 @@ use Filament\Tables\Table;
 class MovimientosRelationManager extends RelationManager
 {
     protected static string $relationship = 'movimientos';
+    protected static ?string $modelLabel = 'movimiento';
+
+    protected static ?string $pluralModelLabel = 'movimientos';
 
     protected static ?string $title = 'Movimientos';
 

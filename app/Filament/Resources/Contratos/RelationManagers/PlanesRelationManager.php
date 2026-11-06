@@ -18,6 +18,9 @@ use Filament\Tables\Table;
 class PlanesRelationManager extends RelationManager
 {
     protected static string $relationship = 'planes';
+    protected static ?string $modelLabel = 'plan preventivo';
+
+    protected static ?string $pluralModelLabel = 'planes preventivos';
 
     protected static ?string $title = 'Planes por tipo de equipo';
 

@@ -19,6 +19,9 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class MarcaResource extends Resource
 {
     protected static ?string $model = Marca::class;
+    protected static ?string $modelLabel = 'marca';
+
+    protected static ?string $pluralModelLabel = 'marcas';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 

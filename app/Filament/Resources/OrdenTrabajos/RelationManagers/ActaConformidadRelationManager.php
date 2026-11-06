@@ -20,6 +20,9 @@ class ActaConformidadRelationManager extends RelationManager
     use \App\Filament\Concerns\GuardaFirmas;
 
     protected static string $relationship = 'actas';
+    protected static ?string $modelLabel = 'acta de conformidad';
+
+    protected static ?string $pluralModelLabel = 'actas de conformidad';
 
     protected static ?string $title = 'Acta de conformidad';
 

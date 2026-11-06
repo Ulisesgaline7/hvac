@@ -16,6 +16,9 @@ use Filament\Tables\Table;
 class LineasRelationManager extends RelationManager
 {
     protected static string $relationship = 'lineas';
+    protected static ?string $modelLabel = 'línea';
+
+    protected static ?string $pluralModelLabel = 'líneas';
 
     protected static ?string $title = 'Equipos y fichas técnicas';
 

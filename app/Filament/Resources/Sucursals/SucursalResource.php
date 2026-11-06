@@ -19,6 +19,9 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class SucursalResource extends Resource
 {
     protected static ?string $model = Sucursal::class;
+    protected static ?string $modelLabel = 'sucursal';
+
+    protected static ?string $pluralModelLabel = 'sucursales';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 

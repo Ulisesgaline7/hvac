@@ -10,6 +10,9 @@ use Filament\Tables\Table;
 class HistorialRelationManager extends RelationManager
 {
     protected static string $relationship = 'historial';
+    protected static ?string $modelLabel = 'registro de historial';
+
+    protected static ?string $pluralModelLabel = 'registros de historial';
 
     protected static ?string $title = 'Historial de estados';
 

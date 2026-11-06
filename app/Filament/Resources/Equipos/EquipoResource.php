@@ -19,6 +19,9 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class EquipoResource extends Resource
 {
     protected static ?string $model = Equipo::class;
+    protected static ?string $modelLabel = 'equipo';
+
+    protected static ?string $pluralModelLabel = 'equipos';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 

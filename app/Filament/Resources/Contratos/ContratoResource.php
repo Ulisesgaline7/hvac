@@ -21,6 +21,9 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class ContratoResource extends Resource
 {
     protected static ?string $model = Contrato::class;
+    protected static ?string $modelLabel = 'contrato';
+
+    protected static ?string $pluralModelLabel = 'contratos';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
 

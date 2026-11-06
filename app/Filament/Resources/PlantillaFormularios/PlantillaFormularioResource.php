@@ -24,6 +24,9 @@ use Filament\Tables\Table;
 class PlantillaFormularioResource extends Resource
 {
     protected static ?string $model = PlantillaFormulario::class;
+    protected static ?string $modelLabel = 'plantilla de formulario';
+
+    protected static ?string $pluralModelLabel = 'plantillas de formulario';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentCheck;
 

@@ -19,6 +19,9 @@ use Illuminate\Support\Facades\DB;
 class LineasRelationManager extends RelationManager
 {
     protected static string $relationship = 'lineas';
+    protected static ?string $modelLabel = 'equipo del contrato';
+
+    protected static ?string $pluralModelLabel = 'equipos del contrato';
 
     protected static ?string $title = 'Equipos cubiertos';
 
