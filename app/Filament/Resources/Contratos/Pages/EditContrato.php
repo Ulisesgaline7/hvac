@@ -52,6 +52,37 @@ class EditContrato extends EditRecord
                     $r = app(GeneradorCalendario::class)->recalcular($this->record->fresh());
                     Notification::make()->success()->title("Canceladas: {$r['canceladas']} · Creadas: {$r['creadas']}")->send();
                 }),
+            Action::make('vistaPrevia')
+                ->label('Vista previa PDF')
+                ->icon('heroicon-o-document-text')
+                ->action(fn () => response()->streamDownload(
+                    function () {
+                        echo app(\App\Services\ContratoPdf::class)->render($this->record);
+                    },
+                    'contrato-' . $this->record->id . '-previa.pdf'
+                )),
+            Action::make('enviarFirma')
+                ->label('Enviar a firma')
+                ->icon('heroicon-o-pencil-square')
+                ->visible(fn () => blank($this->record->firmado_at) && $this->record->estado !== EstadoContrato::Cancelado)
+                ->action(function () {
+                    $c = $this->record;
+                    if (blank($c->token_firma)) {
+                        $c->update(['token_firma' => \Illuminate\Support\Str::random(48)]);
+                    }
+                    $c->update(['firma_enviada_at' => now()]);
+                    Notification::make()->success()->persistent()
+                        ->title('Enlace de firma del cliente')
+                        ->body(route('contratos.firma', $c->token_firma))
+                        ->send();
+                }),
+            Action::make('descargarFirmado')
+                ->label('Descargar contrato firmado')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('success')
+                ->visible(fn () => filled($this->record->ruta_pdf))
+                ->action(fn () => \Illuminate\Support\Facades\Storage::disk('local')
+                    ->download($this->record->ruta_pdf, 'contrato-' . $this->record->id . '-firmado.pdf')),
             DeleteAction::make(),
             ForceDeleteAction::make(),
             RestoreAction::make(),

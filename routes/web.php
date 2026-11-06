@@ -60,6 +60,10 @@ Route::middleware(['web', 'throttle:30,1'])->group(function () {
         ->whereAlphaNumeric('token')->name('cotizaciones.aceptar');
     Route::post('/cotizacion/{token}/rechazar', [\App\Http\Controllers\AceptacionCotizacionController::class, 'rechazar'])
         ->whereAlphaNumeric('token')->name('cotizaciones.rechazar');
+    Route::get('/contrato/firma/{token}', [\App\Http\Controllers\FirmaContratoController::class, 'mostrar'])
+        ->whereAlphaNumeric('token')->name('contratos.firma');
+    Route::post('/contrato/firma/{token}', [\App\Http\Controllers\FirmaContratoController::class, 'firmar'])
+        ->whereAlphaNumeric('token')->name('contratos.firma.firmar');
 });
 
 Route::middleware(['web', 'auth', 'throttle:120,1'])->prefix('api-tecnico')->group(function () {
