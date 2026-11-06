@@ -26,12 +26,13 @@ class CotizacionForm
 
             Select::make('cliente_id')->label('Cliente')
                 ->relationship('cliente', 'razon_social')->searchable()->preload()->required()
-                ->live()->afterStateUpdated(fn (Set $set) => $set('sucursal_id', null))
+                ->live()->afterStateUpdated(function (Set $set) { $set('sucursal_id', null); $set('equipos', []); })
                 ->disabled($bloqueada),
             Select::make('sucursal_id')->label('Sucursal')->required()->searchable()
                 ->options(fn (Get $get) => $get('cliente_id')
                     ? Sucursal::where('cliente_id', $get('cliente_id'))->orderBy('nombre')->pluck('nombre', 'id')->all()
                     : [])
+                ->live()->afterStateUpdated(fn (Set $set) => $set('equipos', []))
                 ->disabled($bloqueada),
             DatePicker::make('fecha')->label('Fecha')->default(now())->required()->disabled($bloqueada),
             DatePicker::make('valida_hasta')->label('Válida hasta')
