@@ -107,6 +107,10 @@ class Factura extends Model
                 : ($pagado > 0 ? 'parcial' : 'emitida');
         }
 
+        if ($pagado > (float) $this->total && (float) $this->total > 0) {
+            \Illuminate\Support\Facades\Log::warning("Factura {$this->numero}: pagado ({$pagado}) supera el total ({$this->total}).");
+        }
+
         $this->forceFill(['pagado' => $pagado, 'estado' => $estado])->saveQuietly();
     }
 }

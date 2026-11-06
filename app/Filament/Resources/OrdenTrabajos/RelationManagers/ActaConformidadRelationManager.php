@@ -39,9 +39,16 @@ class ActaConformidadRelationManager extends RelationManager
             ]),
             TextInput::make('recibe_nombre')->label('Recibe (nombre)')->required(),
             TextInput::make('recibe_cargo')->label('Cargo'),
-            \App\Forms\Components\FirmaPad::make('f_firma_cliente')->label('Firma del cliente')->columnSpanFull(),
+            \App\Forms\Components\FirmaPad::make('f_firma_cliente')->label('Firma del cliente')->required(fn (string $operation) => $operation === 'create')->columnSpanFull(),
             \App\Forms\Components\FirmaPad::make('f_firma_tecnico')->label('Firma del técnico')->columnSpanFull(),
         ])->columns(2);
+    }
+
+    /** Con la OT cerrada solo el administrador modifica o borra el acta. */
+    private function actaEditable(): bool
+    {
+        return $this->getOwnerRecord()->estado !== \App\Enums\EstadoOt::Cerrada
+            || (bool) auth()->user()?->hasRole('administrador');
     }
 
     public function table(Table $table): Table
@@ -57,8 +64,8 @@ class ActaConformidadRelationManager extends RelationManager
             ])
             ->headerActions([CreateAction::make()->label('Registrar acta')
                 ->using(fn (array $data) => $this->guardarConFirmas(null, $data, ['firma_cliente', 'firma_tecnico']))])
-            ->recordActions([EditAction::make()
+            ->recordActions([EditAction::make()->visible(fn () => $this->actaEditable())
                 ->using(fn (array $data, $record) => $this->guardarConFirmas($record, $data, ['firma_cliente', 'firma_tecnico'])),
-                DeleteAction::make()]);
+                DeleteAction::make()->visible(fn () => $this->actaEditable())]);
     }
 }

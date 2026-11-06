@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 
 \Illuminate\Support\Facades\Schedule::command('ot:generar-preventivas')->dailyAt('02:00');
 \Illuminate\Support\Facades\Schedule::command('cobros:facturar-contratos')->dailyAt('03:00');
+\Illuminate\Support\Facades\Schedule::command('cotizaciones:vencer')->dailyAt('04:00');

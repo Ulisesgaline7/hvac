@@ -4,33 +4,53 @@
 <meta charset="utf-8">
 <style>
     @page { margin: 0; }
-    body { margin: 0; font-family: 'DejaVu Sans', sans-serif; }
-    .pagina { width: {{ $ancho }}mm; height: {{ $alto }}mm; box-sizing: border-box; padding: 3mm; position: relative; overflow: hidden; }
+    body { margin: 0; font-family: 'DejaVu Sans', sans-serif; color: #0b1f3a; }
+    .pagina { position: relative; width: {{ $ancho }}mm; height: {{ $alto - 1 }}mm; overflow: hidden; background: #fff; }
     .salto { page-break-after: always; }
-    .qr { position: absolute; top: 3mm; right: 3mm; width: {{ min($alto - 6, 32) }}mm; height: {{ min($alto - 6, 32) }}mm; }
-    .texto { margin-right: {{ min($alto - 6, 32) + 3 }}mm; }
-    .codigo { font-size: 17pt; font-weight: bold; margin: 0 0 1.5mm 0; }
-    .linea { font-size: 7pt; margin: 0 0 0.8mm 0; line-height: 1.2; }
-    .etq { color: #555; }
-    .pie { position: absolute; bottom: 2mm; left: 3mm; font-size: 5.5pt; color: #666; }
+    .izq { position: absolute; left: 3mm; top: 3mm; }
+    .logo { height: 9mm; }
+    table.datos { border-collapse: collapse; margin-top: 2mm; }
+    table.datos td { font-size: 7pt; padding: 0.9mm 1.5mm; border-bottom: 0.2mm solid #0b1f3a; }
+    table.datos td.k { background: #0b1f3a; color: #fff; width: 15mm; }
+    .qr-caja { position: absolute; top: 3mm; right: 3mm; background: #fff; border: 0.6mm solid #1f6fd6; }
+    .qr-caja img { display: block; margin: 1mm; }
+    .qr-texto { position: absolute; right: 3mm; text-align: center; font-size: 5.5pt; font-weight: bold; line-height: 1.25; }
+    .pie { position: absolute; left: 0; bottom: 0; width: {{ $ancho }}mm; height: 9mm; background: #0b1f3a; color: #fff; }
+    .pie td { font-size: 6pt; vertical-align: middle; height: 9mm; white-space: nowrap; }
+    .pie td.id { text-align: right; font-size: 9pt; font-weight: bold; padding-right: 4mm; width: 32mm; }
 </style>
 </head>
 <body>
 @foreach ($etiquetas as $e)
-    @php($eq = $e['equipo'])
+    @php
+        $eq = $e['equipo'];
+        $qrCaja = min($alto - 14, 34);
+        $qrImg  = $qrCaja - 1.2 - 2;
+        $izq    = $ancho - $qrCaja - 12;
+        $serie  = data_get($eq, 'numero_serie') ?? data_get($eq, 'serial') ?? data_get($eq, 'serie');
+        $ubic   = trim(($eq->area->sucursal->nombre ?? '').' · '.($eq->area->nombre ?? ''), ' ·');
+    @endphp
     <div class="pagina {{ $loop->last ? '' : 'salto' }}">
-        <img class="qr" src="{{ $e['qr'] }}">
-        <div class="texto">
-            <p class="codigo">{{ $eq->codigo }}</p>
-            <p class="linea"><span class="etq">Cliente:</span> {{ $eq->area->sucursal->cliente->razon_social }}</p>
-            <p class="linea"><span class="etq">Sucursal:</span> {{ $eq->area->sucursal->nombre }}</p>
-            <p class="linea"><span class="etq">Área:</span> {{ $eq->area->nombre }}</p>
-            <p class="linea"><span class="etq">Tipo:</span> {{ $eq->tipo->nombre }}</p>
-            @if ($eq->capacidad_valor)
-                <p class="linea"><span class="etq">Capacidad:</span> {{ rtrim(rtrim(number_format($eq->capacidad_valor, 2, '.', ''), '0'), '.') }} {{ $eq->capacidad_unidad }}</p>
-            @endif
+        <div class="izq" style="width: {{ $izq }}mm;">
+            <img class="logo" src="{{ \App\Support\DocumentoMarca::logo() }}">
+            <table class="datos" style="width: {{ $izq }}mm;">
+                <tr><td class="k">Equipo</td><td>{{ $eq->tipo->nombre }}</td></tr>
+                <tr><td class="k">Marca</td><td>{{ $eq->marca->nombre ?? '—' }}</td></tr>
+                <tr><td class="k">Modelo</td><td>{{ $eq->modelo ?: '—' }}</td></tr>
+                @if ($serie)<tr><td class="k">Serial</td><td>{{ $serie }}</td></tr>@endif
+                <tr><td class="k">Ubicación</td><td>{{ $ubic }}</td></tr>
+            </table>
         </div>
-        <div class="pie">Escanee el QR para ver la ficha del equipo</div>
+        <div class="qr-caja" style="width: {{ $qrCaja - 1.2 }}mm; height: {{ $qrCaja - 1.2 }}mm;">
+            <img src="{{ $e['qr'] }}" style="width: {{ $qrImg }}mm; height: {{ $qrImg }}mm;">
+        </div>
+        <div class="qr-texto" style="top: {{ 3 + $qrCaja + 1.5 }}mm; width: {{ $qrCaja }}mm;">
+            ESCANEE AQUÍ<br>ficha, historial y servicio
+        </div>
+        <table class="pie" cellspacing="0" cellpadding="0"><tr>
+            <td style="padding-left: 4mm;">Mantenimiento · Servicio técnico · Soporte</td>
+            <td class="id">ID: {{ $eq->codigo }}</td>
+        </tr></table>
     </div>
 @endforeach
 </body>

@@ -91,7 +91,7 @@ class FacturacionService
             'subtotal' => $subtotal,
             'isv' => $isv,
             'total' => round($subtotal + $isv, 2),
-            'notas' => "Visita técnica {$ot->numero} (cotización {$c->numero} rechazada)",
+            'notas' => "Visita técnica {$ot->numero} (cotización {$c->numero} {$c->estado})",
         ]);
 
         Pago::where('orden_trabajo_id', $ot->id)->whereNull('factura_id')->update(['factura_id' => $factura->id]);

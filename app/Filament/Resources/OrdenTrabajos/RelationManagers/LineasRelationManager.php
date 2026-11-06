@@ -31,6 +31,15 @@ class LineasRelationManager extends RelationManager
 
 
 
+    /** Fichas y tareas solo se editan con la OT en trabajo; en revisión, solo coordinador y administrador. */
+    private function fichaEditable($record): bool
+    {
+        $estado = $record->ordenTrabajo?->estado;
+
+        return in_array($estado, [\App\Enums\EstadoOt::Asignada, \App\Enums\EstadoOt::EnProceso, \App\Enums\EstadoOt::EnEspera], true)
+            || ($estado === \App\Enums\EstadoOt::EnRevision && auth()->user()?->hasAnyRole(['administrador', 'coordinador']));
+    }
+
     public function table(Table $table): Table
     {
         return $table
@@ -104,6 +113,7 @@ class LineasRelationManager extends RelationManager
             ->recordActions([
                 Action::make('tareas')
                     ->label('Tareas previstas')
+                    ->visible(fn ($record) => $this->fichaEditable($record))
                     ->icon('heroicon-o-list-bullet')
                     ->fillForm(fn ($record) => ['tareas' => $record->datos_previstos['tareas'] ?? ''])
                     ->schema([\Filament\Forms\Components\Textarea::make('tareas')->label('Tareas previstas')->rows(4)])
@@ -149,6 +159,7 @@ class LineasRelationManager extends RelationManager
                     }),
                 Action::make('ficha')
                     ->label('Llenar ficha')
+                    ->visible(fn ($record) => $this->fichaEditable($record))
                     ->icon('heroicon-o-clipboard-document-list')
                     ->modalWidth('4xl')
                     ->fillForm(function ($record) {
@@ -165,7 +176,7 @@ class LineasRelationManager extends RelationManager
                             return [];
                         }
 
-                        return FormularioDinamico::componentes($ficha->version->definicion);
+                        return FormularioDinamico::componentes($ficha->campos());
                     })
                     ->action(function (array $data, $record) {
                         try {

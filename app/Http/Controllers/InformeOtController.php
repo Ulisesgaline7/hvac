@@ -16,7 +16,7 @@ class InformeOtController extends Controller
         $orden = OrdenTrabajo::findOrFail($ot);
 
         $usuario = Auth::user();
-        $esPersonal = ($usuario?->hasAnyRole(['administrador', 'coordinador', 'tecnico'])) ?? false;
+        $esPersonal = ($usuario?->hasAnyRole(['administrador', 'coordinador', 'tecnico', 'supervisor', 'comercial', 'representante_legal'])) ?? false;
 
         $cabeceras = [
             'Content-Type' => 'application/pdf',

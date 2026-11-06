@@ -56,7 +56,8 @@ class PublicadorInforme
             throw new DomainException('Genera el informe antes de publicarlo.');
         }
 
-        $informe->update(['estado' => 'publicado', 'publicado_en' => now(), 'publicado_por' => Auth::id()]);
+        $hash = app(FirmaPdf::class)->firmar(Storage::disk('local')->path($informe->ruta_pdf));
+        $informe->update(['hash_pdf' => $hash, 'firmado_en' => now(), 'estado' => 'publicado', 'publicado_en' => now(), 'publicado_por' => Auth::id()]);
 
         return $informe;
     }

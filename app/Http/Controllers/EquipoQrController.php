@@ -14,7 +14,13 @@ class EquipoQrController extends Controller
     public function __invoke(Request $request, string $token)
     {
         if (! Auth::check()) {
-            return redirect()->guest(route('equipo.ingreso'));
+            $equipo = RlsServiceProvider::comoInterno(
+                fn () => Equipo::with(['tipo', 'marca'])->where('token_qr', $token)->first()
+            );
+
+            return $equipo
+                ? view('equipo.escaneo', ['equipo' => $equipo])
+                : response()->view('equipo.generica', [], 404);
         }
 
         $usuario = Auth::user();
@@ -82,5 +88,70 @@ class EquipoQrController extends Controller
         }
 
         return view('equipo.tecnico', $datos);
+    }
+
+    public function cambiarEstado(Request $request, string $token)
+    {
+        $usuario = Auth::user();
+        abort_unless($usuario && $usuario->hasAnyRole(['administrador', 'coordinador']), 403);
+
+        $datos = $request->validate([
+            'estado' => ['required', \Illuminate\Validation\Rule::enum(\App\Enums\EstadoEquipo::class)],
+        ]);
+        $nuevo = \App\Enums\EstadoEquipo::from($datos['estado']);
+
+        $equipo = Equipo::where('token_qr', $token)->firstOrFail();
+
+        // La baja definitiva se hace desde el panel, no con un toque en el celular.
+        abort_if($nuevo === \App\Enums\EstadoEquipo::DadoDeBaja || $equipo->estado === \App\Enums\EstadoEquipo::DadoDeBaja, 422, 'Este cambio de estado no se permite desde el QR.');
+
+        if ($equipo->estado !== $nuevo) {
+            $equipo->update(['estado' => $nuevo]); // Auditable registra usuario y valores
+        }
+
+        return redirect()->route('equipo.qr', $token)
+            ->with('ok', 'Estado actualizado: ' . str_replace('_', ' ', $nuevo->value));
+    }
+
+    /** Sirve una foto de una ficha del equipo, solo a quien puede ver el equipo. */
+    public function foto(Request $request, string $token, int $media)
+    {
+        $usuario = Auth::user();
+        abort_unless($usuario, 403);
+
+        $equipo = Equipo::where('token_qr', $token)->first();
+
+        if (! $equipo && $usuario->hasRole('tecnico')) {
+            abort(404);
+        }
+        abort_unless($equipo, 404);
+
+        if ($usuario->hasRole('tecnico') && ! $usuario->hasAnyRole(['administrador', 'coordinador'])) {
+            $tecnicoId = Tecnico::where('user_id', $usuario->id)->value('id');
+            $permitido = $tecnicoId && \Illuminate\Support\Facades\DB::table('orden_trabajo_equipo')
+                ->where('equipo_id', $equipo->id)
+                ->whereIn('orden_trabajo_id', \Illuminate\Support\Facades\DB::table('orden_trabajo_tecnico')
+                    ->where('tecnico_id', $tecnicoId)->select('orden_trabajo_id'))
+                ->exists();
+            abort_unless($permitido, 403);
+        }
+
+        $m = \Spatie\MediaLibrary\MediaCollections\Models\Media::query()
+            ->where('id', $media)
+            ->where('model_type', \App\Models\OrdenTrabajoEquipo::class)
+            ->whereIn('model_id', \Illuminate\Support\Facades\DB::table('orden_trabajo_equipo')
+                ->where('equipo_id', $equipo->id)->select('id'))
+            ->where('collection_name', 'like', '%foto%')
+            ->where('collection_name', 'not like', '%firma%')
+            ->firstOrFail();
+
+        $usarConv = $m->hasGeneratedConversion('informe');
+        $ruta = $usarConv ? $m->getPath('informe') : $m->getPath();
+        abort_unless(is_file($ruta), 404);
+
+        return response()->file($ruta, [
+            'Cache-Control' => 'private, max-age=3600',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 }

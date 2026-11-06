@@ -50,6 +50,27 @@ class MisOrdenesResource extends Resource
             ->recordActions([ViewAction::make()]);
     }
 
+    public static function infolist(\Filament\Schemas\Schema $schema): \Filament\Schemas\Schema
+    {
+        $e = \Filament\Infolists\Components\TextEntry::class;
+
+        return $schema->components([
+            \Filament\Schemas\Components\Section::make('Orden de trabajo')->columns(2)->columnSpanFull()->schema([
+                $e::make('numero')->label('OT'),
+                $e::make('estado')->badge(),
+                $e::make('tipo')->label('Tipo')
+                    ->state(fn ($record) => $record->tipo instanceof \BackedEnum ? $record->tipo->value : $record->tipo),
+                $e::make('prioridad')->label('Prioridad')->badge(),
+                $e::make('cliente.razon_social')->label('Cliente'),
+                $e::make('sucursal.nombre')->label('Sucursal'),
+                $e::make('fecha_programada')->label('Programada')->date()->placeholder('—'),
+                $e::make('descripcion')->label('Descripción')->placeholder('—')->columnSpanFull(),
+                $e::make('motivo_devolucion')->label('Motivo de devolución')->columnSpanFull()
+                    ->visible(fn ($record) => filled($record->motivo_devolucion)),
+            ]),
+        ]);
+    }
+
     public static function getRelations(): array
     {
         return [LineasRelationManager::class];

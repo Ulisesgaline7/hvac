@@ -58,7 +58,7 @@ class CotizacionForm
                         \App\Models\Area::where('sucursal_id', $get('sucursal_id') ?: 0)->select('id')
                     ),
                 )
-                ->getOptionLabelFromRecordUsing(fn ($r) => trim("{$r->codigo} · " . ($r->tipo?->nombre ?? '') . ' ' . ($r->modelo ?? '')))
+                ->getOptionLabelFromRecordUsing(fn ($r) => $r === null ? "" : trim("{$r->codigo} · " . ($r->tipo?->nombre ?? '') . ' ' . ($r->modelo ?? '')))
                 ->multiple()->searchable(['codigo', 'modelo', 'serie'])->preload()
                 ->helperText('Elija la sucursal primero. Si el equipo no existe, regístrelo aquí mismo: se crea con su código y QR.')
                 ->createOptionForm(fn (Get $get) => [
@@ -106,7 +106,18 @@ class CotizacionForm
                 ->disabled($bloqueada),
             Select::make('descuento_contrato')->label('Descuento por contrato anual')->placeholder('Sin contrato')
                 ->options(collect(config('tarifario.descuentos'))->filter(fn ($d) => ! isset($d['desde']))->map(fn ($d) => $d['nombre'])->all())
+                ->live()
                 ->helperText('El descuento por volumen se calcula solo. No se acumulan: se aplica el mayor.')
+                ->disabled($bloqueada),
+
+            TextInput::make('descuento_contrato_pct')->label('Porcentaje del descuento por contrato')
+                ->numeric()->suffix('%')
+                ->visible(fn ($get) => filled($get('descuento_contrato')) && (float) config('tarifario.descuentos.' . $get('descuento_contrato') . '.max') > (float) config('tarifario.descuentos.' . $get('descuento_contrato') . '.min'))
+                ->minValue(fn ($get) => (float) config('tarifario.descuentos.' . $get('descuento_contrato') . '.min') * 100)
+                ->maxValue(fn ($get) => (float) config('tarifario.descuentos.' . $get('descuento_contrato') . '.max') * 100)
+                ->helperText(fn ($get) => 'Rango del tarifario: ' . round((float) config('tarifario.descuentos.' . $get('descuento_contrato') . '.min') * 100, 2) . ' % a ' . round((float) config('tarifario.descuentos.' . $get('descuento_contrato') . '.max') * 100, 2) . ' %. Vacío = el mínimo.')
+                ->formatStateUsing(fn ($state) => filled($state) ? round((float) $state * 100, 2) : null)
+                ->dehydrateStateUsing(fn ($state) => filled($state) ? (float) $state / 100 : null)
                 ->disabled($bloqueada),
 
             TextInput::make('visitas_anuales')->label('Visitas al año (solo planes)')->numeric()->integer()->minValue(1)->maxValue(24)

@@ -22,13 +22,20 @@ class FichaService
             return $existente;
         }
 
-        $version = $this->plantillaPara($linea)->ultimaVersion
+        $plantilla = $this->plantillaPara($linea);
+        $version = $plantilla->ultimaVersion
             ?? throw new DomainException('La plantilla no tiene versiones publicadas.');
+
+        $clienteId = $linea->ordenTrabajo->cliente_id;
+        $definicion = $clienteId
+            ? app(AjustesPlantilla::class)->definicionPara($clienteId, $plantilla->id, $version->definicion)
+            : null;
 
         $ficha = FichaTecnica::create([
             'orden_trabajo_id' => $linea->orden_trabajo_id,
             'orden_trabajo_equipo_id' => $linea->id,
             'plantilla_version_id' => $version->id,
+            'definicion' => $definicion,
             'respuestas' => [],
         ]);
 
@@ -40,7 +47,7 @@ class FichaService
     /** Guarda respuestas (borrador permitido) y recalcula completitud y alertas. */
     public function guardar(FichaTecnica $ficha, array $respuestas): FichaTecnica
     {
-        $campos = $ficha->version->definicion;
+        $campos = $ficha->campos();
 
         $ficha->update([
             'respuestas' => $respuestas,
@@ -117,7 +124,7 @@ class FichaService
         $linea->unsetRelation('media');
         $respuestas = $ficha->respuestas ?? [];
 
-        foreach ($ficha->version->definicion as $c) {
+        foreach ($ficha->campos() as $c) {
             if (! in_array($c['tipo'], ['foto', 'firma'], true)) {
                 continue;
             }

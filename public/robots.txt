@@ -1,2 +1,10 @@
 User-agent: *
-Disallow:
+Disallow: /admin
+Disallow: /tecnico
+Disallow: /portal
+Disallow: /ingresar
+Disallow: /e/
+Disallow: /cotizacion/
+Disallow: /api-tecnico
+
+Sitemap: https://controltotalhn.com/sitemap.xml

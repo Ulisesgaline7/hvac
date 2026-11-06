@@ -67,6 +67,7 @@ Route::middleware(['web', 'auth', 'throttle:120,1'])->prefix('api-tecnico')->gro
     Route::post('/ficha', [\App\Http\Controllers\OfflineTecnicoController::class, 'ficha'])->name('offline.ficha');
 });
 
+Route::get('/sitemap.xml', \App\Http\Controllers\SitemapController::class);
 Route::view('/', 'web.index')->name('home');
 
 
@@ -88,3 +89,17 @@ Route::get('/{slug}', [\App\Http\Controllers\PaginaWebController::class, 'show']
     ->middleware('web')
     ->where('slug', \App\Models\WebPagina::patronRuta())
     ->name('web.pagina');
+
+Route::middleware(['web', 'auth', 'throttle:30,1'])
+    ->post('/e/{token}/estado', [\App\Http\Controllers\EquipoQrController::class, 'cambiarEstado'])
+    ->name('equipo.estado');
+
+Route::middleware(['web', 'auth', 'throttle:120,1'])
+    ->get('/e/{token}/foto/{media}', [\App\Http\Controllers\EquipoQrController::class, 'foto'])
+    ->whereNumber('media')
+    ->name('equipo.foto');
+
+Route::get('/liquidaciones/{liquidacion}/comprobante', \App\Http\Controllers\ComprobanteLiquidacionController::class)
+    ->middleware('web')
+    ->whereNumber('liquidacion')
+    ->name('liquidaciones.comprobante');

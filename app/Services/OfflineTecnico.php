@@ -67,10 +67,14 @@ class OfflineTecnico
                         return $base + ['ficha' => null, 'error' => $e->getMessage()];
                     }
 
-                    $plantillas[$ficha->plantilla_version_id] ??= $ficha->version->definicion;
+                    $clavePlantilla = $ficha->definicion === null
+                        ? (string) $ficha->plantilla_version_id
+                        : $ficha->plantilla_version_id . '-' . substr(md5(json_encode($ficha->definicion)), 0, 8);
+                    $plantillas[$clavePlantilla] ??= $ficha->campos();
 
                     return $base + ['ficha' => [
                         'version_id' => $ficha->plantilla_version_id,
+                        'plantilla' => $clavePlantilla,
                         'respuestas' => (object) ($ficha->respuestas ?? []),
                         'completa' => (bool) $ficha->completa,
                         'alertas' => $ficha->alertas ?? [],
@@ -118,7 +122,7 @@ class OfflineTecnico
             throw new DomainException('La ficha cambió de versión. Descargue sus OT de nuevo.', 409);
         }
 
-        $campos = collect($ficha->version->definicion)->keyBy('clave');
+        $campos = collect($ficha->campos())->keyBy('clave');
         $editables = $campos->reject(fn ($c) => in_array($c['tipo'], ['foto', 'firma'], true))->keys()->all();
 
         $merged = $ficha->respuestas ?? [];

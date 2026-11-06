@@ -7,4 +7,5 @@ return [
     App\Providers\Filament\AdminPanelProvider::class,
     App\Providers\Filament\TecnicoPanelProvider::class,
     App\Providers\Filament\PortalPanelProvider::class,
+    App\Providers\NotificacionesServiceProvider::class,
 ];

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Equipo;
 use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\ErrorCorrectionLevel;
 use Endroid\QrCode\Writer\PngWriter;
 use Endroid\QrCode\Writer\SvgWriter;
 
@@ -22,7 +23,8 @@ class GeneradorQr
             writer: $escritor,
             data: $this->urlDe($equipo),
             size: 300,
-            margin: 0,
+            errorCorrectionLevel: ErrorCorrectionLevel::Quartile,
+            margin: 28,
         ))->build()->getDataUri();
     }
 
@@ -30,6 +32,6 @@ class GeneradorQr
     {
         $escritor = extension_loaded('gd') ? new PngWriter() : new SvgWriter();
 
-        return (new Builder(writer: $escritor, data: $url, size: 300, margin: 0))->build()->getDataUri();
+        return (new Builder(writer: $escritor, data: $url, size: 300, errorCorrectionLevel: ErrorCorrectionLevel::Quartile, margin: 28))->build()->getDataUri();
     }
 }

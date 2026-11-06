@@ -25,6 +25,8 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('30s')
             ->path('admin')
             ->login(\App\Filament\Pages\Auth\Login::class)
             ->renderHook(\Filament\View\PanelsRenderHook::AUTH_LOGIN_FORM_AFTER, fn () => view('filament.recaptcha'))

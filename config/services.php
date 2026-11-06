@@ -41,4 +41,6 @@ return [
         'secret' => env('RECAPTCHA_SECRET_KEY'),
     ],
 
+    'ga4_id' => env('GA4_ID'),
+
 ];

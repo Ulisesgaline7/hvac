@@ -128,6 +128,22 @@ class CotizacionFlujo
         return $c->fresh();
     }
 
+    /** Cotización enviada cuya vigencia pasó sin respuesta: queda vencida y, si nació de una visita, se factura la visita. */
+    public function vencer(Cotizacion $c): Cotizacion
+    {
+        $this->exigirEstado($c, 'enviada', 'vencer');
+
+        DB::transaction(function () use ($c) {
+            $c->update([
+                'estado' => 'vencida',
+                'notas' => trim(($c->notas ? $c->notas . "\n" : '') . 'Vencida el ' . now()->format('d/m/Y') . ' sin respuesta del cliente.'),
+            ]);
+            app(FacturacionService::class)->facturarVisitaRechazada($c->fresh());
+        });
+
+        return $c->fresh();
+    }
+
     private function lineasPorTipoOt(Cotizacion $c): Collection
     {
         return $c->lineas()->with('servicio')->get()

@@ -64,7 +64,7 @@ class InformeOtService
                     'completa' => (bool) $ficha?->completa,
                     'alertas' => $ficha?->alertas ?? [],
                     'plantilla' => $ficha?->version?->plantilla?->nombre ?? null,
-                    'filas' => $ficha ? $this->filas($ficha->version->definicion ?? [], $ficha->respuestas ?? []) : [],
+                    'filas' => $ficha ? $this->filas($ficha->campos(), $ficha->respuestas ?? []) : [],
                 ];
             });
 

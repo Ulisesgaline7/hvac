@@ -30,6 +30,14 @@ class Equipo extends Model
 
     protected static function booted(): void
     {
+        static::saving(function (Equipo $equipo) {
+            $d = $equipo->datos_placa ?? [];
+            if (isset($d['capacidad']) && $d['capacidad'] !== '') {
+                $equipo->capacidad_valor = $d['capacidad'];
+                $equipo->capacidad_unidad = $d['capacidad_unidad'] ?? $equipo->capacidad_unidad;
+            }
+        });
+
         static::creating(function (Equipo $equipo) {
             if (empty($equipo->token_qr)) {
                 $equipo->token_qr = Str::random(32);

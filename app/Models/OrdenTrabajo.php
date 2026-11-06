@@ -257,6 +257,7 @@ class OrdenTrabajo extends Model
             if ($nuevo === EstadoOt::Cerrada) {
                 app(\App\Services\GarantiaService::class)->emitir($this);
                 app(\App\Services\FacturacionService::class)->generarDesdeOt($this);
+                app(\App\Services\PagoTecnicoService::class)->generar($this);
             }
         });
     }

@@ -41,6 +41,7 @@ class PlantillaFormularioResource extends Resource
             Select::make('familia')->required()->options([
                 'aire_acondicionado' => 'Aire acondicionado',
                 'cuartos_frios' => 'Cuartos fríos',
+                'cocina_industrial' => 'Cocina industrial',
                 'refrigeracion_comercial' => 'Refrigeración comercial',
                 'instalacion' => 'Instalación y puesta en marcha',
             ]),

@@ -24,6 +24,8 @@ class TecnicoPanelProvider extends PanelProvider
     {
         return $panel
             ->id('tecnico')
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('30s')
             ->path('tecnico')
             ->login()
             ->colors(['primary' => \App\Support\Marca::primario()])

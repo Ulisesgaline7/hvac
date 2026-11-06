@@ -24,6 +24,8 @@ class PortalPanelProvider extends PanelProvider
     {
         return $panel
             ->id('portal')
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('30s')
             ->path('portal')
             ->login()
             ->colors(['primary' => \App\Support\Marca::primario()])

@@ -54,14 +54,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;600;800&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 
     <!-- Icon Font Stylesheet -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <!-- Libraries Stylesheet -->
     <link href="{{ asset('aircon/lib/animate/animate.min.css') }}" rel="stylesheet">
 
     <!-- Customized Bootstrap Stylesheet -->
-    <link href="{{ asset('aircon/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('aircon/css/bootstrap.min.css') . '?v=5.3.3' }}" rel="stylesheet">
 
     <!-- Template Stylesheet -->
     <link href="{{ asset('aircon/css/style.css') }}" rel="stylesheet">
@@ -93,6 +93,7 @@
         .navbar .navbar-brand h1 img { height: 52px; width: auto; max-height: 60px; }
         .footer h1 img { height: 52px; width: auto; max-height: 60px; }
     </style>
+@include('web.partials.jsonld')
 </head>
 
 <body>
@@ -250,7 +251,7 @@
                     <div class="col-md-6 text-center text-md-end">
                         <!--/*** The author’s attribution link below must remain intact on your website. ***/-->
                         <!--/*** If you wish to remove this credit link, please purchase the Pro Version from https://htmlcodex.com/downloading/?item=2574 ***/-->
-                        Designed By <a href="https://htmlcodex.com">HTML Codex</a>
+                        Desarrollado por NewBrand LLC
                     </div>
                 </div>
             </div>
@@ -264,14 +265,16 @@
 
 
     <!-- JavaScript Libraries -->
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="{{ asset('aircon/lib/wow/wow.min.js') }}"></script>
     <script src="{{ asset('aircon/lib/easing/easing.min.js') }}"></script>
     <script src="{{ asset('aircon/lib/waypoints/waypoints.min.js') }}"></script>
 
     <!-- Template Javascript -->
     <script src="{{ asset('aircon/js/main.js') }}"></script>
+@include('web.partials.whatsapp-flotante')
+@include('web.partials.cookies')
 </body>
 
 </html>

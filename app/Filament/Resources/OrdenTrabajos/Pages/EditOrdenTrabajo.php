@@ -204,11 +204,11 @@ class EditOrdenTrabajo extends EditRecord
                                 ->required(),
                             Select::make('rol')
                                 ->label('Rol')
-                                ->options(['tecnico' => 'Técnico', 'ayudante' => 'Ayudante', 'supervisor' => 'Supervisor'])
+                                ->options(['tecnico' => 'Técnico', 'ayudante' => 'Ayudante'])
                                 ->default('tecnico')
                                 ->required(),
                         ])
-                        ->helperText('Tarifario: instalaciones mínimo 2 personas; en altura, 1 ayudante por cada 2 técnicos; supervisor desde 4 técnicos.'),
+                        ->helperText('Tarifario: instalaciones mínimo 2 personas; en altura, 1 ayudante por cada 2 técnicos; el líder también supervisa.'),
                 ])
                 ->action(function (array $data) {
                     try {

@@ -70,6 +70,7 @@ class EtiquetaController extends Controller
         return response($this->generador->pdf($equipos), 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => "inline; filename=\"$nombre\"",
+            'Cache-Control' => 'no-store, max-age=0',
         ]);
     }
 }

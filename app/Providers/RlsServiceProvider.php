@@ -13,14 +13,17 @@ class RlsServiceProvider extends ServiceProvider
     {
         $usuario = config('rls.usuario_app');
 
-        if ($usuario && ! $this->app->runningInConsole() && config('database.default') === 'pgsql') {
+        if ($usuario && config('database.default') === 'pgsql') {
             config([
                 'database.connections.pgsql_app' => array_merge(config('database.connections.pgsql'), [
                     'username' => $usuario,
                     'password' => config('rls.password_app'),
                 ]),
-                'database.default' => 'pgsql_app',
             ]);
+
+            if (! $this->app->runningInConsole()) {
+                config(['database.default' => 'pgsql_app']);
+            }
         }
     }
 

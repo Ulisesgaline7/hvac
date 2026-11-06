@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 /** Cuadrilla de una OT: un líder (es el tecnico_id de la OT) y los demás miembros con su rol. */
 class CuadrillaService
 {
-    private const ROLES_MIEMBRO = ['tecnico', 'ayudante', 'supervisor'];
+    private const ROLES_MIEMBRO = ['tecnico', 'ayudante'];
 
     /**
      * @param  array<int,string>  $miembros  tecnico_id => rol (tecnico, ayudante o supervisor); el líder se indica aparte

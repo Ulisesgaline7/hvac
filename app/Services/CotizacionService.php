@@ -7,16 +7,23 @@ use App\Models\Cotizacion;
 /** Fórmula del tarifario: Total = [(Cant × Precio) + Recargos − Descuento] + Repuestos + ISV 15 %. */
 class CotizacionService
 {
+    /** Recargos que no se combinan: se aplica el de mayor porcentaje. */
+    private const EXCLUYENTES = ['NOCTURNO_DOMINICAL', 'EMERGENCIA_24_7'];
+
+    /** Los recargos sumados no pasan de este porcentaje del servicio. */
+    private const TOPE_RECARGOS = 1.0;
+
     /**
-     * @param  array<int,array{tipo?:string,cantidad:float|int|string,precio_unitario:float|int|string,cuenta_equipo?:bool}>  $lineas
+     * @param  array<int,array{tipo?:string,categoria?:?string,cantidad:float|int|string,precio_unitario:float|int|string,cuenta_equipo?:bool}>  $lineas
      * @param  array<int|string,float|string>  $recargos  lista de códigos (usa el % mínimo) o código => %
      */
-    public function calcular(array $lineas, array $recargos = [], ?string $descuentoContrato = null, bool $aplicarMinimo = true): array
+    public function calcular(array $lineas, array $recargos = [], ?string $descuentoContrato = null, bool $aplicarMinimo = true, ?float $pctContrato = null): array
     {
         $cfg = config('tarifario');
         $servicios = 0.0;
         $repuestos = 0.0;
         $equipos = 0;
+        $hayInstalacion = false;
 
         foreach ($lineas as $l) {
             $importe = round((float) ($l['cantidad'] ?? 0) * (float) ($l['precio_unitario'] ?? 0), 2);
@@ -25,6 +32,10 @@ class CotizacionService
                 $repuestos += $importe;
 
                 continue;
+            }
+
+            if (($l['categoria'] ?? null) === 'instalacion') {
+                $hayInstalacion = true;
             }
 
             $servicios += $importe;
@@ -36,34 +47,59 @@ class CotizacionService
         $servicios = round($servicios, 2);
         $repuestos = round($repuestos, 2);
 
+        // Servicio mínimo: no aplica a instalaciones.
         $ajuste = 0.0;
-        if ($aplicarMinimo && $equipos > 0 && $equipos < $cfg['minimo_si_menos_de'] && $servicios < $cfg['servicio_minimo']) {
+        if ($aplicarMinimo && ! $hayInstalacion && $equipos > 0 && $equipos < $cfg['minimo_si_menos_de'] && $servicios < $cfg['servicio_minimo']) {
             $ajuste = round($cfg['servicio_minimo'] - $servicios, 2);
         }
 
         $base = $servicios + $ajuste;
 
-        // Recargos: sobre el servicio; el % queda dentro del rango del tarifario.
-        $montos = [];
+        // Recargos: porcentaje dentro del rango del tarifario.
+        $pcts = [];
         foreach ($recargos as $clave => $valor) {
             $codigo = is_int($clave) ? (string) $valor : (string) $clave;
             $def = $cfg['recargos'][$codigo] ?? null;
             if (! $def) {
                 continue;
             }
-            $pct = is_int($clave) ? $def['min'] : min(max((float) $valor, $def['min']), $def['max']);
+            $pcts[$codigo] = is_int($clave) ? $def['min'] : min(max((float) $valor, $def['min']), $def['max']);
+        }
+
+        // Nocturno y emergencia no se combinan: queda el mayor.
+        $presentes = array_values(array_intersect(self::EXCLUYENTES, array_keys($pcts)));
+        if (count($presentes) > 1) {
+            usort($presentes, fn ($a, $b) => $pcts[$b] <=> $pcts[$a]);
+            foreach (array_slice($presentes, 1) as $descartado) {
+                unset($pcts[$descartado]);
+            }
+        }
+
+        // Tope: si la suma lo pasa, se reduce en proporción.
+        $suma = array_sum($pcts);
+        if ($suma > self::TOPE_RECARGOS && $suma > 0) {
+            $factor = self::TOPE_RECARGOS / $suma;
+            $pcts = array_map(fn ($p) => $p * $factor, $pcts);
+        }
+
+        $montos = [];
+        foreach ($pcts as $codigo => $pct) {
             $montos[$codigo] = round($base * $pct, 2);
         }
         $recargosMonto = round(array_sum($montos), 2);
 
-        // Descuento: solo el mayor entre volumen y contrato.
+        // Descuento: solo el mayor entre volumen y contrato, sobre la base de servicios.
         $descCodigo = null;
         $descPct = 0.0;
         foreach ($cfg['descuentos'] as $codigo => $def) {
             $aplica = isset($def['desde']) ? $equipos >= $def['desde'] : $codigo === $descuentoContrato;
-            if ($aplica && $def['min'] > $descPct) {
+            $pct = $def['min'];
+            if ($aplica && ! isset($def['desde']) && $pctContrato !== null) {
+                $pct = min(max($pctContrato, $def['min']), $def['max'] ?? $def['min']);
+            }
+            if ($aplica && $pct > $descPct) {
                 $descCodigo = $codigo;
-                $descPct = $def['min'];
+                $descPct = $pct;
             }
         }
         $descMonto = round($base * $descPct, 2);
@@ -90,11 +126,15 @@ class CotizacionService
     /** Recalcula y guarda los totales de una cotización a partir de sus líneas. */
     public function recalcular(Cotizacion $c): Cotizacion
     {
-        $lineas = $c->lineas()->get()->map(fn ($l) => [
-            'tipo' => $l->tipo, 'cantidad' => $l->cantidad, 'precio_unitario' => $l->precio_unitario, 'cuenta_equipo' => $l->cuenta_equipo,
+        $lineas = $c->lineas()->with('servicio')->get()->map(fn ($l) => [
+            'tipo' => $l->tipo,
+            'categoria' => $l->servicio?->categoria,
+            'cantidad' => $l->cantidad,
+            'precio_unitario' => $l->precio_unitario,
+            'cuenta_equipo' => $l->cuenta_equipo,
         ])->all();
 
-        $r = $this->calcular($lineas, $c->recargos ?? [], $c->descuento_contrato);
+        $r = $this->calcular($lineas, $c->recargos ?? [], $c->descuento_contrato, true, $c->descuento_contrato_pct !== null ? (float) $c->descuento_contrato_pct : null);
 
         [$tratamiento, $visita] = $this->visita($c);
         $extra = (new LogisticaViaticos)->calcular($c->logistica ?? [], config('tarifario'));
@@ -123,6 +163,7 @@ class CotizacionService
 
         return $c->fresh();
     }
+
     /** @return array{0: ?string, 1: float} tratamiento (bonificar|cobrar|gratis|null) y monto a sumar. */
     private function visita(Cotizacion $c): array
     {

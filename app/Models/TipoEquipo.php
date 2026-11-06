@@ -13,4 +13,6 @@ class TipoEquipo extends Model
 
     protected $table = 'tipos_equipo';
     protected $guarded = [];
+
+    protected $casts = ['campos_registro' => 'array'];
 }
