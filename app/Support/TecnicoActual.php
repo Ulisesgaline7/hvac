@@ -8,18 +8,17 @@ use Illuminate\Support\Facades\Schema;
 /** Resuelve el técnico (tabla tecnicos) del usuario con sesión. */
 final class TecnicoActual
 {
-    private static ?int $id = null;
-    private static bool $resuelto = false;
+    /** @var array<int, ?int> */
+    private static array $cache = [];
 
     public static function id(): ?int
     {
-        if (self::$resuelto) {
-            return self::$id;
-        }
-        self::$resuelto = true;
         $u = auth()->user();
         if (! $u) {
             return null;
+        }
+        if (array_key_exists($u->id, self::$cache)) {
+            return self::$cache[$u->id];
         }
 
         $q = DB::table('tecnicos');
@@ -28,10 +27,12 @@ final class TecnicoActual
         } elseif (Schema::hasColumn('tecnicos', 'email')) {
             $q->where('email', $u->email);
         } else {
-            return null;
+            return self::$cache[$u->id] = null;
         }
 
-        return self::$id = ($q->value('id') ? (int) $q->value('id') : null);
+        $id = $q->value('id');
+
+        return self::$cache[$u->id] = ($id ? (int) $id : null);
     }
 
     /** IDs de OT donde participa (líder, equipo o supervisor). */
