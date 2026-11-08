@@ -1,0 +1,91 @@
+<table><tbody><tr><td><strong>CÓDIGO</strong></td><td>PRO-CAM-01</td><td><strong>VERSIÓN</strong></td><td>1.0</td></tr><tr><td><strong>EMISIÓN</strong></td><td></td><td><strong>ELABORÓ</strong></td><td></td></tr><tr><td><strong>REVISÓ</strong></td><td></td><td><strong>APROBÓ</strong></td><td></td></tr></tbody></table>
+<h3>1. OBJETIVO</h3>
+<p>Establecer cómo se solicitan, evalúan, aprueban, desarrollan, prueban y publican los cambios de la plataforma, para mejorarla sin dañar la operación, los datos ni las reglas de negocio.</p>
+<h3>2. ALCANCE</h3>
+<p>Aplica a todo cambio de la plataforma: nuevas funciones, mejoras, correcciones, cambios de configuración, de base de datos, de plantillas de documentos y de integraciones, desde la solicitud hasta la verificación posterior a su publicación.</p>
+<p>Se coordina con PRO-TI-01 (seguridad) y PRO-DOC-01 (documentos).</p>
+<h3>3. DEFINICIONES</h3>
+<table><thead><tr><th>Término</th><th>Significado</th></tr></thead><tbody>
+<tr><td>Cambio</td><td>Cualquier modificación a la plataforma, su configuración o sus datos maestros.</td></tr>
+<tr><td>Solicitud de cambio</td><td>Pedido formal para modificar la plataforma.</td></tr>
+<tr><td>Entorno de pruebas</td><td>Copia de la plataforma donde se prueba sin afectar a los usuarios.</td></tr>
+<tr><td>Publicación</td><td>Paso de un cambio probado al uso real.</td></tr>
+<tr><td>Reversa</td><td>Plan para volver a la versión anterior si algo sale mal.</td></tr>
+<tr><td>Cambio urgente</td><td>Corrección necesaria de inmediato por una falla grave.</td></tr>
+</tbody></table>
+<h3>4. RESPONSABLES</h3>
+<table><thead><tr><th>Rol</th><th>Responsabilidades</th></tr></thead><tbody>
+<tr><td>Desarrollador</td><td>Evalúa, desarrolla, prueba, publica, documenta y mantiene el plan de reversa.</td></tr>
+<tr><td>Operaciones</td><td>Solicita cambios técnicos y operativos, prueba y valida que sirvan en campo.</td></tr>
+<tr><td>Comercial</td><td>Solicita cambios comerciales y de portal para clientes y los prueba.</td></tr>
+<tr><td>Finanzas</td><td>Valida cambios que afecten cobros, impuestos o reportes.</td></tr>
+<tr><td>Los tres socios</td><td>Aprueban cambios mayores y prioridades.</td></tr>
+</tbody></table>
+<h3>5. DOCUMENTOS Y REGISTROS RELACIONADOS</h3>
+<table><thead><tr><th>Documento</th><th>Para qué se usa</th></tr></thead><tbody>
+<tr><td>Solicitud de cambio</td><td>Registro del pedido.</td></tr>
+<tr><td>Requerimientos de usuario</td><td>Definición de lo que se necesita.</td></tr>
+<tr><td>Reglas de negocio</td><td>ISV, numeración, estados y garantías.</td></tr>
+<tr><td>Registro de cambios</td><td>Historial de versiones.</td></tr>
+<tr><td>Registro de pruebas</td><td>Resultados.</td></tr>
+<tr><td>Plan de respaldos y continuidad</td><td>Respaldo antes de publicar.</td></tr>
+<tr><td>Términos de uso del portal</td><td>Aviso a los clientes.</td></tr>
+</tbody></table>
+<h3>6. DIAGRAMA DE FLUJO</h3>
+<p>1. Pedir el cambio → 2. Registrar y clasificar → 3. Evaluar el impacto → 4. Aprobar → 5. Respaldar → 6. Desarrollar en pruebas → 7. Probar → 8. Validar con usuarios → 9. Publicar → 10. Verificar → 11. Comunicar y → 12. Revisión trimestral documentar</p>
+<h3>7. DESCRIPCIÓN DEL PROCEDIMIENTO</h3>
+<table><thead><tr><th>N.º</th><th>Actividad y criterio de cumplimiento</th><th>Responsable</th><th>Registro</th></tr></thead><tbody>
+<tr><td><strong>1</strong></td><td>Pedir el cambio. Describir qué se necesita, por qué, quién lo usa, la urgencia y el beneficio esperado. Una solicitud por cambio.</td><td>Solicitante</td><td>Solicitud de cambio</td></tr>
+<tr><td><strong>2</strong></td><td>Registrar y clasificar. Asignar un número y clasificarlo: menor (texto, ajuste visual), normal (nueva función o corrección) o mayor (cambio de datos, permisos, cobros o impuestos).</td><td>Desarrollador</td><td>Registro de cambios</td></tr>
+<tr><td><strong>3</strong></td><td>Evaluar el impacto. Qué se afecta (datos, permisos, documentos PDF, reportes, reglas de negocio), el esfuerzo, los riesgos y las alternativas.</td><td>Desarrollador</td><td>Evaluación</td></tr>
+<tr><td><strong>4</strong></td><td>Aprobar y priorizar. Menores: aprueba Operaciones. Normales: los socios del área afectada. Mayores: los tres socios. Se prioriza por impacto en el servicio y en los ingresos.</td><td>Los tres socios o Operaciones</td><td>Aprobación</td></tr>
+<tr><td><strong>5</strong></td><td>Respaldar. Hacer un respaldo completo de la base de datos y los archivos antes de empezar a publicar.</td><td>Desarrollador</td><td>Respaldo verificado</td></tr>
+<tr><td><strong>6</strong></td><td>Desarrollar en el entorno de pruebas. Programar el cambio sin tocar datos reales, con control de versiones del código y revisión de código cuando sea posible.</td><td>Desarrollador</td><td>Código versionado</td></tr>
+<tr><td><strong>7</strong></td><td>Probar. Pruebas técnicas y de reglas de negocio: ISV de 15 %, numeración consecutiva, estados de la orden, permisos por rol, generación de PDF y casos de error. Registrar los resultados.</td><td>Desarrollador</td><td>Registro de pruebas</td></tr>
+<tr><td><strong>8</strong></td><td>Validar con usuarios. Los usuarios clave prueban el cambio con casos reales en el entorno de pruebas y lo aceptan por escrito.</td><td>Operaciones y Finanzas</td><td>Aceptación</td></tr>
+<tr><td><strong>9</strong></td><td>Planificar la publicación. Elegir un horario de bajo uso, definir el plan de reversa y avisar a los usuarios si habrá una interrupción.</td><td>Desarrollador</td><td>Plan de publicación</td></tr>
+<tr><td><strong>10</strong></td><td>Publicar. Aplicar el cambio al uso real, con el respaldo hecho y el plan de reversa a mano.</td><td>Desarrollador</td><td>Registro de publicación</td></tr>
+<tr><td><strong>11</strong></td><td>Verificar después de publicar. Revisar las funciones principales, los PDF y los permisos, y vigilar errores durante ____ horas. Si hay una falla grave, revertir.</td><td>Desarrollador</td><td>Verificación</td></tr>
+<tr><td><strong>12</strong></td><td>Comunicar y documentar. Informar a los usuarios qué cambió y cómo usarlo, actualizar los documentos y el listado maestro, y anotar la versión en el registro de cambios.</td><td>Desarrollador</td><td>Aviso, registro</td></tr>
+<tr><td><strong>13</strong></td><td>Cerrar. Cerrar la solicitud y archivar la evidencia de pruebas y aprobaciones.</td><td>Desarrollador</td><td>Solicitud cerrada</td></tr>
+<tr><td><strong>14</strong></td><td>Revisar cada trimestre. Revisar los cambios hechos, los problemas que causaron y la lista de pendientes, como parte de la revisión por la dirección.</td><td>Los tres socios</td><td>Revisión por la dirección</td></tr>
+</tbody></table>
+<h3>8. TIPOS DE CAMBIO Y APROBACIÓN</h3>
+<table><thead><tr><th>Tipo</th><th>Ejemplos</th><th>Aprueba</th><th>Pruebas</th></tr></thead><tbody>
+<tr><td>Menor</td><td>Texto, ajuste visual, plantilla sin cálculos</td><td>Operaciones</td><td>Revisión rápida</td></tr>
+<tr><td>Normal</td><td>Nueva función, corrección de error, nuevo reporte</td><td>Socios del área</td><td>Completas con casos reales</td></tr>
+<tr><td>Mayor</td><td>Datos, permisos, cobros, impuestos, base de datos, integración</td><td>Los tres socios</td><td>Completas, con respaldo y reversa</td></tr>
+<tr><td>Urgente</td><td>Falla grave que detiene el servicio</td><td>Desarrollador y un socio</td><td>Mínimas, completas después</td></tr>
+</tbody></table>
+<h3>9. EXCEPCIONES Y CASOS ESPECIALES</h3>
+<table><thead><tr><th>Situación</th><th>Qué se hace</th></tr></thead><tbody>
+<tr><td>Cambio urgente por una falla grave</td><td>Se corrige de inmediato con respaldo y reversa, se informa a los socios y se documenta y prueba a fondo dentro de ____ horas.</td></tr>
+<tr><td>El cambio afecta los impuestos o los cobros</td><td>Se trata como mayor y lo valida Finanzas, y el contador si cambia el cálculo.</td></tr>
+<tr><td>El cambio falla después de publicar</td><td>Revertir según el plan, informar a los usuarios y volver al entorno de pruebas.</td></tr>
+<tr><td>Solicitudes en conflicto entre áreas</td><td>Los tres socios priorizan según el impacto en el cliente.</td></tr>
+<tr><td>El desarrollador no está disponible</td><td>Solo se aplican cambios urgentes con apoyo técnico acordado; el resto espera.</td></tr>
+<tr><td>Un cambio afecta documentos ya emitidos</td><td>No se modifican los emitidos; se crean nuevos con la versión actual.</td></tr>
+</tbody></table>
+<h3>10. RIESGOS Y CONTROLES</h3>
+<table><thead><tr><th>Riesgo</th><th>Control</th></tr></thead><tbody>
+<tr><td>Cambios que dañan datos o cálculos</td><td>Respaldo, pruebas de reglas de negocio y reversa.</td></tr>
+<tr><td>Cambios sin aprobación</td><td>Registro y aprobación por tipo.</td></tr>
+<tr><td>Interrupciones del servicio</td><td>Publicación en horario de bajo uso y aviso a usuarios.</td></tr>
+<tr><td>Pérdida de conocimiento por depender de una persona</td><td>Código versionado y documentación.</td></tr>
+<tr><td>Funciones que nadie usa</td><td>Aprobación por beneficio y revisión trimestral.</td></tr>
+</tbody></table>
+<h3>11. INDICADORES</h3>
+<table><thead><tr><th>Indicador</th><th>Cómo se calcula</th><th>Meta</th></tr></thead><tbody>
+<tr><td>Cambios con prueba y aprobación</td><td>Con registro completo ÷ cambios</td><td>100 %</td></tr>
+<tr><td>Cambios revertidos</td><td>Revertidos ÷ publicados</td><td>Menos de ____ %</td></tr>
+<tr><td>Incidentes tras una publicación</td><td>Número en el periodo</td><td>0</td></tr>
+<tr><td>Tiempo de atención de cambios normales</td><td>Fecha de publicación - fecha de solicitud</td><td>£ ____ días</td></tr>
+<tr><td>Cambios documentados</td><td>Documentados ÷ publicados</td><td>100 %</td></tr>
+</tbody></table>
+<h3>12. CONTROL DE CAMBIOS</h3>
+<table><thead><tr><th>Versión</th><th>Fecha</th><th>Descripción del cambio</th><th>Autor</th></tr></thead><tbody>
+<tr><td>1.0</td><td></td><td>Emisión inicial</td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td></tr>
+</tbody></table>
+<table><tbody><tr><td>Elaboró</td><td>Revisó</td><td>Aprobó (los tres socios)</td></tr></tbody></table>

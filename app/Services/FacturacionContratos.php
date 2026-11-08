@@ -21,6 +21,11 @@ class FacturacionContratos
             return null;
         }
 
+        // Pago único: un solo periodo, el inicio de la vigencia (la factura es única por contrato y periodo).
+        if (($c->periodicidad ?: config('cobros.contrato_periodicidad')) === 'unica') {
+            return $inicio;
+        }
+
         $paso = self::MESES[$c->periodicidad ?: config('cobros.contrato_periodicidad')] ?? 1;
         $k = intdiv((int) floor($inicio->diffInMonths($hoy, true)), $paso);
 

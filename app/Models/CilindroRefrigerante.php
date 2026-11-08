@@ -35,4 +35,14 @@ class CilindroRefrigerante extends Model
 
         return round((float) $this->peso_inicial_kg - $cargas + $recuperado, 2);
     }
+
+    public function proveedor(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Proveedor::class);
+    }
+
+    public function documentos(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(DocumentoTercero::class, 'cilindro_id');
+    }
 }

@@ -10,6 +10,7 @@ enum Frecuencia: string implements HasLabel
     case Trimestral = 'trimestral';
     case Semestral = 'semestral';
     case Anual = 'anual';
+    case Unica = 'unica';
 
     public function meses(): int
     {
@@ -18,11 +19,15 @@ enum Frecuencia: string implements HasLabel
             self::Trimestral => 3,
             self::Semestral => 6,
             self::Anual => 12,
+            self::Unica => 0, // no se repite; GeneradorCalendario::fechas la trata aparte
         };
     }
 
     public function getLabel(): string
     {
-        return ucfirst($this->value);
+        return match ($this) {
+            self::Unica => 'Única (una sola vez)',
+            default => ucfirst($this->value),
+        };
     }
 }

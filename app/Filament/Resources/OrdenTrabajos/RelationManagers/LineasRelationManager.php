@@ -43,6 +43,12 @@ class LineasRelationManager extends RelationManager
             || ($estado === \App\Enums\EstadoOt::EnRevision && auth()->user()?->hasAnyRole(['administrador', 'coordinador']));
     }
 
+    /** Actividades previstas de la línea: una por renglón de «tareas», con clave estable por texto. */
+    private static function actividades($record): array
+    {
+        return \App\Support\ChecklistLinea::actividades($record);
+    }
+
     public function table(Table $table): Table
     {
         return $table
@@ -62,7 +68,21 @@ class LineasRelationManager extends RelationManager
                     ->state(fn ($record) => \App\Models\Area::find($record->equipo?->area_id ?? $record->area_id)?->nombre),
                 TextColumn::make('tareas')->label('Tareas previstas')->placeholder('—')->wrap()
                     ->state(fn ($record) => $record->datos_previstos['tareas'] ?? null),
+                TextColumn::make('progreso')->label('Checklist')->placeholder('—')
+                    ->state(function ($record) {
+                        $a = self::actividades($record);
+                        if (! $a) {
+                            return null;
+                        }
+
+                        return count(array_intersect_key($record->datos_previstos['checklist'] ?? [], $a)) . '/' . count($a);
+                    }),
                 IconColumn::make('ficha.completa')->label('Ficha completa')->boolean(),
+                TextColumn::make('docs_equipo')->label('Docs')->placeholder('—')
+                    ->state(fn ($record) => $record->equipo_id
+                        ? (\Spatie\MediaLibrary\MediaCollections\Models\Media::where('model_type', \App\Models\Equipo::class)
+                            ->where('model_id', $record->equipo_id)->where('collection_name', 'documentos_equipo')->count() ?: null)
+                        : null),
                 TextColumn::make('ficha.version.version')->label('Versión')->prefix('v')->placeholder('—'),
             ])
             ->headerActions([
@@ -114,20 +134,128 @@ class LineasRelationManager extends RelationManager
                     }),
             ])
             ->recordActions([
+                Action::make('ver_equipo')
+                    ->label('Ver equipo')
+                    ->icon('heroicon-o-eye')
+                    ->color('gray')
+                    ->modalHeading(fn ($record) => 'Equipo ' . ($record->equipo?->codigo ?? ''))
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Cerrar')
+                    ->modalContent(function ($record) {
+                        $ot = $record->ordenTrabajo;
+                        $listo = in_array($ot?->estado, [\App\Enums\EstadoOt::CompletadaTecnico, \App\Enums\EstadoOt::EnRevision, \App\Enums\EstadoOt::Cerrada], true);
+                        $li = fn (string $url, string $texto) => '<li><a href="' . e($url) . '" target="_blank" rel="noopener" style="text-decoration:underline">' . e($texto) . '</a></li>';
+                        $html = '<p style="margin-bottom:.5rem"><strong>' . e(trim(($record->equipo?->marca?->nombre ?? '') . ' ' . ($record->equipo?->modelo ?? ''))) . '</strong></p>';
+                        if (! $listo) {
+                            return new \Illuminate\Support\HtmlString($html . '<p>Los documentos se generan cuando la OT está completada.</p>');
+                        }
+                        $html .= '<ul style="list-style:disc;padding-left:1.2rem">';
+                        foreach (['protocolo' => 'Protocolo de puesta en marcha', 'garantia' => 'Certificado de garantía', 'capacitacion' => 'Constancia de capacitación'] as $tipo => $nombre) {
+                            $html .= $li(route('ordenes-trabajo.entregable', ['ot' => $ot->id, 'tipo' => $tipo, 'linea' => $record->id]), $nombre);
+                        }
+                        $html .= $li(route('ordenes-trabajo.entregable', ['ot' => $ot->id, 'tipo' => 'calendario']), 'Calendario de mantenimiento (propuesta)');
+                        if ($ot->estado === \App\Enums\EstadoOt::Cerrada) {
+                            $html .= $li(route('ordenes-trabajo.informe', $ot->id), 'Informe de la OT');
+                        }
+                        if ($record->equipo_id) {
+                            $docs = \Spatie\MediaLibrary\MediaCollections\Models\Media::where('model_type', \App\Models\Equipo::class)
+                                ->where('model_id', $record->equipo_id)->where('collection_name', 'documentos_equipo')->orderBy('id')->get();
+                            foreach ($docs as $d) {
+                                $html .= $li(route('equipos.documento', $d->id), $d->name . ' (documento del equipo)');
+                            }
+                        }
+
+                        return new \Illuminate\Support\HtmlString($html . '</ul>');
+                    }),
+                Action::make('documentos_equipo')
+                    ->label('Documentos del equipo')
+                    ->icon('heroicon-o-document-text')
+                    ->color('gray')
+                    ->visible(fn ($record) => $record->equipo_id && \Spatie\MediaLibrary\MediaCollections\Models\Media::where('model_type', \App\Models\Equipo::class)
+                        ->where('model_id', $record->equipo_id)->where('collection_name', 'documentos_equipo')->exists())
+                    ->modalHeading(fn ($record) => 'Documentos de ' . ($record->equipo?->codigo ?? 'equipo'))
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Cerrar')
+                    ->modalContent(function ($record) {
+                        $docs = \Spatie\MediaLibrary\MediaCollections\Models\Media::where('model_type', \App\Models\Equipo::class)
+                            ->where('model_id', $record->equipo_id)->where('collection_name', 'documentos_equipo')->orderBy('id')->get();
+                        $tipos = \App\Filament\Resources\Equipos\RelationManagers\DocumentosEquipoRelationManager::TIPOS;
+                        $html = '<ul style="list-style:disc;padding-left:1.2rem">';
+                        foreach ($docs as $d) {
+                            $html .= '<li><a href="' . e(route('equipos.documento', $d->id)) . '" target="_blank" rel="noopener" style="text-decoration:underline">'
+                                . e($d->name) . '</a> <span style="opacity:.6">· ' . e($tipos[$d->getCustomProperty('tipo')] ?? 'Otro') . '</span></li>';
+                        }
+                        return new \Illuminate\Support\HtmlString($html . '</ul>');
+                    }),
                 Action::make('tareas')
                     ->label('Tareas previstas')
-                    ->visible(fn ($record) => $this->fichaEditable($record))
+                    ->visible(fn ($record) => auth()->user()?->hasAnyRole(['administrador', 'coordinador'])
+                        && ($this->fichaEditable($record) || ! in_array($record->ordenTrabajo?->estado,
+                            [\App\Enums\EstadoOt::CompletadaTecnico, \App\Enums\EstadoOt::EnRevision, \App\Enums\EstadoOt::Cerrada], true)))
                     ->icon('heroicon-o-list-bullet')
                     ->fillForm(fn ($record) => ['tareas' => $record->datos_previstos['tareas'] ?? ''])
-                    ->schema([\Filament\Forms\Components\Textarea::make('tareas')->label('Tareas previstas')->rows(4)])
+                    ->schema([
+                        \Filament\Forms\Components\Select::make('plantilla')->label('Cargar lista sugerida')->dehydrated(false)->live()
+                            ->options(fn () => collect(config('tareas.listas'))->map(fn ($l) => $l['nombre'])->all())
+                            ->afterStateUpdated(function ($state, \Filament\Schemas\Components\Utilities\Set $set, \Filament\Schemas\Components\Utilities\Get $get) {
+                                if (! $state) {
+                                    return;
+                                }
+                                $actual = trim((string) $get('tareas'));
+                                $set('tareas', trim($actual . "\n" . implode("\n", config("tareas.listas.$state.tareas", []))));
+                            }),
+                        \Filament\Forms\Components\Textarea::make('tareas')->label('Tareas previstas')->rows(10)->helperText('Una actividad por línea; cada una será un ítem del checklist.'),
+                    ])
                     ->action(function (array $data, $record) {
                         $record->update(['datos_previstos' => array_merge($record->datos_previstos ?? [], ['tareas' => $data['tareas']])]);
                         Notification::make()->success()->title('Tareas previstas guardadas')->send();
                     }),
+                Action::make('checklist')
+                    ->label('Checklist')
+                    ->icon('heroicon-o-check-circle')
+                    ->visible(fn ($record) => $this->fichaEditable($record) && self::actividades($record) !== [])
+                    ->modalWidth('2xl')
+                    ->fillForm(function ($record) {
+                        $guardado = $record->datos_previstos['checklist'] ?? [];
+                        $datos = [];
+                        foreach (self::actividades($record) as $k => $texto) {
+                            $datos["e_$k"] = $guardado[$k]['estado'] ?? null;
+                            $datos["o_$k"] = $guardado[$k]['obs'] ?? null;
+                        }
+
+                        return $datos;
+                    })
+                    ->schema(function ($record) {
+                        $campos = [];
+                        foreach (self::actividades($record) as $k => $texto) {
+                            $campos[] = \Filament\Forms\Components\ToggleButtons::make("e_$k")
+                                ->label($texto)->inline()->live()
+                                ->options(['ok' => 'OK', 'na' => 'N/A', 'falla' => 'Falla'])
+                                ->colors(['ok' => 'success', 'na' => 'gray', 'falla' => 'danger']);
+                            $campos[] = \Filament\Forms\Components\Textarea::make("o_$k")
+                                ->label('Observación')->rows(2)
+                                ->visible(fn (\Filament\Schemas\Components\Utilities\Get $get) => $get("e_$k") === 'falla')
+                                ->required(fn (\Filament\Schemas\Components\Utilities\Get $get) => $get("e_$k") === 'falla');
+                        }
+
+                        return $campos;
+                    })
+                    ->action(function (array $data, $record) {
+                        $resultado = [];
+                        foreach (self::actividades($record) as $k => $texto) {
+                            if (! empty($data["e_$k"])) {
+                                $resultado[$k] = ['texto' => $texto, 'estado' => $data["e_$k"], 'obs' => $data["o_$k"] ?? null];
+                            }
+                        }
+                        $record->update(['datos_previstos' => array_merge($record->datos_previstos ?? [], ['checklist' => $resultado])]);
+                        Notification::make()->success()->title('Checklist guardado')->send();
+                    }),
                 Action::make('movimiento')
                     ->label('Refrigerante')
                     ->icon('heroicon-o-beaker')
-                    ->visible(fn ($record) => in_array($record->ordenTrabajo?->estado, [\App\Enums\EstadoOt::EnProceso, \App\Enums\EstadoOt::EnEspera], true))
+                    ->visible(fn ($record) => in_array($record->ordenTrabajo?->estado, [\App\Enums\EstadoOt::EnProceso, \App\Enums\EstadoOt::EnEspera], true)
+                        && in_array(\App\Models\TipoEquipo::find($record->tipo_equipo_id ?: $record->equipo?->tipo_equipo_id)?->familia,
+                            ['aire_acondicionado', 'cuartos_frios', 'refrigeracion_comercial'], true))
                     ->schema([
                         \Filament\Forms\Components\Select::make('cilindro_id')
                             ->label('Cilindro')
@@ -136,13 +264,22 @@ class LineasRelationManager extends RelationManager
                                 ->mapWithKeys(fn ($c) => [$c->id => "{$c->codigo} · {$c->refrigerante?->nombre} · saldo {$c->saldoKg()} kg"]))
                             ->searchable(),
                         \Filament\Forms\Components\Select::make('tipo')
-                            ->options(['carga' => 'Carga (agregado)', 'recuperacion' => 'Recuperación'])
+                            ->options(fn () => $this->getOwnerRecord()->tipo === \App\Enums\TipoOt::Instalacion
+                                ? ['carga' => 'Carga (agregado)']
+                                : ['carga' => 'Carga (agregado)', 'recuperacion' => 'Recuperación'])
+                            ->default(fn () => $this->getOwnerRecord()->tipo === \App\Enums\TipoOt::Instalacion ? 'carga' : null)
                             ->required(),
                         \Filament\Forms\Components\TextInput::make('cantidad_kg')
                             ->label('Cantidad')->numeric()->minValue(0.01)->suffix('kg')->required(),
                         \Filament\Forms\Components\Textarea::make('observaciones'),
                     ])
                     ->action(function (array $data, $record) {
+                        if ($data['tipo'] === 'recuperacion' && $this->getOwnerRecord()->tipo === \App\Enums\TipoOt::Instalacion) {
+                            Notification::make()->danger()->title('En una instalación solo se registra carga de refrigerante.')->send();
+
+                            return;
+                        }
+
                         try {
                             \App\Models\MovimientoRefrigerante::create([
                                 'orden_trabajo_id' => $record->orden_trabajo_id,
@@ -167,7 +304,9 @@ class LineasRelationManager extends RelationManager
                     ->modalWidth('4xl')
                     ->fillForm(function ($record) {
                         try {
-                            return $this->prefijar(app(FichaService::class)->obtenerOCrear($record)->respuestas ?? []);
+                            $svc = app(FichaService::class);
+
+                            return $this->prefijar($svc->prellenar($record, $svc->obtenerOCrear($record)));
                         } catch (DomainException) {
                             return [];
                         }

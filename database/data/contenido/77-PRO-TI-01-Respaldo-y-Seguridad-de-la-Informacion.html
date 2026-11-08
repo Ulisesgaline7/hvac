@@ -1,0 +1,91 @@
+<table><tbody><tr><td><strong>CÓDIGO</strong></td><td>PRO-TI-01</td><td><strong>VERSIÓN</strong></td><td>1.0</td></tr><tr><td><strong>EMISIÓN</strong></td><td></td><td><strong>ELABORÓ</strong></td><td></td></tr><tr><td><strong>REVISÓ</strong></td><td></td><td><strong>APROBÓ</strong></td><td></td></tr></tbody></table>
+<h3>1. OBJETIVO</h3>
+<p>Proteger la información de la empresa y de sus clientes, y la plataforma, mediante control de accesos, respaldos, pruebas de restauración y respuesta a incidentes, para asegurar confidencialidad, integridad y disponibilidad.</p>
+<h3>2. ALCANCE</h3>
+<p>Aplica a toda la información de Control Total y de sus clientes: base de datos, fotos, firmas, PDF, código de la plataforma, documentos de la empresa, contabilidad, correos, claves y dispositivos usados para el trabajo (computadoras y celulares).</p>
+<p>Se complementa con el plan de respaldos y continuidad y el aviso de privacidad. Un abogado debe confirmar la ley de datos personales aplicable.</p>
+<h3>3. DEFINICIONES</h3>
+<table><thead><tr><th>Término</th><th>Significado</th></tr></thead><tbody>
+<tr><td>Confidencialidad</td><td>Solo accede quien debe.</td></tr>
+<tr><td>Integridad</td><td>La información es correcta y no se altera sin control.</td></tr>
+<tr><td>Disponibilidad</td><td>La información se puede usar cuando se necesita.</td></tr>
+<tr><td>Respaldo</td><td>Copia de la información para recuperarla si se pierde.</td></tr>
+<tr><td>Principio de mínimo privilegio</td><td>Cada persona accede solo a lo que necesita para su trabajo.</td></tr>
+<tr><td>Autenticación de dos factores</td><td>Segundo paso de verificación además de la clave.</td></tr>
+<tr><td>Incidente de seguridad</td><td>Pérdida, robo, acceso indebido o alteración de información.</td></tr>
+</tbody></table>
+<h3>4. RESPONSABLES</h3>
+<table><thead><tr><th>Rol</th><th>Responsabilidades</th></tr></thead><tbody>
+<tr><td>Finanzas</td><td>Responsable del procedimiento: accesos, claves, respaldos, pruebas, proveedores y respuesta a incidentes.</td></tr>
+<tr><td>Desarrollador</td><td>Mantiene la plataforma, aplica parches, configura respaldos y soluciona fallas técnicas.</td></tr>
+<tr><td>Operaciones</td><td>Controla el uso de la información en campo y de los dispositivos de técnicos.</td></tr>
+<tr><td>Los tres socios</td><td>Aprueban la política, los proveedores críticos y las acciones ante incidentes graves.</td></tr>
+<tr><td>Todos los usuarios</td><td>Protegen sus claves y dispositivos y reportan incidentes.</td></tr>
+</tbody></table>
+<h3>5. DOCUMENTOS Y REGISTROS RELACIONADOS</h3>
+<table><thead><tr><th>Documento</th><th>Para qué se usa</th></tr></thead><tbody>
+<tr><td>Plan de respaldos y continuidad</td><td>Qué se respalda y cómo se recupera.</td></tr>
+<tr><td>Aviso de privacidad</td><td>Tratamiento de datos.</td></tr>
+<tr><td>Acuerdo de confidencialidad</td><td>Compromiso de los técnicos.</td></tr>
+<tr><td>Términos de uso del portal</td><td>Reglas para clientes.</td></tr>
+<tr><td>Control de cambios en la plataforma</td><td>Cambios seguros.</td></tr>
+<tr><td>Código de conducta</td><td>Uso de recursos.</td></tr>
+</tbody></table>
+<h3>6. DIAGRAMA DE FLUJO</h3>
+<p>1. Inventariar → 2. Clasificar → 3. Accesos por rol → 4. Altas y bajas → 5. Claves y doble factor → 6. Respaldar → 7. Probar restauración → 8. Mantener plataforma → 9. Proteger dispositivos → 10. Controlar proveedores → 11. Atender incidentes → 12. Revisión anual</p>
+<h3>7. DESCRIPCIÓN DEL PROCEDIMIENTO</h3>
+<table><thead><tr><th>N.º</th><th>Actividad y criterio de cumplimiento</th><th>Responsable</th><th>Registro</th></tr></thead><tbody>
+<tr><td><strong>1</strong></td><td>Inventariar la información. Listar dónde está cada tipo de información (plataforma, correo, carpetas, celulares, papel) y quién la maneja.</td><td>Finanzas</td><td>Inventario</td></tr>
+<tr><td><strong>2</strong></td><td>Clasificarla. Pública (catálogo), interna (procedimientos, precios), confidencial (datos de clientes, contratos, finanzas, claves). Lo confidencial tiene acceso restringido.</td><td>Finanzas</td><td>Inventario</td></tr>
+<tr><td><strong>3</strong></td><td>Dar accesos por rol. Cada persona tiene su usuario. Roles: administrador, operaciones, comercial, técnico y cliente. Solo se da lo necesario. Nadie comparte claves.</td><td>Finanzas</td><td>Registro de accesos</td></tr>
+<tr><td><strong>4</strong></td><td>Altas y bajas. Dar de alta al incorporarse y de baja el mismo día de la salida de un socio, técnico o usuario de cliente. Revisar accesos cada ____ meses.</td><td>Finanzas</td><td>Registro de accesos</td></tr>
+<tr><td><strong>5</strong></td><td>Proteger las claves. Claves largas y únicas, guardadas en un gestor de claves. Autenticación de dos factores en la plataforma, el correo y el banco.</td><td>Todos</td><td>Gestor de claves</td></tr>
+<tr><td><strong>6</strong></td><td>Respaldar. Respaldo automático diario de la base de datos y los archivos, y respaldo del código en cada cambio, a un lugar distinto del servidor principal y cifrado.</td><td>Desarrollador</td><td>Registro de respaldos</td></tr>
+<tr><td><strong>7</strong></td><td>Probar la restauración. Cada ____ meses restaurar un respaldo en un entorno de prueba y comprobar que los datos estén completos. Un respaldo sin prueba no cuenta.</td><td>Finanzas</td><td>Registro de prueba</td></tr>
+<tr><td><strong>8</strong></td><td>Mantener la plataforma. Aplicar actualizaciones de seguridad, usar conexión cifrada (HTTPS), proteger contra accesos no autorizados y registrar quién hizo qué cambio.</td><td>Desarrollador</td><td>Registro de cambios</td></tr>
+<tr><td><strong>9</strong></td><td>Proteger los dispositivos. Celulares y computadoras con bloqueo, sin compartir. Perdido o robado: avisar de inmediato para cerrar sesiones y cambiar claves.</td><td>Operaciones</td><td>Aviso</td></tr>
+<tr><td><strong>10</strong></td><td>Controlar proveedores de tecnología. Elegir servicios confiables y revisar sus condiciones de seguridad y respaldo. Tener un plan si el proveedor falla.</td><td>Finanzas</td><td>Evaluación</td></tr>
+<tr><td><strong>11</strong></td><td>Atender incidentes. Contener (cambiar claves, cerrar accesos), evaluar qué se afectó, informar a los socios y, si hay datos de clientes, avisar a los afectados según la ley. Investigar la causa y abrir una no conformidad.</td><td>Finanzas</td><td>Reporte de incidente</td></tr>
+<tr><td><strong>12</strong></td><td>Conservar y eliminar datos. Guardar los datos solo el tiempo necesario, según la tabla de retención, y eliminarlos de forma segura al vencer.</td><td>Finanzas</td><td>Registro de eliminación</td></tr>
+<tr><td><strong>13</strong></td><td>Revisar cada año. Revisar riesgos, accesos, pruebas y proveedores, y actualizar el procedimiento.</td><td>Los tres socios</td><td>Minuta</td></tr>
+</tbody></table>
+<h3>8. ACCESOS POR ROL</h3>
+<table><thead><tr><th>Rol</th><th>Puede ver y hacer</th><th>No puede</th></tr></thead><tbody>
+<tr><td>Administrador</td><td>Todo, incluidos usuarios y datos de la empresa</td><td>Compartir su acceso</td></tr>
+<tr><td>Operaciones</td><td>Órdenes, equipos, reportes y técnicos</td><td>Cambiar precios o datos financieros</td></tr>
+<tr><td>Comercial</td><td>Clientes, equipos, cotizaciones y órdenes</td><td>Ver datos financieros ni de pagos a técnicos</td></tr>
+<tr><td>Técnico</td><td>Solo sus órdenes asignadas</td><td>Ver precios, otros técnicos o clientes</td></tr>
+<tr><td>Cliente</td><td>Sus propios equipos y documentos</td><td>Ver datos de otros clientes</td></tr>
+</tbody></table>
+<h3>9. EXCEPCIONES Y CASOS ESPECIALES</h3>
+<table><thead><tr><th>Situación</th><th>Qué se hace</th></tr></thead><tbody>
+<tr><td>Pérdida o robo de un celular</td><td>Avisar, cerrar sesiones y cambiar claves en minutos; evaluar si había datos de clientes.</td></tr>
+<tr><td>Un socio o técnico se retira</td><td>Baja inmediata de accesos, recuperación de dispositivos y claves compartidas, y cambio de contraseñas críticas.</td></tr>
+<tr><td>Falla del proveedor de alojamiento</td><td>Aplicar el plan de continuidad y restaurar en otro servicio con el último respaldo.</td></tr>
+<tr><td>Sospecha de acceso indebido</td><td>Cambiar claves, revisar el registro de accesos, informar a los socios y evaluar el aviso a clientes.</td></tr>
+<tr><td>El desarrollador no está disponible</td><td>Usar las claves de la bóveda y el respaldo técnico acordado.</td></tr>
+<tr><td>Un cliente pide eliminar sus datos</td><td>Evaluar la retención legal y, si procede, eliminar o anonimizar y confirmar por escrito.</td></tr>
+</tbody></table>
+<h3>10. RIESGOS Y CONTROLES</h3>
+<table><thead><tr><th>Riesgo</th><th>Control</th></tr></thead><tbody>
+<tr><td>Acceso no autorizado a datos de clientes</td><td>Roles, claves seguras y doble factor.</td></tr>
+<tr><td>Pérdida de datos</td><td>Respaldos diarios y pruebas de restauración.</td></tr>
+<tr><td>Dependencia de una sola persona</td><td>Claves en bóveda, documentación y respaldo técnico.</td></tr>
+<tr><td>Dispositivos perdidos</td><td>Bloqueo, cierre remoto de sesiones y aviso inmediato.</td></tr>
+<tr><td>Incumplimiento de la ley de datos</td><td>Aviso de privacidad y validación con abogado.</td></tr>
+</tbody></table>
+<h3>11. INDICADORES</h3>
+<table><thead><tr><th>Indicador</th><th>Cómo se calcula</th><th>Meta</th></tr></thead><tbody>
+<tr><td>Respaldos exitosos</td><td>Exitosos ÷ programados</td><td>100 %</td></tr>
+<tr><td>Pruebas de restauración realizadas</td><td>Hechas ÷ programadas</td><td>100 %</td></tr>
+<tr><td>Usuarios con doble factor</td><td>Con doble factor ÷ usuarios internos</td><td>100 %</td></tr>
+<tr><td>Bajas de acceso en el mismo día</td><td>Bajas a tiempo ÷ bajas</td><td>100 %</td></tr>
+<tr><td>Incidentes de seguridad</td><td>Número en el periodo</td><td>0</td></tr>
+</tbody></table>
+<h3>12. CONTROL DE CAMBIOS</h3>
+<table><thead><tr><th>Versión</th><th>Fecha</th><th>Descripción del cambio</th><th>Autor</th></tr></thead><tbody>
+<tr><td>1.0</td><td></td><td>Emisión inicial</td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td></tr>
+</tbody></table>
+<table><tbody><tr><td>Elaboró</td><td>Revisó</td><td>Aprobó (los tres socios)</td></tr></tbody></table>

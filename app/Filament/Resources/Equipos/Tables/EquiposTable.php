@@ -74,6 +74,7 @@ class EquiposTable
                     ->icon('heroicon-o-qr-code')
                     ->url(fn ($record) => route('etiquetas.equipo', $record))
                     ->openUrlInNewTab(),
+                \Filament\Actions\ViewAction::make(),
                 EditAction::make(),
             ])
             ->toolbarActions([

@@ -26,6 +26,12 @@ class ActaConformidadRelationManager extends RelationManager
 
     protected static ?string $title = 'Acta de conformidad';
 
+    /** En la vista del técnico el relation manager sería de solo lectura y ocultaría "Registrar acta". */
+    public function isReadOnly(): bool
+    {
+        return false;
+    }
+
     public function form(Schema $schema): Schema
     {
         return $schema->components([
@@ -43,7 +49,6 @@ class ActaConformidadRelationManager extends RelationManager
             TextInput::make('recibe_nombre')->label('Recibe (nombre)')->required(),
             TextInput::make('recibe_cargo')->label('Cargo'),
             \App\Forms\Components\FirmaPad::make('f_firma_cliente')->label('Firma del cliente')->required(fn (string $operation) => $operation === 'create')->columnSpanFull(),
-            \App\Forms\Components\FirmaPad::make('f_firma_tecnico')->label('Firma del técnico')->columnSpanFull(),
         ])->columns(2);
     }
 
@@ -66,9 +71,9 @@ class ActaConformidadRelationManager extends RelationManager
                 TextColumn::make('calificacion')->label('Calificación')->placeholder('—'),
             ])
             ->headerActions([CreateAction::make()->label('Registrar acta')
-                ->using(fn (array $data) => $this->guardarConFirmas(null, $data, ['firma_cliente', 'firma_tecnico']))])
+                ->using(fn (array $data) => $this->guardarConFirmas(null, $data, ['firma_cliente']))])
             ->recordActions([EditAction::make()->visible(fn () => $this->actaEditable())
-                ->using(fn (array $data, $record) => $this->guardarConFirmas($record, $data, ['firma_cliente', 'firma_tecnico'])),
-                DeleteAction::make()->visible(fn () => $this->actaEditable())]);
+                ->using(fn (array $data, $record) => $this->guardarConFirmas($record, $data, ['firma_cliente'])),
+                DeleteAction::make()->visible(fn () => $this->actaEditable() && (bool) auth()->user()?->hasAnyRole(['administrador', 'coordinador']))]);
     }
 }

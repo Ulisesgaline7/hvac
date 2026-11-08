@@ -23,7 +23,12 @@
     </td>
     <td style="width:50%; padding-left:14pt; vertical-align:bottom">
         @if($repFirma)
-            <img src="{{ $repFirma }}" style="height:60pt"><br>
+            <table style="border-collapse:collapse; margin:0 auto;"><tr>
+                <td style="vertical-align:bottom; padding:0;"><img src="{{ $repFirma }}" style="height:44pt"></td>
+                @if (\App\Support\FirmaEmpresa::activa('contrato') && ($selloEmpresa = \App\Support\FirmaEmpresa::sello()))
+                    <td style="vertical-align:bottom; padding:0 0 0 8pt;"><img src="{{ $selloEmpresa }}" style="height:36pt"></td>
+                @endif
+            </tr></table>
         @else
             <div style="height:60pt"></div>
         @endif

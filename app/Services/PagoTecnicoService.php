@@ -11,10 +11,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
-/** Genera las líneas de pago a técnicos al cerrar una OT. Líder 60 %, resto de la cuadrilla 40 %; el supervisor no entra. */
+/** Genera las líneas de pago a técnicos al cerrar una OT. El supervisor recibe PCT_SUPERVISOR %; del resto, líder 60 % y cuadrilla 40 %. */
 class PagoTecnicoService
 {
     private const PCT_LIDER = 60;
+
+    /** % del monto base para los supervisores asignados (en partes iguales). El resto se reparte líder/cuadrilla. */
+    private const PCT_SUPERVISOR = 10;
 
     /** Mismo mapa que CotizacionFlujo: categoría del tarifario → tipo de OT. */
     private const TIPO_OT = [
@@ -90,25 +93,27 @@ class PagoTecnicoService
         return $n;
     }
 
-    /** @return array{lider: ?int, auxiliares: array<int, array{id: int, rol: string}>} */
+    /** @return array{lider: ?int, auxiliares: array<int, array{id: int, rol: string}>, supervisores: array<int, int>} */
     private function miembros(OrdenTrabajo $ot): array
     {
-        $filas = DB::table('orden_trabajo_tecnico')->where('orden_trabajo_id', $ot->id)->get()
-            ->filter(fn ($f) => $f->rol !== 'supervisor')->values();
+        $todas = DB::table('orden_trabajo_tecnico')->where('orden_trabajo_id', $ot->id)->get();
+        $supervisores = $todas->where('rol', 'supervisor')->pluck('tecnico_id')->map(fn ($i) => (int) $i)->unique()->values()->all();
+        $filas = $todas->filter(fn ($f) => $f->rol !== 'supervisor')->values();
 
         if ($filas->isEmpty() && $ot->tecnico_id) {
-            return ['lider' => (int) $ot->tecnico_id, 'auxiliares' => []];
+            return ['lider' => (int) $ot->tecnico_id, 'auxiliares' => [], 'supervisores' => $supervisores];
         }
 
         $lider = $filas->firstWhere('rol', 'lider') ?? $filas->first();
         if (! $lider) {
-            return ['lider' => null, 'auxiliares' => []];
+            return ['lider' => null, 'auxiliares' => [], 'supervisores' => $supervisores];
         }
 
         return [
             'lider' => (int) $lider->tecnico_id,
             'auxiliares' => $filas->filter(fn ($f) => (int) $f->tecnico_id !== (int) $lider->tecnico_id)
                 ->map(fn ($f) => ['id' => (int) $f->tecnico_id, 'rol' => (string) $f->rol])->values()->all(),
+            'supervisores' => $supervisores,
         ];
     }
 
@@ -232,14 +237,31 @@ class PagoTecnicoService
     /** @return array<int, array{tecnico_id: int, rol: string, pct: float, monto: float}> */
     private function reparto(float $base, array $m): array
     {
+        $sup = $m['supervisores'] ?? [];
         $aux = $m['auxiliares'];
-        if ($aux === []) {
-            return [['tecnico_id' => $m['lider'], 'rol' => 'lider', 'pct' => 100.0, 'monto' => round($base, 2)]];
+        $pctSup = $sup === [] ? 0.0 : (float) self::PCT_SUPERVISOR;
+        $factor = (100 - $pctSup) / 100;
+        $filas = [];
+        $baseEjec = $base;
+
+        if ($sup !== []) {
+            $pctCadaSup = round($pctSup / count($sup), 2);
+            $montoCadaSup = round($base * $pctCadaSup / 100, 2);
+            $baseEjec = round($base - $montoCadaSup * count($sup), 2);
+            foreach ($sup as $id) {
+                $filas[] = ['tecnico_id' => $id, 'rol' => 'supervisor', 'pct' => $pctCadaSup, 'monto' => $montoCadaSup];
+            }
         }
 
-        $pctAux = round((100 - self::PCT_LIDER) / count($aux), 2);
-        $montoAux = round($base * $pctAux / 100, 2);
-        $filas = [['tecnico_id' => $m['lider'], 'rol' => 'lider', 'pct' => (float) self::PCT_LIDER, 'monto' => round($base - $montoAux * count($aux), 2)]];
+        if ($aux === []) {
+            array_unshift($filas, ['tecnico_id' => $m['lider'], 'rol' => 'lider', 'pct' => round(100 * $factor, 2), 'monto' => round($baseEjec, 2)]);
+
+            return $filas;
+        }
+
+        $pctAux = round((100 - self::PCT_LIDER) * $factor / count($aux), 2);
+        $montoAux = round($baseEjec * (100 - self::PCT_LIDER) / 100 / count($aux), 2);
+        array_unshift($filas, ['tecnico_id' => $m['lider'], 'rol' => 'lider', 'pct' => round(self::PCT_LIDER * $factor, 2), 'monto' => round($baseEjec - $montoAux * count($aux), 2)]);
         foreach ($aux as $a) {
             $filas[] = ['tecnico_id' => $a['id'], 'rol' => $a['rol'], 'pct' => $pctAux, 'monto' => $montoAux];
         }

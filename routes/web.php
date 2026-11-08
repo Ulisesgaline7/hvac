@@ -34,6 +34,21 @@ Route::middleware(['web', 'auth'])
     ->whereNumber('ot')
     ->name('ordenes-trabajo.informe');
 
+Route::middleware('auth')
+    ->get('/ordenes-trabajo/{ot}/entregable/{tipo}', \App\Http\Controllers\EntregableOtController::class)
+    ->whereIn('tipo', ['garantia', 'capacitacion', 'calendario', 'protocolo'])
+    ->name('ordenes-trabajo.entregable');
+
+Route::middleware('auth')
+    ->get('/equipos/documentos/{media}', \App\Http\Controllers\DocumentoEquipoController::class)
+    ->whereNumber('media')
+    ->name('equipos.documento');
+
+Route::middleware('auth')
+    ->get('/ordenes-trabajo/documentos/{media}', \App\Http\Controllers\DocumentoOtController::class)
+    ->whereNumber('media')
+    ->name('ordenes-trabajo.documento');
+
 Route::middleware(['web', 'throttle:30,1'])
     ->get('/v/{token}', \App\Http\Controllers\VerificarInformeController::class)
     ->whereAlphaNumeric('token')
@@ -107,3 +122,11 @@ Route::get('/liquidaciones/{liquidacion}/comprobante', \App\Http\Controllers\Com
     ->middleware('web')
     ->whereNumber('liquidacion')
     ->name('liquidaciones.comprobante');
+
+Route::get('/documentos-terceros/{documento}/archivo', \App\Http\Controllers\DocumentoTerceroArchivoController::class)->name('documentos-terceros.archivo');
+
+Route::middleware(['web', 'auth'])->group(function () {
+    Route::get('/push/clave', [\App\Http\Controllers\PushController::class, 'clave']);
+    Route::post('/push/suscribir', [\App\Http\Controllers\PushController::class, 'guardar']);
+    Route::post('/push/baja', [\App\Http\Controllers\PushController::class, 'borrar']);
+});

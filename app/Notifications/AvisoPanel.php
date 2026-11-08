@@ -23,7 +23,16 @@ class AvisoPanel extends Notification implements ShouldQueue
 
     public function via($notifiable): array
     {
-        return $this->correo ? ['database', 'mail'] : ['database'];
+        $canales = $this->correo ? ['database', 'mail'] : ['database'];
+        $canales[] = \App\Notifications\Channels\WebPushChannel::class;
+
+        return $canales;
+    }
+
+    /** Texto genérico: se ve en la pantalla bloqueada. El detalle está en el panel. */
+    public function toPush($notifiable): array
+    {
+        return ['title' => 'Control Total', 'body' => 'Tienes un aviso nuevo', 'url' => $this->url ?: '/tecnico'];
     }
 
     public function toDatabase($notifiable): array
@@ -34,7 +43,7 @@ class AvisoPanel extends Notification implements ShouldQueue
             ->icon($this->icono);
 
         if ($this->url) {
-            $n->actions([Action::make('ver')->label('Ver')->url($this->url)->button()]);
+            $n->actions([Action::make('ver')->label('Ver')->url($this->url)->button()->markAsRead()->markAsRead()]);
         }
 
         return $n->getDatabaseMessage();
@@ -42,7 +51,11 @@ class AvisoPanel extends Notification implements ShouldQueue
 
     public function toMail($notifiable): MailMessage
     {
-        $m = (new MailMessage)->subject($this->titulo)->line($this->cuerpo);
+        $m = (new MailMessage)
+            ->subject($this->titulo)
+            ->greeting('Hola, ' . ($notifiable->name ?? ''))
+            ->line($this->cuerpo)
+            ->salutation("Saludos,\nControl Total");
 
         if ($this->url) {
             $m->action('Ver detalle', $this->url);

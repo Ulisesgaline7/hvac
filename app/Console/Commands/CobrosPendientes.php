@@ -34,12 +34,16 @@ class CobrosPendientes extends Command
         foreach (Contrato::where('estado', 'activo')->where('cuota_monto', '>', 0)->cursor() as $c) {
             $inicio = Carbon::parse($c->vigencia_inicio)->startOfDay();
             $fin = Carbon::parse($c->vigencia_fin)->startOfDay();
+            $unico = ($c->periodicidad ?: config('cobros.contrato_periodicidad')) === 'unica';
             $paso = self::MESES[$c->periodicidad ?: config('cobros.contrato_periodicidad')] ?? 1;
 
             for ($k = 0; ($p = $inicio->copy()->addMonthsNoOverflow($k * $paso))->lte($hoy) && $p->lte($fin); $k++) {
                 if (! Factura::where('contrato_id', $c->id)->whereDate('periodo', $p)->exists()) {
                     $this->line("Contrato {$c->id}  periodo {$p->format('d/m/Y')}");
                     $n++;
+                }
+                if ($unico) {
+                    break;
                 }
             }
         }

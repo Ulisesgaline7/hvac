@@ -13,10 +13,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Equipo extends Model
+class Equipo extends Model implements HasMedia
 {
-    use AislaPorCliente, Auditable, RegistraCreador, SoftDeletes;
+    use AislaPorCliente, Auditable, InteractsWithMedia, RegistraCreador, SoftDeletes;
 
     protected $table = 'equipos';
     protected $guarded = [];
@@ -27,6 +29,12 @@ class Equipo extends Model
         'fecha_instalacion' => 'date',
         'garantia_hasta' => 'date',
     ];
+
+    /** Documentos escaneados del equipo (manual, ficha del fabricante, garantía). Disco privado. */
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('documentos_equipo')->useDisk('local');
+    }
 
     protected static function booted(): void
     {
@@ -48,6 +56,21 @@ class Equipo extends Model
         });
     }
 
+    public function lineas(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(OrdenTrabajoEquipo::class, 'equipo_id');
+    }
+
+    public function documentosEquipo(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->media()->where('collection_name', 'documentos_equipo');
+    }
+
+    public function garantias(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Garantia::class, 'equipo_id');
+    }
+
     public function area(): BelongsTo
     {
         return $this->belongsTo(Area::class);
@@ -66,6 +89,21 @@ class Equipo extends Model
     public function refrigerante(): BelongsTo
     {
         return $this->belongsTo(Refrigerante::class);
+    }
+
+    /** Capacidad lista para mostrar, p. ej. "18000 BTU" (sin ceros sobrantes). */
+    public function getCapacidadTextoAttribute(): ?string
+    {
+        if (! $this->capacidad_valor) {
+            return null;
+        }
+
+        $valor = (string) $this->capacidad_valor;
+        if (str_contains($valor, '.')) {
+            $valor = rtrim(rtrim($valor, '0'), '.');
+        }
+
+        return trim($valor . ' ' . $this->capacidad_unidad);
     }
 
     protected static function restringirACliente(Builder $consulta, int $clienteId): void

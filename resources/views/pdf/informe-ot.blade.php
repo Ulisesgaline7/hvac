@@ -18,6 +18,7 @@
     .ok { background: #15803d; } .borrador { background: #b45309; } .sin { background: #4B5A6E; }
     .alerta { background: #fef2f2; border-left: 3px solid #b91c1c; padding: 3px 6px; margin: 3px 0; color: #991b1b; }
     .bloque { margin: 4px 0; }
+    .falla-fila td { background: #fef2f2; }
 </style>
 @endpush
 
@@ -38,6 +39,15 @@
     @if ($ot->causa_raiz)<div class="bloque"><strong>Causa raíz:</strong> {{ $ot->causa_raiz }}</div>@endif
     @if ($ot->reparacion)<div class="bloque"><strong>Reparación:</strong> {{ $ot->reparacion }}</div>@endif
 
+    @php
+        $fallasOt = $lineas->flatMap(fn ($l) => collect($l['checklist'])->where('falla', true)
+            ->map(fn ($a) => $l['codigo'] . ' · ' . $a['texto'] . ($a['obs'] ? ': ' . $a['obs'] : '')))->values();
+    @endphp
+    @if ($fallasOt->isNotEmpty())
+        <div class="seccion">Actividades con falla ({{ $fallasOt->count() }})</div>
+        @foreach ($fallasOt as $f)<div class="alerta">{{ $f }}</div>@endforeach
+    @endif
+
     <div class="seccion">Equipos intervenidos ({{ $lineas->count() }})</div>
 
     @forelse ($lineas as $l)
@@ -54,6 +64,18 @@
             @if ($l['observaciones'])<div class="bloque">Observaciones: {{ $l['observaciones'] }}</div>@endif
 
             @foreach ($l['alertas'] as $a)<div class="alerta">⚠ {{ $a }}</div>@endforeach
+
+            @if ($l['checklist'])
+                <div class="bloque"><strong>Checklist de actividades</strong></div>
+                <table class="filas">
+                    @foreach ($l['checklist'] as $a)
+                        <tr class="{{ $a['falla'] ? 'falla-fila' : '' }}">
+                            <td class="k">{{ $a['texto'] }}</td>
+                            <td class="{{ $a['falla'] ? 'fuera' : '' }}">{{ $a['estado'] }}@if ($a['falla'] && $a['obs']) · {{ $a['obs'] }}@endif</td>
+                        </tr>
+                    @endforeach
+                </table>
+            @endif
 
             @if ($l['filas'])
                 <table class="filas">

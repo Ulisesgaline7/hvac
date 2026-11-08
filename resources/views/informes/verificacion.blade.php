@@ -18,7 +18,7 @@
     <div class="tarjeta">
         @if ($integro === false)
             <h1>✖ Documento alterado</h1>
-            <p class="nota">El archivo guardado no coincide con el que se firmó. No lo considere válido y comuníquese con PIC Ingeniería.</p>
+            <p class="nota">El archivo guardado no coincide con el que se firmó. No lo considere válido y comuníquese con Control Total.</p>
         @else
             <h1>✔ Informe auténtico</h1>
         @endif

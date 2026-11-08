@@ -1,6 +1,6 @@
 {
-  "name": "HVAC Manager · Técnicos",
-  "short_name": "HVAC Técnico",
+  "name": "Control Total · Técnicos",
+  "short_name": "Control Total Técnico",
   "start_url": "/tecnico",
   "scope": "/",
   "display": "standalone",

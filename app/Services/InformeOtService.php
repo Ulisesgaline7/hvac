@@ -64,7 +64,8 @@ class InformeOtService
                     'completa' => (bool) $ficha?->completa,
                     'alertas' => $ficha?->alertas ?? [],
                     'plantilla' => $ficha?->version?->plantilla?->nombre ?? null,
-                    'filas' => $ficha ? $this->filas($ficha->campos(), $ficha->respuestas ?? []) : [],
+                    'filas' => $this->filasConRefrigerante($l, $ficha),
+                    'checklist' => $this->checklist($l),
                 ];
             });
 
@@ -142,6 +143,20 @@ class InformeOtService
             ])->values()->all();
     }
 
+    /** Checklist de actividades de la línea con su resultado (OK, N/A, Falla) y observación. */
+    private function checklist(OrdenTrabajoEquipo $l): array
+    {
+        $estados = ['ok' => 'OK', 'na' => 'N/A', 'falla' => 'Falla'];
+        $resp = \App\Support\ChecklistLinea::respuestas($l);
+
+        return collect(\App\Support\ChecklistLinea::actividades($l))->map(fn ($texto, $k) => [
+            'texto' => $texto,
+            'estado' => $estados[$resp[$k]['estado'] ?? ''] ?? 'Sin responder',
+            'falla' => ($resp[$k]['estado'] ?? null) === 'falla',
+            'obs' => $resp[$k]['obs'] ?? null,
+        ])->values()->all();
+    }
+
     /** Una fila por campo de la plantilla (omite foto y firma, que llegan con el módulo de evidencias). */
     private function filas(array $campos, array $resp): array
     {
@@ -170,6 +185,37 @@ class InformeOtService
             };
 
             $filas[] = ['etiqueta' => $c['etiqueta'], 'valor' => $texto, 'fuera' => $fuera, 'nota' => $c['tipo'] === 'nota'];
+        }
+
+        return $filas;
+    }
+
+    /** Filas de la ficha + refrigerante calculado desde los movimientos (si la ficha no tiene su propio campo de cantidad). */
+    private function filasConRefrigerante(OrdenTrabajoEquipo $l, $ficha): array
+    {
+        $filas = $ficha ? $this->filas($ficha->campos(), $ficha->respuestas ?? []) : [];
+        $claves = $ficha ? array_column($ficha->campos(), 'clave') : [];
+
+        if (in_array('refrigerante_cantidad', $claves, true)) {
+            return $filas;
+        }
+
+        $movs = $l->movimientos()->with('cilindro.refrigerante')->orderBy('id')->get();
+
+        foreach (['carga' => 'Refrigerante cargado', 'recuperacion' => 'Refrigerante recuperado'] as $tipo => $etiqueta) {
+            $grupo = $movs->where('tipo', $tipo);
+            if ($grupo->isEmpty()) {
+                continue;
+            }
+
+            $tipos = $grupo->map(fn ($m) => $m->cilindro?->refrigerante?->nombre)->filter()->unique()->implode(', ');
+
+            $filas[] = [
+                'etiqueta' => $etiqueta . ($tipos !== '' ? " ($tipos)" : ''),
+                'valor' => number_format((float) $grupo->sum('cantidad_kg'), 2, '.', '') . ' kg',
+                'fuera' => false,
+                'nota' => false,
+            ];
         }
 
         return $filas;

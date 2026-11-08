@@ -21,6 +21,12 @@ class GeneradorCalendario
         $inicio = $inicio->copy()->startOfDay();
         $fin = $fin->copy()->startOfDay();
 
+        // Una sola visita: la fecha de inicio si cae dentro de la vigencia.
+        // Sin esto, meses() = 0 repetiría la misma fecha sin terminar nunca.
+        if ($frecuencia === Frecuencia::Unica) {
+            return $inicio->lte($fin) ? [$inicio] : [];
+        }
+
         for ($i = 0; ($fecha = $inicio->copy()->addMonthsNoOverflow($i * $frecuencia->meses()))->lte($fin); $i++) {
             $fechas[] = $fecha;
         }

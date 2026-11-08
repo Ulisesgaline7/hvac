@@ -70,4 +70,5 @@
             @endforeach
         </table>
     @endif
+@include("pdf.partials.qr-verificacion", ["token" => app(\App\Services\VerificacionDocumento::class)->token($f), "que" => "esta factura"])
 @endsection

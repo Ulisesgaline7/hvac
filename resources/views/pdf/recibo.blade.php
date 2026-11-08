@@ -55,4 +55,5 @@
             <td style="width:40%"><div class="firma">Cliente</div></td>
         </tr>
     </table>
+@include("pdf.partials.qr-verificacion", ["token" => app(\App\Services\VerificacionDocumento::class)->token($pago), "que" => "este recibo"])
 @endsection

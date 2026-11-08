@@ -3,7 +3,7 @@
 // Cláusulas generales del contrato. Reemplazar por el texto aprobado por el abogado.
 return [
     // Representante legal de la Empresa (se imprime en el PDF).
-    'representante' => ['nombre' => 'Fredy Ulises Galindo Lainez', 'cargo' => 'Representante legal'],
+    'representante' => ['nombre' => env('EMPRESA_REP_NOMBRE', 'Fredy Ulises Galindo Lainez'), 'cargo' => env('EMPRESA_REP_CARGO', 'Representante legal')],
     'clausulas' => [
         ['titulo' => 'Objeto', 'texto' => 'La Empresa prestará al Cliente los servicios descritos en este contrato sobre los equipos listados.'],
         ['titulo' => 'Acceso', 'texto' => 'El Cliente facilitará el acceso a las instalaciones y equipos en las fechas coordinadas.'],

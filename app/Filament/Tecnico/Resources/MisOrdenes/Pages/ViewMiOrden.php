@@ -18,7 +18,11 @@ class ViewMiOrden extends ViewRecord
             $this->transicion('iniciar', 'Iniciar', EstadoOt::Asignada, EstadoOt::EnProceso, 'heroicon-o-play'),
             $this->transicion('reanudar', 'Reanudar', EstadoOt::EnEspera, EstadoOt::EnProceso, 'heroicon-o-arrow-path'),
             $this->transicion('completar', 'Completar', EstadoOt::EnProceso, EstadoOt::CompletadaTecnico, 'heroicon-o-check'),
+            ...\App\Support\AccionesEntregables::hacer(fn () => $this->record),
             $this->acuerdoAction(),
+            $this->pasoSupervisor('revisar', 'Iniciar revisión', EstadoOt::CompletadaTecnico, EstadoOt::EnRevision, 'heroicon-o-eye', false),
+            $this->pasoSupervisor('cerrar', 'Cerrar OT', EstadoOt::EnRevision, EstadoOt::Cerrada, 'heroicon-o-lock-closed', false),
+            $this->pasoSupervisor('devolver', 'Devolver al técnico', EstadoOt::EnRevision, EstadoOt::EnProceso, 'heroicon-o-arrow-uturn-left', true),
         ];
     }
 
@@ -68,6 +72,33 @@ class ViewMiOrden extends ViewRecord
     {
         return \Illuminate\Support\Facades\DB::table('orden_trabajo_tecnico')
             ->where('orden_trabajo_id', $this->record->id)->where('rol', 'lider')->exists();
+    }
+
+    /** Pasos del supervisor asignado. Visible solo para él; la autorización real la valida OrdenTrabajo::cambiarEstado. */
+    private function pasoSupervisor(string $nombre, string $etiqueta, EstadoOt $desde, EstadoOt $hacia, string $icono, bool $pideMotivo): Action
+    {
+        return Action::make($nombre)
+            ->label($etiqueta)
+            ->icon($icono)
+            ->color($hacia === EstadoOt::EnProceso ? 'warning' : 'success')
+            ->visible(fn () => $this->record->estado === $desde && $this->record->esSupervisorDe(auth()->user()))
+            ->schema([
+                \Filament\Forms\Components\Textarea::make('motivo')
+                    ->label($pideMotivo ? 'Motivo de la devolución' : 'Observaciones (obligatorio si hay valores fuera de rango)')
+                    ->required($pideMotivo),
+            ])
+            ->action(function (array $data) use ($hacia) {
+                try {
+                    $this->record->cambiarEstado($hacia, $data['motivo'] ?? null);
+                } catch (\DomainException $e) {
+                    Notification::make()->danger()->title($e->getMessage())->send();
+
+                    return;
+                }
+
+                $this->record->refresh();
+                Notification::make()->success()->title('Estado actualizado')->send();
+            });
     }
 
     private function transicion(string $nombre, string $etiqueta, EstadoOt $desde, EstadoOt $hacia, string $icono): Action

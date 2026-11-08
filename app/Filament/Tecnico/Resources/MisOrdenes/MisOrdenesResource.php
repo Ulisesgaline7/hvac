@@ -68,12 +68,34 @@ class MisOrdenesResource extends Resource
                 $e::make('motivo_devolucion')->label('Motivo de devolución')->columnSpanFull()
                     ->visible(fn ($record) => filled($record->motivo_devolucion)),
             ]),
+            \Filament\Schemas\Components\Section::make('Actividades con falla')->columnSpanFull()
+                ->visible(fn ($record) => self::fallasDe($record) !== [])
+                ->schema([
+                    $e::make('fallas')->hiddenLabel()->color('danger')
+                        ->state(fn ($record) => self::fallasDe($record))
+                        ->listWithLineBreaks()->bulleted(),
+                ]),
         ]);
+    }
+
+    /** Actividades del checklist marcadas con falla, de todos los equipos de la OT. */
+    public static function fallasDe($ot): array
+    {
+        $salida = [];
+
+        foreach ($ot->lineas()->with('equipo')->get() as $l) {
+            foreach (\App\Support\ChecklistLinea::fallas($l) as $f) {
+                $salida[] = ($l->equipo?->codigo ?? 'Equipo por instalar') . ' · ' . ($f['texto'] ?? '')
+                    . (filled($f['obs'] ?? null) ? ': ' . $f['obs'] : '');
+            }
+        }
+
+        return $salida;
     }
 
     public static function getRelations(): array
     {
-        return [LineasRelationManager::class];
+        return [LineasRelationManager::class, \App\Filament\Resources\OrdenTrabajos\RelationManagers\ActaConformidadRelationManager::class, \App\Filament\Resources\OrdenTrabajos\RelationManagers\DocumentosOtRelationManager::class];
     }
 
     public static function getPages(): array

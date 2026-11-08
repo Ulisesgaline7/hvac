@@ -74,6 +74,27 @@ class RlsServiceProvider extends ServiceProvider
             self::fijar($previo->interno, $previo->cliente, $previo->usuario);
         }
     }
+    /** Como comoInterno(), pero conserva el usuario autenticado (app.user_id) para que quede el autor en los registros. */
+    public static function comoInternoConUsuario(callable $fn): mixed
+    {
+        if (DB::connection()->getDriverName() !== 'pgsql') {
+            return $fn();
+        }
+
+        $previo = DB::connection()->selectOne(
+            "select coalesce(current_setting('app.es_interno', true), '') as interno,
+                    coalesce(current_setting('app.cliente_id', true), '') as cliente,
+                    coalesce(current_setting('app.user_id', true), '') as usuario"
+        );
+
+        self::fijar('true', '', $previo->usuario);
+        try {
+            return $fn();
+        } finally {
+            self::fijar($previo->interno, $previo->cliente, $previo->usuario);
+        }
+    }
+
     private static function fijar(string $interno, string $clienteId, string $userId): void
     {
         DB::connection()->select(

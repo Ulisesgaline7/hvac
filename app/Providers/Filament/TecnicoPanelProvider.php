@@ -30,6 +30,7 @@ class TecnicoPanelProvider extends PanelProvider
             ->login()
             ->colors(['primary' => \App\Support\Marca::primario()])
             ->brandName(\App\Support\Marca::nombre())
+            ->profile(\App\Filament\Pages\Auth\EditarPerfil::class)
             ->brandLogo(\App\Support\Marca::logoClaro())
             ->darkModeBrandLogo(\App\Support\Marca::logoOscuro())
             ->brandLogoHeight(\App\Support\Marca::alturaLogo())

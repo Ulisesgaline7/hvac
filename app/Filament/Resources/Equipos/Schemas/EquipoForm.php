@@ -112,6 +112,8 @@ class EquipoForm
                     ->options(EstadoEquipo::class)
                     ->default('operativo')
                     ->required(),
+                \Filament\Forms\Components\FileUpload::make('foto_ruta')->label('Foto del equipo')
+                    ->image()->disk('public')->directory('equipos')->visibility('public')->maxSize(4096)->columnSpanFull(),
                 Textarea::make('notas')->columnSpanFull(),
             ]);
     }

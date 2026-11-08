@@ -27,6 +27,7 @@ class EditOrdenTrabajo extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            ...\App\Support\AccionesEntregables::hacer(fn () => $this->record),
             Action::make('informe')
                 ->label('Informe PDF')
                 ->icon('heroicon-o-document-arrow-down')
@@ -190,7 +191,7 @@ class EditOrdenTrabajo extends EditRecord
                         ->options(fn () => Tecnico::where('estado_homologacion', 'aprobado')->with('user')->get()->pluck('user.name', 'id'))
                         ->searchable()
                         ->required()
-                        ->helperText('El líder cambia el estado de la OT y firma el cierre. Solo técnicos aprobados.'),
+                        ->helperText('El líder ejecuta la OT y la completa. La revisión y el cierre los hace el supervisor, el coordinador o el administrador. Solo técnicos aprobados.'),
                     \Filament\Forms\Components\Repeater::make('miembros')
                         ->label('Otros miembros')
                         ->defaultItems(0)
@@ -204,11 +205,11 @@ class EditOrdenTrabajo extends EditRecord
                                 ->required(),
                             Select::make('rol')
                                 ->label('Rol')
-                                ->options(['tecnico' => 'Técnico', 'ayudante' => 'Ayudante'])
+                                ->options(['tecnico' => 'Técnico', 'ayudante' => 'Ayudante', 'supervisor' => 'Supervisor (revisa y cierra)'])
                                 ->default('tecnico')
                                 ->required(),
                         ])
-                        ->helperText('Tarifario: instalaciones mínimo 2 personas; en altura, 1 ayudante por cada 2 técnicos; el líder también supervisa.'),
+                        ->helperText('Tarifario: instalaciones mínimo 2 personas (sin contar al supervisor); en altura, 1 ayudante por cada 2 técnicos. El supervisor debe tener el rol de supervisor y recibe un porcentaje aparte del pago.'),
                 ])
                 ->action(function (array $data) {
                     try {

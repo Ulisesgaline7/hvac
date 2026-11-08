@@ -18,32 +18,55 @@ class FormularioDinamico
 
     public static function componentes(array $campos, string $prefijo = 'r_'): array
     {
+        $claves = array_column($campos, 'clave');
+        $usados = [];
         $salida = [];
 
         foreach ($campos as $c) {
-            if (in_array($c['tipo'], self::PENDIENTES, true)) {
+            if (in_array($c['tipo'], self::PENDIENTES, true) || isset($usados[$c['clave']])) {
                 continue;
             }
 
-            $nombre = $prefijo . $c['clave'];
-            $etiqueta = $c['etiqueta'] . (! empty($c['obligatorio']) ? ' *' : '');
+            // Par "antes/después": la clave termina en _antes y existe su contraparte del mismo tipo.
+            if (str_ends_with($c['clave'], '_antes')) {
+                $base = substr($c['clave'], 0, -6);
+                $i = array_search($base, $claves, true);
 
-            $salida[] = match ($c['tipo']) {
-                'numero' => TextInput::make($nombre)->label($etiqueta)->numeric()
-                    ->suffix($c['unidad'] ?? null)->helperText(self::ayudaRango($c)),
-                'seleccion' => Select::make($nombre)->label($etiqueta)->options(self::opciones($c)),
-                'casilla' => Toggle::make($nombre)->label($etiqueta),
-                'checklist' => CheckboxList::make($nombre)->label($etiqueta)->options(self::opciones($c))->columns(2)->columnSpanFull(),
-                'foto' => FileUpload::make('f_' . $c['clave'])->label($etiqueta)->image()->multiple()->maxFiles(6)
-                    ->maxSize(10240)->disk('local')->directory('tmp-fotos')->visibility('private')->columnSpanFull(),
-                'firma' => FirmaPad::make('f_' . $c['clave'])->label($etiqueta)->columnSpanFull(),
-                'fecha' => DatePicker::make($nombre)->label($etiqueta),
-                'nota' => Textarea::make($nombre)->label($etiqueta)->columnSpanFull(),
-                default => TextInput::make($nombre)->label($etiqueta),
-            };
+                if ($i !== false && $campos[$i]['tipo'] === $c['tipo']) {
+                    $usados[$base] = true;
+                    $salida[] = \Filament\Schemas\Components\Grid::make(2)->columnSpanFull()->schema([
+                        self::componente($c, $prefijo),
+                        self::componente($campos[$i], $prefijo),
+                    ]);
+
+                    continue;
+                }
+            }
+
+            $salida[] = self::componente($c, $prefijo);
         }
 
         return $salida;
+    }
+
+    private static function componente(array $c, string $prefijo)
+    {
+        $nombre = $prefijo . $c['clave'];
+        $etiqueta = $c['etiqueta'] . (! empty($c['obligatorio']) ? ' *' : '');
+
+        return match ($c['tipo']) {
+            'numero' => TextInput::make($nombre)->label($etiqueta)->numeric()
+                ->suffix($c['unidad'] ?? null)->helperText(self::ayudaRango($c)),
+            'seleccion' => Select::make($nombre)->label($etiqueta)->options(self::opciones($c)),
+            'casilla' => Toggle::make($nombre)->label($etiqueta),
+            'checklist' => CheckboxList::make($nombre)->label($etiqueta)->options(self::opciones($c))->columns(2)->columnSpanFull(),
+            'foto' => FileUpload::make('f_' . $c['clave'])->label($etiqueta)->image()->multiple()->maxFiles(6)
+                ->maxSize(10240)->disk('local')->directory('tmp-fotos')->visibility('private')->columnSpanFull(),
+            'firma' => FirmaPad::make('f_' . $c['clave'])->label($etiqueta)->columnSpanFull(),
+            'fecha' => DatePicker::make($nombre)->label($etiqueta),
+            'nota' => Textarea::make($nombre)->label($etiqueta)->columnSpanFull(),
+            default => TextInput::make($nombre)->label($etiqueta),
+        };
     }
 
     /** Etiquetas de los campos obligatorios sin respuesta. `false` en una casilla cuenta como respondido. */

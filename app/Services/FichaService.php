@@ -58,6 +58,31 @@ class FichaService
         return $ficha;
     }
 
+    /** Valores iniciales desde el equipo para campos con "origen" (p. ej. "equipo.modelo") aún sin respuesta. No guarda nada. */
+    public function prellenar(OrdenTrabajoEquipo $linea, FichaTecnica $ficha): array
+    {
+        $respuestas = $ficha->respuestas ?? [];
+
+        foreach ($ficha->campos() as $c) {
+            if (empty($c['origen']) || isset($respuestas[$c['clave']])) {
+                continue;
+            }
+
+            $valor = data_get($linea, $c['origen']);
+            if ($valor === null || $valor === '' || is_array($valor) || is_object($valor)) {
+                continue;
+            }
+
+            if ($c['tipo'] === 'seleccion' && ! in_array($valor, $c['opciones'] ?? [], true)) {
+                continue;
+            }
+
+            $respuestas[$c['clave']] = $valor;
+        }
+
+        return $respuestas;
+    }
+
     private function plantillaPara(OrdenTrabajoEquipo $linea): PlantillaFormulario
     {
         $ot = $linea->ordenTrabajo;

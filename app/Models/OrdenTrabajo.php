@@ -18,9 +18,16 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class OrdenTrabajo extends Model
+class OrdenTrabajo extends Model implements \Spatie\MediaLibrary\HasMedia
 {
     use AislaPorCliente, Auditable, RegistraCreador, SoftDeletes, TieneSla;
+    use \Spatie\MediaLibrary\InteractsWithMedia;
+
+    /** Documentos escaneados de la OT (acta firmada, orden de servicio, etc.). Disco privado. */
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('documentos_ot')->useDisk('local');
+    }
 
     protected $table = 'ordenes_trabajo';
     protected $guarded = [];
@@ -163,6 +170,9 @@ class OrdenTrabajo extends Model
 
     public ?string $motivoCambio = null;
 
+    /** Evita repetir la elevación de contexto cuando cambiarEstado se vuelve a llamar a sí mismo. */
+    private bool $elevado = false;
+
     public function historial(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(HistorialEstadoOt::class, 'orden_trabajo_id')->latest('id');
@@ -194,10 +204,36 @@ class OrdenTrabajo extends Model
             throw new \DomainException("Hay {$incompletas} equipo(s) con la ficha técnica incompleta o sin llenar.");
         }
 
+        if ($this->tipo === TipoOt::Instalacion) {
+            $sinCarga = $lineas->filter(function ($l) {
+                $r = $l->ficha?->respuestas ?? [];
+                $legado = filled($r['refrigerante_cantidad'] ?? null);
+                $noAplica = ($r['carga_registrada'] ?? null) === 'N/A';
+                $hayCarga = \App\Models\MovimientoRefrigerante::where('orden_trabajo_equipo_id', $l->id)
+                    ->where('tipo', 'carga')->exists();
+
+                return ! ($legado || $noAplica || $hayCarga);
+            })->count();
+
+            if ($sinCarga > 0) {
+                throw new \DomainException("Hay {$sinCarga} equipo(s) sin carga de refrigerante registrada. Regístrala en la línea o marca «Carga de refrigerante registrada» como N/A en la ficha.");
+            }
+        }
+
+        $sinResponder = $lineas->sum(fn ($l) => \App\Support\ChecklistLinea::pendientes($l));
+        if ($sinResponder > 0) {
+            throw new \DomainException("Quedan {$sinResponder} actividad(es) del checklist sin responder.");
+        }
+
         if ($nuevo === EstadoOt::Cerrada
-            && in_array($this->tipo, [TipoOt::Instalacion, TipoOt::Emergencia], true)
+            && $lineas->contains(fn ($l) => \App\Support\ChecklistLinea::fallas($l) !== [])
+            && blank($motivo)) {
+            throw new \DomainException('Hay actividades del checklist con falla. Indica en el motivo cómo se atendieron antes de cerrar.');
+        }
+
+        if (in_array($this->tipo, [TipoOt::Instalacion, TipoOt::Emergencia], true)
             && ! $this->actas()->get()->contains(fn ($a) => $a->getMedia('firma_cliente')->isNotEmpty())) {
-            throw new \DomainException('Una OT de instalación o emergencia necesita el acta de conformidad firmada por el cliente para cerrarse.');
+            throw new \DomainException('Una OT de instalación o emergencia necesita el acta de conformidad firmada por el cliente para completarse o cerrarse. Regístrala en la pestaña «Acta de conformidad».');
         }
 
         if ($nuevo === EstadoOt::Cerrada
@@ -215,6 +251,32 @@ class OrdenTrabajo extends Model
             ->withTimestamps();
     }
 
+    /**
+     * Supervisor de la OT: usuario con rol «supervisor» que figura en su cuadrilla solo como supervisor
+     * (ni líder ni ejecutor). La cuadrilla se lee con contexto interno para no depender de lo que el RLS le deje ver.
+     */
+    public function esSupervisorDe($usuario): bool
+    {
+        if (! $this->exists || ! $usuario || ! method_exists($usuario, 'hasRole') || ! $usuario->hasRole('supervisor')) {
+            return false;
+        }
+
+        return \App\Providers\RlsServiceProvider::comoInternoConUsuario(function () use ($usuario) {
+            $roles = DB::table('orden_trabajo_tecnico as ott')
+                ->join('tecnicos as t', 't.id', '=', 'ott.tecnico_id')
+                ->where('ott.orden_trabajo_id', $this->id)
+                ->where('t.user_id', $usuario->getKey())
+                ->pluck('ott.rol');
+
+            $esLiderDeLaOt = $this->tecnico_id
+                && DB::table('tecnicos')->where('id', $this->tecnico_id)->where('user_id', $usuario->getKey())->exists();
+
+            return $roles->contains('supervisor')
+                && ! $roles->contains(fn ($r) => $r !== 'supervisor')
+                && ! $esLiderDeLaOt;
+        });
+    }
+
     public function cambiarEstado(EstadoOt $nuevo, ?string $motivo = null): void
     {
         if (! in_array($nuevo, $this->estado->transiciones(), true)) {
@@ -225,8 +287,28 @@ class OrdenTrabajo extends Model
         $esCierreODevolucion = $nuevo === EstadoOt::Cerrada
             || ($this->estado === EstadoOt::EnRevision && $nuevo === EstadoOt::EnProceso);
 
-        if ($esCierreODevolucion && $usuario && ! $usuario->hasAnyRole(['administrador', 'coordinador'])) {
-            throw new \DomainException('Solo coordinador o administrador pueden cerrar o devolver la OT.');
+        if ($esCierreODevolucion && $usuario
+            && ! $usuario->hasAnyRole(['administrador', 'coordinador'])
+            && ! $this->esSupervisorDe($usuario)) {
+            throw new \DomainException('Solo coordinador, administrador o el supervisor asignado pueden cerrar o devolver la OT.');
+        }
+
+        // El supervisor asignado revisa, cierra y devuelve. En base de datos tiene permisos de técnico, así que la
+        // operación corre con contexto interno (conservando su usuario). La autorización ya se validó arriba.
+        $esPasoDeSupervisor = $esCierreODevolucion
+            || ($this->estado === EstadoOt::CompletadaTecnico && $nuevo === EstadoOt::EnRevision);
+
+        if ($esPasoDeSupervisor && ! $this->elevado && $usuario
+            && ! $usuario->hasAnyRole(['administrador', 'coordinador'])
+            && $this->esSupervisorDe($usuario)) {
+            $this->elevado = true;
+            try {
+                \App\Providers\RlsServiceProvider::comoInternoConUsuario(fn () => $this->cambiarEstado($nuevo, $motivo));
+            } finally {
+                $this->elevado = false;
+            }
+
+            return;
         }
 
         if ($this->estado === EstadoOt::Asignada && $nuevo === EstadoOt::EnProceso) {

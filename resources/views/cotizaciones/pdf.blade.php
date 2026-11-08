@@ -111,7 +111,10 @@
 
 <table class="sin-borde" style="margin-top: 14mm;">
     <tr>
-        <td class="firma">Elaborado por {{ $empresa['nombre'] }}</td>
+        <td class="firma">
+            @include('pdf.partes.firma-empresa', ['documento' => 'cotizacion'])
+            Elaborado por {{ $empresa['nombre'] }}
+        </td>
         <td style="width: 10%;"></td>
         <td class="firma">
             @if ($firmada)

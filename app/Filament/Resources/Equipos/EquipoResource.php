@@ -35,10 +35,40 @@ class EquipoResource extends Resource
         return EquiposTable::configure($table);
     }
 
+    public static function infolist(Schema $schema): Schema
+    {
+        $texto = fn (string $n, string $l) => \Filament\Infolists\Components\TextEntry::make($n)->label($l)->placeholder('—');
+
+        return $schema->components([
+            \Filament\Schemas\Components\Section::make('Equipo')->columns(3)->columnSpanFull()->schema([
+                \Filament\Infolists\Components\ImageEntry::make('foto_ruta')->label('Foto')->disk('public')->height(160),
+                $texto('codigo', 'Código')->weight('bold')->copyable(),
+                $texto('tipo.nombre', 'Tipo'),
+                \Filament\Infolists\Components\TextEntry::make('estado')->label('Estado')->badge(),
+                $texto('marca.nombre', 'Marca'),
+                $texto('modelo', 'Modelo'),
+                $texto('serie', 'Serie'),
+                $texto('capacidad_texto', 'Capacidad'),
+                $texto('refrigerante.nombre', 'Refrigerante'),
+                $texto('voltaje', 'Voltaje'),
+            ]),
+            \Filament\Schemas\Components\Section::make('Ubicación y garantía')->columns(3)->columnSpanFull()->schema([
+                $texto('area.nombre', 'Área'),
+                $texto('area.sucursal.nombre', 'Sucursal'),
+                $texto('area.sucursal.cliente.razon_social', 'Cliente'),
+                $texto('fecha_instalacion', 'Instalado')->date('d/m/Y'),
+                $texto('garantia_hasta', 'Garantía hasta')->date('d/m/Y'),
+                $texto('notas', 'Notas')->columnSpanFull(),
+            ]),
+        ]);
+    }
+
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\OrdenesEquipoRelationManager::class,
+            RelationManagers\GarantiasEquipoRelationManager::class,
+            RelationManagers\DocumentosEquipoRelationManager::class,
         ];
     }
 
@@ -47,6 +77,7 @@ class EquipoResource extends Resource
         return [
             'index' => ListEquipos::route('/'),
             'create' => CreateEquipo::route('/create'),
+            'view' => Pages\ViewEquipo::route('/{record}'),
             'edit' => EditEquipo::route('/{record}/edit'),
         ];
     }
