@@ -18,6 +18,7 @@ class PagoOtResource extends Resource
     protected static ?string $modelLabel = 'pago';
     protected static ?string $pluralModelLabel = 'detalle de pagos';
     protected static ?int $navigationSort = 21;
+    protected static ?string $slug = 'pagos';
 
     public static function getEloquentQuery(): Builder
     {

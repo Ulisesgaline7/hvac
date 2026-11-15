@@ -18,6 +18,7 @@ class LiquidacionResource extends Resource
     protected static ?string $modelLabel = 'liquidación';
     protected static ?string $pluralModelLabel = 'liquidaciones';
     protected static ?int $navigationSort = 20;
+    protected static ?string $slug = 'liquidaciones';
 
     public static function getEloquentQuery(): Builder
     {
@@ -35,6 +36,14 @@ class LiquidacionResource extends Resource
     {
         return $table
             ->defaultSort('semana_inicio', 'desc')
+            ->recordActions([
+                \Filament\Actions\Action::make('comprobante')
+                    ->label('Comprobante')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->url(fn ($record) => route('liquidaciones.comprobante', $record->id))
+                    ->openUrlInNewTab()
+                    ->visible(fn ($record) => $record->estado === 'pagada' && filled($record->numero)),
+            ])
             ->columns([
                 TextColumn::make('semana_inicio')->label('Semana del')->date('d/m/Y')->sortable(),
                 TextColumn::make('semana_fin')->label('al')->date('d/m/Y'),
