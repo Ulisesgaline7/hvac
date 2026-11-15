@@ -31,10 +31,9 @@ class ResumenTecnico extends StatsOverviewWidget
         $cobrado = (float) DB::table('liquidaciones_tecnico')->where('tecnico_id', $t)
             ->where('estado', 'pagada')->where('pagada_en', '>=', $ini)->sum('neto');
 
+        // Pagos que el técnico aún no recibe (bruto). Las líneas 'liquidado' ya se pagaron y salen en "Cobrado".
         $porCobrar = (float) DB::table('pagos_tecnico')->where('tecnico_id', $t)
-            ->whereNotIn('estado', ['sin_tarifa', 'retorno', 'liquidado'])->sum('monto')
-            + (float) DB::table('liquidaciones_tecnico')->where('tecnico_id', $t)
-                ->where('estado', '!=', 'pagada')->sum('neto');
+            ->whereNotIn('estado', ['sin_tarifa', 'retorno', 'liquidado'])->sum('monto');
 
         $retornos = DB::table('pagos_tecnico')->where('tecnico_id', $t)
             ->where('estado', 'retorno')->where('created_at', '>=', $ini)->count();
@@ -44,7 +43,7 @@ class ResumenTecnico extends StatsOverviewWidget
             Stat::make('Cerradas este mes', $cerradasMes),
             Stat::make('Puntualidad', $puntual)->description('OTs cerradas a tiempo'),
             Stat::make('Cobrado este mes', 'L ' . number_format($cobrado, 2)),
-            Stat::make('Por cobrar', 'L ' . number_format($porCobrar, 2)),
+            Stat::make('Por cobrar', 'L ' . number_format($porCobrar, 2))->description('Antes de retención'),
             Stat::make('Retornos del mes', $retornos)
                 ->description('Retrabajos por falla de ejecución')
                 ->color($retornos > 0 ? 'danger' : 'success'),

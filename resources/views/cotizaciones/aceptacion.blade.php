@@ -37,8 +37,36 @@
     @elseif (in_array($cotizacion->visita_tratamiento, ['bonificar', 'gratis'], true))
       <tr><td colspan="3" class="n">Visita técnica (sin costo)</td><td class="n">0.00</td></tr>
     @endif
-    <tr><td colspan="3" class="n">ISV</td><td class="n">{{ number_format($cotizacion->isv, 2) }}</td></tr>
+    @php($recNombres = collect($cotizacion->recargos ?? [])->map(fn ($v, $k) => config('tarifario.recargos.' . (is_int($k) ? $v : $k) . '.nombre'))->filter()->values())
+    @php($descNombre = $cotizacion->descuento_codigo ? config('tarifario.descuentos.' . $cotizacion->descuento_codigo . '.nombre') : null)
+    @if ((float) $cotizacion->ajuste_minimo > 0)
+      <tr><td colspan="3" class="n">Ajuste a servicio mínimo por visita</td><td class="n">{{ number_format((float) $cotizacion->ajuste_minimo, 2) }}</td></tr>
+    @endif
+    @if ((float) $cotizacion->recargos_monto > 0)
+      <tr><td colspan="3" class="n">Recargos ({{ $recNombres->implode(', ') }})</td><td class="n">{{ number_format((float) $cotizacion->recargos_monto, 2) }}</td></tr>
+    @endif
+    @if ((float) $cotizacion->descuento_monto > 0)
+      <tr><td colspan="3" class="n">Descuento ({{ $descNombre }}, {{ rtrim(rtrim(number_format((float) $cotizacion->descuento_pct * 100, 2), '0'), '.') }} %)</td><td class="n">− {{ number_format((float) $cotizacion->descuento_monto, 2) }}</td></tr>
+    @endif
+    @if ((float) $cotizacion->repuestos_monto > 0)
+      <tr><td colspan="3" class="n">Repuestos y materiales</td><td class="n">{{ number_format((float) $cotizacion->repuestos_monto, 2) }}</td></tr>
+    @endif
+    @if ((float) $cotizacion->logistica_monto > 0)
+      <tr><td colspan="3" class="n">Logística</td><td class="n">{{ number_format((float) $cotizacion->logistica_monto, 2) }}</td></tr>
+    @endif
+    @if ((float) $cotizacion->viaticos_monto > 0)
+      <tr><td colspan="3" class="n">Viáticos</td><td class="n">{{ number_format((float) $cotizacion->viaticos_monto, 2) }}</td></tr>
+    @endif
+    <tr><td colspan="3" class="n"><strong>Subtotal</strong></td><td class="n"><strong>{{ number_format((float) $cotizacion->subtotal, 2) }}</strong></td></tr>
+    <tr><td colspan="3" class="n">ISV ({{ (int) (config('tarifario.isv') * 100) }} %)</td><td class="n">{{ number_format($cotizacion->isv, 2) }}</td></tr>
     <tr><td colspan="3" class="n"><strong>Total</strong></td><td class="n"><strong>L {{ number_format($cotizacion->total, 2) }}</strong></td></tr>
+    @php($ra = \App\Services\ResumenAnual::resumen($cotizacion))
+    @if ($ra)
+      <tr><td colspan="4"><strong>Plan anual:</strong> {{ $ra['texto'] }}. Los valores de arriba son por visita.</td></tr>
+      <tr><td colspan="3" class="n">Subtotal anual</td><td class="n">{{ number_format($ra['subtotal'], 2) }}</td></tr>
+      <tr><td colspan="3" class="n">ISV anual ({{ (int) round(config('tarifario.isv') * 100) }} %)</td><td class="n">{{ number_format($ra['isv'], 2) }}</td></tr>
+      <tr><td colspan="3" class="n"><strong>TOTAL ANUAL</strong></td><td class="n"><strong>L {{ number_format($ra['total'], 2) }}</strong></td></tr>
+    @endif
   </table>
   @if($cotizacion->condiciones)<p><strong>Condiciones:</strong><br>{!! nl2br(e($cotizacion->condiciones)) !!}</p>@endif
 

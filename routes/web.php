@@ -54,6 +54,11 @@ Route::middleware(['web', 'throttle:30,1'])
     ->whereAlphaNumeric('token')
     ->name('informe.verificar');
 
+Route::middleware(['web', 'throttle:30,1'])
+    ->get('/v/{token}/pdf', [\App\Http\Controllers\VerificarInformeController::class, 'cotizacionPdf'])
+    ->whereAlphaNumeric('token')
+    ->name('cotizacion.verificada.pdf');
+
 Route::get('/cotizaciones/{cotizacion}/pdf', \App\Http\Controllers\CotizacionPdfController::class)
     ->middleware('web')
     ->name('cotizaciones.pdf');
@@ -86,6 +91,12 @@ Route::middleware(['web', 'auth', 'throttle:120,1'])->prefix('api-tecnico')->gro
     Route::post('/ficha', [\App\Http\Controllers\OfflineTecnicoController::class, 'ficha'])->name('offline.ficha');
 });
 
+Route::get('/whatsapp/webhook', [\App\Http\Controllers\WhatsappWebhookController::class, 'verificar'])
+    ->middleware('throttle:60,1');
+Route::post('/whatsapp/webhook', [\App\Http\Controllers\WhatsappWebhookController::class, 'recibir'])
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class])
+    ->middleware('throttle:300,1');
+
 Route::get('/sitemap.xml', \App\Http\Controllers\SitemapController::class);
 Route::view('/', 'web.index')->name('home');
 
@@ -102,6 +113,10 @@ Route::get('/documentos/{documento}/pdf', \App\Http\Controllers\DocumentoCatalog
     ->middleware(['web', 'auth'])
     ->whereNumber('documento')
     ->name('documentos.pdf');
+
+Route::middleware(['web', 'signed'])->get('/sso/{user}', [\App\Http\Controllers\SsoController::class, 'entrar'])->name('sso.entrar');
+
+require __DIR__ . '/portal.php';
 
 // Páginas del sitio público (administradas desde el panel). Debe ir al final.
 Route::get('/{slug}', [\App\Http\Controllers\PaginaWebController::class, 'show'])
@@ -125,8 +140,11 @@ Route::get('/liquidaciones/{liquidacion}/comprobante', \App\Http\Controllers\Com
 
 Route::get('/documentos-terceros/{documento}/archivo', \App\Http\Controllers\DocumentoTerceroArchivoController::class)->name('documentos-terceros.archivo');
 
+Route::middleware('web')->get('/push/clave', [\App\Http\Controllers\PushController::class, 'clave']);
 Route::middleware(['web', 'auth'])->group(function () {
-    Route::get('/push/clave', [\App\Http\Controllers\PushController::class, 'clave']);
     Route::post('/push/suscribir', [\App\Http\Controllers\PushController::class, 'guardar']);
     Route::post('/push/baja', [\App\Http\Controllers\PushController::class, 'borrar']);
 });
+Route::middleware(['web', 'auth'])->post('/cambiar-division', \App\Http\Controllers\CambiarDivisionController::class)->name('admin.cambiar-division');
+Route::middleware(['web', 'auth', 'signed'])->get('/suplantar/{user}', [\App\Http\Controllers\SuplantarController::class, 'iniciar'])->name('suplantar.iniciar');
+Route::middleware(['web', 'auth'])->post('/suplantar-volver', [\App\Http\Controllers\SuplantarController::class, 'volver'])->name('suplantar.volver');

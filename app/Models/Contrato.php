@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\PerteneceADivision;
 use App\Enums\EstadoContrato;
 use App\Enums\TipoContrato;
 use App\Models\Concerns\AislaPorCliente;
@@ -16,6 +17,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Contrato extends Model
 {
+    use PerteneceADivision;
+
     use AislaPorCliente, Auditable, RegistraCreador, SoftDeletes;
 
     protected $table = 'contratos';

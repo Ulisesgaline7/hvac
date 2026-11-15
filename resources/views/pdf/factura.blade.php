@@ -48,12 +48,44 @@
     <div class="seccion">Montos</div>
     <table class="tabla">
         <tr><th>Concepto</th><th style="text-align:right">Importe (L)</th></tr>
+        @php($cotOrigen = $f->cotizacion_id ? \App\Models\Cotizacion::find($f->cotizacion_id) : null)
+        @if ($cotOrigen && abs((float) $cotOrigen->subtotal - (float) $f->subtotal) < 0.01 && abs((float) $cotOrigen->isv - (float) $f->isv) < 0.01)
+            @php($recNom = collect($cotOrigen->recargos ?? [])->map(fn ($v, $k) => config('tarifario.recargos.' . (is_int($k) ? $v : $k) . '.nombre'))->filter()->values())
+            @php($descNom = $cotOrigen->descuento_codigo ? config('tarifario.descuentos.' . $cotOrigen->descuento_codigo . '.nombre') : null)
+            @php($raF = \App\Services\ResumenAnual::resumen($cotOrigen))
+            @if ($raF)
+                <tr><td colspan="2"><i>{{ $cotOrigen->descuento_codigo ? config('tarifario.descuentos.' . $cotOrigen->descuento_codigo . '.nombre') : 'Plan' }} · {{ $raF['texto'] }} (esta factura corresponde a una visita)</i></td></tr>
+            @endif
+            <tr><td>Servicios</td><td style="text-align:right">{{ number_format((float) $cotOrigen->subtotal_servicios, 2) }}</td></tr>
+            @if ((float) $cotOrigen->ajuste_minimo > 0)
+                <tr><td>Ajuste a servicio mínimo por visita</td><td style="text-align:right">{{ number_format((float) $cotOrigen->ajuste_minimo, 2) }}</td></tr>
+            @endif
+            @if ((float) $cotOrigen->recargos_monto > 0)
+                <tr><td>Recargos ({{ $recNom->implode(', ') }})</td><td style="text-align:right">{{ number_format((float) $cotOrigen->recargos_monto, 2) }}</td></tr>
+            @endif
+            @if ((float) $cotOrigen->descuento_monto > 0)
+                <tr><td>Descuento ({{ $descNom }})</td><td style="text-align:right">− {{ number_format((float) $cotOrigen->descuento_monto, 2) }}</td></tr>
+            @endif
+            @if ((float) $cotOrigen->repuestos_monto > 0)
+                <tr><td>Repuestos y materiales</td><td style="text-align:right">{{ number_format((float) $cotOrigen->repuestos_monto, 2) }}</td></tr>
+            @endif
+            @if ((float) $cotOrigen->logistica_monto > 0)
+                <tr><td>Logística</td><td style="text-align:right">{{ number_format((float) $cotOrigen->logistica_monto, 2) }}</td></tr>
+            @endif
+            @if ((float) $cotOrigen->viaticos_monto > 0)
+                <tr><td>Viáticos</td><td style="text-align:right">{{ number_format((float) $cotOrigen->viaticos_monto, 2) }}</td></tr>
+            @endif
+        @endif
         <tr><td>Subtotal</td><td style="text-align:right">{{ number_format((float) $f->subtotal, 2) }}</td></tr>
-        <tr><td>ISV 15 %</td><td style="text-align:right">{{ number_format((float) $f->isv, 2) }}</td></tr>
+        <tr><td>ISV {{ (int) round(config('tarifario.isv') * 100) }} %</td><td style="text-align:right">{{ number_format((float) $f->isv, 2) }}</td></tr>
         <tr><td><b>Total</b></td><td style="text-align:right"><b>{{ number_format((float) $f->total, 2) }}</b></td></tr>
         <tr><td>Pagado</td><td style="text-align:right">{{ number_format((float) $f->pagado, 2) }}</td></tr>
         <tr><td><b>Saldo</b></td><td style="text-align:right"><b>{{ number_format($f->saldo, 2) }}</b></td></tr>
     </table>
+
+    @if (filled($f->notas))
+        <p style="margin-top:6pt"><i>{{ $f->notas }}</i></p>
+    @endif
 
     @if ($cuotas->isNotEmpty())
         <div class="seccion">Plan de cuotas</div>

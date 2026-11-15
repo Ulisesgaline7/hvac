@@ -71,6 +71,8 @@ class AceptacionCotizacionController extends Controller
             return back()->withErrors(['general' => $e->getMessage() . ' Comuníquese con su asesor.'])->withInput();
         }
 
+        \App\Services\AvisosInternos::cotizacionRespondida($id, 'aceptada', "Firmó {$datos['nombre']} ({$datos['cargo']}).");
+
         return redirect()->route('cotizaciones.aceptacion', $token)
             ->with('resultado', 'Gracias. La cotización fue aceptada y su asesor dará seguimiento.');
     }
@@ -83,6 +85,8 @@ class AceptacionCotizacionController extends Controller
         abort_unless($id, 404);
 
         RlsServiceProvider::comoInterno(fn () => $flujo->rechazar(Cotizacion::findOrFail($id), $datos['motivo'] ?? null));
+
+        \App\Services\AvisosInternos::cotizacionRespondida($id, 'rechazada', filled($datos['motivo'] ?? null) ? 'Motivo: ' . trim($datos['motivo']) : '');
 
         return redirect()->route('cotizaciones.aceptacion', $token)
             ->with('resultado', 'Registramos que la cotización no fue aceptada. Gracias por su respuesta.');

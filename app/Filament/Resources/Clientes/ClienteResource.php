@@ -18,6 +18,10 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ClienteResource extends Resource
 {
+    protected static string|\UnitEnum|null $navigationGroup = 'Clientes y equipos';
+
+    protected static ?int $navigationSort = 1;
+
     protected static ?string $model = Cliente::class;
     protected static ?string $modelLabel = 'cliente';
 

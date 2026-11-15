@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\PerteneceADivision;
 use App\Enums\EstadoOt;
 use App\Enums\TipoOt;
 use App\Models\Concerns\AislaPorCliente;
@@ -20,6 +21,8 @@ use Illuminate\Support\Str;
 
 class OrdenTrabajo extends Model implements \Spatie\MediaLibrary\HasMedia
 {
+    use PerteneceADivision;
+
     use AislaPorCliente, Auditable, RegistraCreador, SoftDeletes, TieneSla;
     use \Spatie\MediaLibrary\InteractsWithMedia;
 

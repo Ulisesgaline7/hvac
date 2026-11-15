@@ -16,7 +16,7 @@
     </div>
     <div class="row2">
         <div class="fld"><label for="email">Correo (opcional)</label><input id="email" name="email" type="email" value="{{ old('email') }}" autocomplete="email"></div>
-        <div class="fld"><label for="ciudad">Ciudad</label><input id="ciudad" name="ciudad" value="{{ old('ciudad') }}"></div>
+        <div class="fld"><label for="ciudad">Ciudad</label><select id="ciudad" name="ciudad"><option value="">Selecciona tu ciudad</option>@foreach (config('ciudades') as $ciudad)<option value="{{ $ciudad }}" @selected(old('ciudad') === $ciudad)>{{ $ciudad }}</option>@endforeach</select></div>
     </div>
     <div class="fld">
         <label for="servicio">¿Qué necesitas?</label>

@@ -18,6 +18,17 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class RefrigeranteResource extends Resource
 {
+    public static function canViewAny(): bool
+    {
+        $u = auth()->user();
+
+        return ! ($u?->hasRole('comercial') && ! $u->hasAnyRole(['administrador', 'coordinador']));
+    }
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Inventario';
+
+    protected static ?int $navigationSort = 5;
+
     protected static ?string $model = Refrigerante::class;
     protected static ?string $modelLabel = 'refrigerante';
 

@@ -22,6 +22,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class LiquidacionTecnicoResource extends Resource
 {
+    protected static string|\UnitEnum|null $navigationGroup = 'Finanzas';
+
+    protected static ?int $navigationSort = 4;
+
     protected static ?string $model = LiquidacionTecnico::class;
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-banknotes';
     protected static ?string $slug = 'liquidaciones-tecnico';

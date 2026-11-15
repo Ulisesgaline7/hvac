@@ -16,6 +16,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class MovimientoInventarioResource extends Resource
 {
+    public static function canViewAny(): bool
+    {
+        $u = auth()->user();
+
+        return ! ($u?->hasRole('comercial') && ! $u->hasAnyRole(['administrador', 'coordinador']));
+    }
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Inventario';
+
+    protected static ?int $navigationSort = 2;
+
     protected static ?string $model = MovimientoInventario::class;
 
     protected static ?string $slug = 'movimientos-inventario';
@@ -26,11 +37,9 @@ class MovimientoInventarioResource extends Resource
 
     protected static ?string $navigationLabel = 'Movimientos';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Inventario';
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-arrows-right-left';
 
-    protected static ?int $navigationSort = 2;
 
     public static function canCreate(): bool
     {

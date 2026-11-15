@@ -10,11 +10,21 @@ use Filament\Support\Icons\Heroicon;
 
 class MapaClientes extends Page
 {
+    public static function canAccess(): bool
+    {
+        $u = auth()->user();
+
+        return ! ($u?->hasRole('comercial') && ! $u->hasAnyRole(['administrador', 'coordinador']));
+    }
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Operación';
+
+    protected static ?int $navigationSort = 4;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMapPin;
 
     protected static ?string $navigationLabel = 'Mapa de clientes';
 
-    protected static ?int $navigationSort = 6;
 
     protected static ?string $slug = 'mapa-clientes';
 

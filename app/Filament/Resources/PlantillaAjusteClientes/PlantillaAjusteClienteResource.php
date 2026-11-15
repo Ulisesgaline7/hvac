@@ -20,6 +20,17 @@ use Filament\Tables\Table;
 
 class PlantillaAjusteClienteResource extends Resource
 {
+    public static function canViewAny(): bool
+    {
+        $u = auth()->user();
+
+        return ! ($u?->hasRole('comercial') && ! $u->hasAnyRole(['administrador', 'coordinador']));
+    }
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Configuración';
+
+    protected static ?int $navigationSort = 5;
+
     protected static ?string $model = PlantillaAjusteCliente::class;
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-adjustments-horizontal';
     protected static ?string $modelLabel = 'ajuste por cliente';

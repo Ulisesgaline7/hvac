@@ -17,9 +17,9 @@ class CotizacionService
      * @param  array<int,array{tipo?:string,categoria?:?string,cantidad:float|int|string,precio_unitario:float|int|string,cuenta_equipo?:bool}>  $lineas
      * @param  array<int|string,float|string>  $recargos  lista de códigos (usa el % mínimo) o código => %
      */
-    public function calcular(array $lineas, array $recargos = [], ?string $descuentoContrato = null, bool $aplicarMinimo = true, ?float $pctContrato = null): array
+    public function calcular(array $lineas, array $recargos = [], ?string $descuentoContrato = null, bool $aplicarMinimo = true, ?float $pctContrato = null, ?int $divisionId = null): array
     {
-        $cfg = config('tarifario');
+        $cfg = $divisionId ? TarifarioDivision::para($divisionId) : config('tarifario');
         $servicios = 0.0;
         $repuestos = 0.0;
         $equipos = 0;
@@ -28,7 +28,7 @@ class CotizacionService
         foreach ($lineas as $l) {
             $importe = round((float) ($l['cantidad'] ?? 0) * (float) ($l['precio_unitario'] ?? 0), 2);
 
-            if (($l['tipo'] ?? 'servicio') === 'repuesto') {
+            if (in_array($l['tipo'] ?? 'servicio', ['repuesto', 'material', 'equipo', 'otro'], true)) {
                 $repuestos += $importe;
 
                 continue;
@@ -134,13 +134,14 @@ class CotizacionService
             'cuenta_equipo' => $l->cuenta_equipo,
         ])->all();
 
-        $r = $this->calcular($lineas, $c->recargos ?? [], $c->descuento_contrato, true, $c->descuento_contrato_pct !== null ? (float) $c->descuento_contrato_pct : null);
+        $r = $this->calcular($lineas, $c->recargos ?? [], $c->descuento_contrato, true, $c->descuento_contrato_pct !== null ? (float) $c->descuento_contrato_pct : null, $c->division_id);
 
         [$tratamiento, $visita] = $this->visita($c);
-        $extra = (new LogisticaViaticos)->calcular($c->logistica ?? [], config('tarifario'));
+        $cfgDiv = TarifarioDivision::para($c->division_id);
+        $extra = (new LogisticaViaticos)->calcular($c->logistica ?? [], $cfgDiv);
         $adicional = round($visita + $extra['total'], 2);
         $subtotal = round($r['subtotal'] + $adicional, 2);
-        $isv = $adicional > 0 ? round($subtotal * config('tarifario.isv'), 2) : $r['isv'];
+        $isv = $adicional > 0 ? round($subtotal * $cfgDiv['isv'], 2) : $r['isv'];
         $total = round($subtotal + $isv, 2);
 
         $c->update([
@@ -155,6 +156,7 @@ class CotizacionService
             'isv' => $isv,
             'total' => $total,
             'visita_tratamiento' => $tratamiento,
+            'visitas_anuales' => ResumenAnual::visitasDePlan($c->descuento_contrato) ?? $c->visitas_anuales,
             'visita_monto' => $visita,
             'logistica_monto' => $extra['movilizacion'],
             'viaticos_monto' => $extra['viaticos'],

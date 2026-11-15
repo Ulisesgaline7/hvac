@@ -43,7 +43,7 @@ class ContratoForm
                 ->helperText('Se factura sola al inicio de cada periodo con el contrato activo. Vacío = no factura.'),
             Select::make('periodicidad')
                 ->label('Periodicidad de cobro')
-                ->options(['mensual' => 'Mensual', 'trimestral' => 'Trimestral', 'semestral' => 'Semestral', 'anual' => 'Anual', 'unica' => 'Pago único'])
+                ->options(['mensual' => 'Mensual', 'bimestral' => 'Bimestral', 'trimestral' => 'Trimestral', 'semestral' => 'Semestral', 'anual' => 'Anual', 'unica' => 'Pago único'])
                 ->default(config('cobros.contrato_periodicidad')),
             KeyValue::make('sla')->label('SLA')->keyLabel('Concepto')->valueLabel('Valor')->columnSpanFull(),
             Textarea::make('servicios_incluidos')->columnSpanFull(),

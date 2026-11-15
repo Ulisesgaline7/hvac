@@ -19,6 +19,17 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class OrdenTrabajoResource extends Resource
 {
+    public static function canViewAny(): bool
+    {
+        $u = auth()->user();
+
+        return ! ($u?->hasRole('comercial') && ! $u->hasAnyRole(['administrador', 'coordinador']));
+    }
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Operación';
+
+    protected static ?int $navigationSort = 3;
+
     protected static ?string $model = OrdenTrabajo::class;
     protected static ?string $modelLabel = 'orden de trabajo';
 

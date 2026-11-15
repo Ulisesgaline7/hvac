@@ -12,6 +12,10 @@ use Filament\Support\Icons\Heroicon;
 
 class TableroOt extends Page
 {
+    protected static string|\UnitEnum|null $navigationGroup = 'Operación';
+
+    protected static ?int $navigationSort = 1;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedViewColumns;
 
     protected static ?string $navigationLabel = 'Tablero de OT';

@@ -18,6 +18,10 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class CotizacionResource extends Resource
 {
+    protected static string|\UnitEnum|null $navigationGroup = 'Comercial';
+
+    protected static ?int $navigationSort = 2;
+
     protected static ?string $model = Cotizacion::class;
     protected static ?string $modelLabel = 'cotización';
 
@@ -38,7 +42,7 @@ class CotizacionResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            \App\Filament\Resources\Cotizacions\RelationManagers\CostosRelationManager::class,
         ];
     }
 

@@ -8,7 +8,7 @@ use Carbon\Carbon;
 
 class FacturacionContratos
 {
-    private const MESES = ['mensual' => 1, 'trimestral' => 3, 'semestral' => 6, 'anual' => 12];
+    private const MESES = ['mensual' => 1, 'bimestral' => 2, 'trimestral' => 3, 'semestral' => 6, 'anual' => 12];
 
     /** Inicio del periodo de cobro vigente hoy, o null si el contrato aún no empieza o ya terminó. */
     public function periodoActual(Contrato $c, ?Carbon $hoy = null): ?Carbon
@@ -30,6 +30,33 @@ class FacturacionContratos
         $k = intdiv((int) floor($inicio->diffInMonths($hoy, true)), $paso);
 
         return $inicio->copy()->addMonthsNoOverflow($k * $paso);
+    }
+
+    private function leyenda(Contrato $c, Carbon $periodo): string
+    {
+        $base = "Contrato #{$c->id} · periodo desde {$periodo->format('d/m/Y')}";
+        try {
+            $cot = \App\Models\Cotizacion::where('contrato_id', $c->id)->first();
+            $ra = $cot ? ResumenAnual::resumen($cot) : null;
+            if (! $ra) {
+                $n = $c->equipos()->count();
+
+                return $n ? "{$base} · {$n} equipos" : $base;
+            }
+            $per = $c->periodicidad ?: config('cobros.contrato_periodicidad');
+            $plan = config("tarifario.descuentos.{$cot->descuento_contrato}.nombre", '');
+            if ($per === 'unica') {
+                $cuota = 'Pago único';
+            } else {
+                $paso = self::MESES[$per] ?? 1;
+                $n = intdiv((int) floor(Carbon::parse($c->vigencia_inicio)->diffInMonths($periodo, true)), $paso) + 1;
+                $cuota = "Cuota {$n} de " . (int) ceil(12 / $paso);
+            }
+
+            return "{$base} · {$cuota} · {$ra['texto']} · {$plan}";
+        } catch (\Throwable $e) {
+            return $base;
+        }
     }
 
     /** Genera la factura del periodo vigente. Idempotente por (contrato, periodo). */
@@ -61,7 +88,7 @@ class FacturacionContratos
             'subtotal' => $subtotal,
             'isv' => $isv,
             'total' => round($subtotal + $isv, 2),
-            'notas' => "Contrato #{$c->id} · periodo desde {$periodo->format('d/m/Y')}",
+            'notas' => $this->leyenda($c, $periodo),
         ]);
     }
 }

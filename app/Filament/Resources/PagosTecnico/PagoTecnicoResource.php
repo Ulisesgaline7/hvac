@@ -19,6 +19,10 @@ use Illuminate\Support\Collection;
 
 class PagoTecnicoResource extends Resource
 {
+    protected static string|\UnitEnum|null $navigationGroup = 'Finanzas';
+
+    protected static ?int $navigationSort = 3;
+
     protected static ?string $model = PagoTecnico::class;
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-currency-dollar';
     protected static ?string $slug = 'pagos-tecnico';

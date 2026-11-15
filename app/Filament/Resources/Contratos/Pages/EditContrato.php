@@ -69,9 +69,9 @@ class EditContrato extends EditRecord
                     $c = $this->record;
                     $faltan = [];
                     if (blank($c->servicios_incluidos)) { $faltan[] = 'servicios incluidos'; }
-                    if ((float) $c->cuota_monto <= 0) { $faltan[] = 'cuota'; }
+                    if ((float) $c->cuota_monto <= 0 && $c->periodicidad !== 'unica') { $faltan[] = 'cuota'; }
                     if (blank($c->vigencia_inicio) || blank($c->vigencia_fin)) { $faltan[] = 'vigencia'; }
-                    if ($c->equipos()->count() === 0) { $faltan[] = 'equipos'; }
+                    if ($c->equipos()->count() === 0 && $c->tipo->generaCalendario() && $c->periodicidad !== 'unica') { $faltan[] = 'equipos'; }
                     if ($faltan) {
                         Notification::make()->danger()->title('Faltan datos para enviar a firma')
                             ->body('Complete: ' . implode(', ', $faltan))->send();
@@ -81,8 +81,11 @@ class EditContrato extends EditRecord
                         $c->update(['token_firma' => \Illuminate\Support\Str::random(48)]);
                     }
                     $c->update(['firma_enviada_at' => now()]);
+                    $enviados = \App\Services\AvisosCliente::contratoEnviado($c->fresh());
                     Notification::make()->success()->persistent()
-                        ->title('Enlace de firma del cliente')
+                        ->title($enviados > 0
+                            ? "Contrato enviado a {$enviados} " . ($enviados === 1 ? 'correo' : 'correos')
+                            : 'Enlace de firma del cliente (no se envió correo: el cliente no tiene contactos con correo)')
                         ->body(route('contratos.firma', $c->token_firma))
                         ->send();
                 }),

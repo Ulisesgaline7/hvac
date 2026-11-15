@@ -9,4 +9,5 @@ enum Rol: string
     case Tecnico = 'tecnico';
     case ClienteAdmin = 'cliente_admin';
     case ClienteConsulta = 'cliente_consulta';
+    case Rrhh = 'rrhh';
 }

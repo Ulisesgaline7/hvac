@@ -7,6 +7,7 @@ use Filament\Support\Contracts\HasLabel;
 enum Frecuencia: string implements HasLabel
 {
     case Mensual = 'mensual';
+    case Bimestral = 'bimestral';
     case Trimestral = 'trimestral';
     case Semestral = 'semestral';
     case Anual = 'anual';
@@ -16,6 +17,7 @@ enum Frecuencia: string implements HasLabel
     {
         return match ($this) {
             self::Mensual => 1,
+            self::Bimestral => 2,
             self::Trimestral => 3,
             self::Semestral => 6,
             self::Anual => 12,

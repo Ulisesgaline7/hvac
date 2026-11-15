@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+#[\Illuminate\Database\Eloquent\Attributes\ObservedBy(\App\Observers\LiquidacionTecnicoObserver::class)]
 class LiquidacionTecnico extends Model
 {
     protected $table = 'liquidaciones_tecnico';

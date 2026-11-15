@@ -18,6 +18,10 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class SucursalResource extends Resource
 {
+    protected static string|\UnitEnum|null $navigationGroup = 'Clientes y equipos';
+
+    protected static ?int $navigationSort = 2;
+
     protected static ?string $model = Sucursal::class;
     protected static ?string $modelLabel = 'sucursal';
 

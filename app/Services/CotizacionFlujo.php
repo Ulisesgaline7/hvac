@@ -39,12 +39,16 @@ class CotizacionFlujo
         $c = app(CotizacionService::class)->recalcular($c);
         $c->update([
             'estado' => 'enviada',
+            'condiciones' => \App\Services\ResumenAnual::condiciones($c),
             'enviada_en' => now(),
             'token_aceptacion' => $c->token_aceptacion ?? Str::random(40),
             'valida_hasta' => $c->valida_hasta ?? now()->addWeekdays((int) config('tarifario.validez_dias_habiles')),
         ]);
 
-        return $c->fresh();
+        $c = $c->fresh();
+        \App\Services\AvisosCliente::cotizacionEnviada($c);
+
+        return $c;
     }
 
     /** @return array{contrato: ?Contrato, ordenes: Collection<int, OrdenTrabajo>} */
@@ -71,6 +75,7 @@ class CotizacionFlujo
                         'contrato_id' => $contrato->id,
                         'equipo_id' => $e->id,
                         'fecha_inicio' => now()->toDateString(),
+                        'frecuencia' => \App\Services\ResumenAnual::PERIODICIDAD[$c->descuento_contrato] ?? null,
                         'creado_por' => \Illuminate\Support\Facades\Auth::id(),
                         'created_at' => now(),
                         'updated_at' => now(),
@@ -156,14 +161,74 @@ class CotizacionFlujo
         $inicio = now()->startOfDay();
         $nombre = config("tarifario.descuentos.{$c->descuento_contrato}.nombre", $c->descuento_contrato);
 
+        $cobro = \App\Services\ResumenAnual::cobro($c);
+        $pl = \App\Models\PlantillaContrato::paraPlan($c->descuento_contrato);
+
         return Contrato::create([
+            'periodicidad' => $cobro['periodicidad'] ?? config('cobros.contrato_periodicidad'),
+            'cuota_monto' => $cobro['cuota'] ?? null,
             'cliente_id' => $c->cliente_id,
             'tipo' => TipoContrato::from('preventivo_recurrente'),
             'vigencia_inicio' => $inicio->toDateString(),
             'vigencia_fin' => $inicio->copy()->addYear()->subDay()->toDateString(),
-            'servicios_incluidos' => $this->resumen($c, $lineas),
-            'notas' => "Generado desde la cotización {$c->numero} ({$nombre}). Equipos asociados desde la cotización. Falta definir la frecuencia de cada uno y activarlo.",
+            'servicios_incluidos' => trim(($pl?->servicios_incluidos ? $pl->servicios_incluidos . "\n\n" : '') . $this->resumen($c, $lineas)),
+            'exclusiones' => $pl?->exclusiones,
+            'garantias' => $pl?->garantias,
+            'sla' => $pl?->sla ?? [],
+            'notas' => "Generado desde la cotización {$c->numero} ({$nombre}). Equipos asociados desde la cotización. Frecuencia de cada equipo según el plan. Revise y actívelo.",
         ]);
+    }
+
+    /** Contrato de servicio único (plantilla SERVICIO_UNICO) para una cotización aprobada sin contrato. Sin cuota ni frecuencia: el servicio se factura al cerrar la OT. */
+    public function generarContratoUnico(Cotizacion $c): Contrato
+    {
+        $this->exigirEstado($c, 'aprobada', 'generar contrato de');
+
+        if ($c->contrato_id) {
+            throw new DomainException('Esta cotización ya tiene contrato.');
+        }
+
+        return DB::transaction(function () use ($c) {
+            $lineas = $c->lineas()->with('servicio')->get()->filter(fn ($l) => $l->tipo === 'servicio');
+            $tipos = $lineas->map(fn ($l) => self::TIPO_OT[$l->servicio?->categoria ?? ''] ?? null)->filter()->unique()->values();
+            $tipo = match (true) {
+                $tipos->count() === 1 && $tipos->first() === 'instalacion' => 'instalacion',
+                $tipos->count() === 1 && $tipos->first() === 'correctivo' => 'correctivo',
+                default => 'mixto',
+            };
+
+            $pl = \App\Models\PlantillaContrato::paraPlan(null);
+            $inicio = now()->startOfDay();
+
+            $contrato = Contrato::create([
+                'cliente_id' => $c->cliente_id,
+                'tipo' => TipoContrato::from($tipo),
+                'vigencia_inicio' => $inicio->toDateString(),
+                'vigencia_fin' => $inicio->copy()->addYear()->subDay()->toDateString(),
+                'periodicidad' => 'unica',
+                'cuota_monto' => null,
+                'servicios_incluidos' => trim(($pl?->servicios_incluidos ? $pl->servicios_incluidos . "\n\n" : '') . $this->resumen($c, $lineas)),
+                'exclusiones' => $pl?->exclusiones,
+                'garantias' => $pl?->garantias,
+                'sla' => $pl?->sla ?? [],
+                'notas' => "Generado desde la cotización {$c->numero} (servicio único). Sin cuota: se factura al cerrar la orden de trabajo.",
+            ]);
+
+            foreach ($c->equipos()->get() as $e) {
+                DB::table('contrato_equipo')->insert([
+                    'contrato_id' => $contrato->id,
+                    'equipo_id' => $e->id,
+                    'fecha_inicio' => now()->toDateString(),
+                    'creado_por' => \Illuminate\Support\Facades\Auth::id(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            $c->update(['contrato_id' => $contrato->id]);
+
+            return $contrato;
+        });
     }
 
     private function resumen(Cotizacion $c, Collection $lineas): string

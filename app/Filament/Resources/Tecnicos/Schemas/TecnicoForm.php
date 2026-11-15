@@ -23,11 +23,9 @@ class TecnicoForm
                 ->createOptionForm([
                     TextInput::make('name')->label('Nombre')->required(),
                     TextInput::make('email')->label('Correo')->email()->required()->unique('users', 'email'),
-                    TextInput::make('password')->label('Contraseña')->password()->required()->minLength(8),
                 ])
                 ->createOptionUsing(function (array $data): int {
-                    $usuario = User::create($data);
-                    $usuario->assignRole('tecnico');
+                    $usuario = app(\App\Services\AccesosUsuario::class)->crear($data, 'tecnico');
 
                     return $usuario->getKey();
                 }),

@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\PerteneceADivision;
 use Illuminate\Database\Eloquent\Model;
 
 class ServicioCatalogo extends Model
 {
+    use PerteneceADivision;
+
     protected $table = 'servicios_catalogo';
     protected $guarded = [];
 

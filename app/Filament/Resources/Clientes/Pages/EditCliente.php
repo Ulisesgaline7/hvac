@@ -25,24 +25,17 @@ class EditCliente extends EditRecord
                     \Filament\Forms\Components\TextInput::make('name')->label('Nombre')->required()->maxLength(255),
                     \Filament\Forms\Components\TextInput::make('email')->label('Correo')->email()->required()->maxLength(255)
                         ->rules([fn () => function (string $attribute, $value, \Closure $fail) { if (\App\Models\User::where('email', $value)->exists()) { $fail('Ese correo ya está registrado.'); } }]),
-                    \Filament\Forms\Components\TextInput::make('password')->label('Contraseña inicial')->password()->revealable()->required()->minLength(8),
                     \Filament\Forms\Components\Select::make('rol')->label('Permisos')->required()->default('cliente_admin')
                         ->options(['cliente_admin' => 'Administrador del cliente', 'cliente_consulta' => 'Solo consulta']),
                 ])
                 ->action(function (array $data) {
                     $rol = in_array($data['rol'], ['cliente_admin', 'cliente_consulta'], true) ? $data['rol'] : 'cliente_consulta';
 
-                    $u = \App\Models\User::create([
-                        'name' => $data['name'],
-                        'email' => $data['email'],
-                        'password' => bcrypt($data['password']),
-                    ]);
-                    $u->forceFill(['cliente_id' => $this->record->getKey()])->save();
-                    $u->assignRole($rol);
+                    $u = app(\App\Services\AccesosUsuario::class)->crear(['name' => $data['name'], 'email' => $data['email'], 'cliente_id' => $this->record->getKey()], $rol);
 
                     \Filament\Notifications\Notification::make()->success()
                         ->title('Acceso creado')
-                        ->body("{$u->email} entra en /portal con la contraseña que acabas de definir.")
+                        ->body("{$u->email} recibirá sus accesos por correo y deberá crear su contraseña al entrar.")
                         ->send();
                 }),
             DeleteAction::make(),

@@ -26,7 +26,7 @@ class Insumo extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()->logOnly(['codigo', 'nombre', 'categoria', 'unidad', 'costo', 'precio_venta', 'stock_minimo', 'ubicacion', 'activo'])
-            ->logOnlyDirty()->dontSubmitEmptyLogs();
+            ->logOnlyDirty()->dontLogEmptyChanges();
     }
 
     public function movimientos(): HasMany

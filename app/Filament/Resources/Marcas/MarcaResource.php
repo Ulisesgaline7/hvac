@@ -18,6 +18,17 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class MarcaResource extends Resource
 {
+    public static function canViewAny(): bool
+    {
+        $u = auth()->user();
+
+        return ! ($u?->hasRole('comercial') && ! $u->hasAnyRole(['administrador', 'coordinador']));
+    }
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Configuración';
+
+    protected static ?int $navigationSort = 1;
+
     protected static ?string $model = Marca::class;
     protected static ?string $modelLabel = 'marca';
 

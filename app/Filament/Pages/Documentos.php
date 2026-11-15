@@ -18,10 +18,13 @@ use UnitEnum;
 
 class Documentos extends Page implements HasSchemas
 {
+    protected static string|\UnitEnum|null $navigationGroup = 'Documentos';
+
+    protected static ?int $navigationSort = 1;
+
     use InteractsWithSchemas;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
-    protected static string|UnitEnum|null $navigationGroup = 'Configuración';
     protected static ?string $navigationLabel = 'Documentos';
     protected static ?string $slug = 'documentos';
     protected static ?string $title = 'Documentos y plantillas';

@@ -23,17 +23,26 @@ use UnitEnum;
 
 class MenuItemWebResource extends Resource
 {
+    public static function canViewAny(): bool
+    {
+        $u = auth()->user();
+
+        return ! ($u?->hasRole('comercial') && ! $u->hasAnyRole(['administrador', 'coordinador']));
+    }
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Sitio web';
+
+    protected static ?int $navigationSort = 2;
+
     protected static ?string $model = MenuItemWeb::class;
 
     protected static ?string $slug = 'menus-web';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBars3;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Sitio web';
 
     protected static ?string $navigationLabel = 'Menús';
 
-    protected static ?int $navigationSort = 2;
 
     protected static ?string $modelLabel = 'elemento del menú';
 

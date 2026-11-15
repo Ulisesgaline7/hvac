@@ -12,11 +12,21 @@ use Filament\Support\Icons\Heroicon;
 
 class CalendarioOt extends Page
 {
+    public static function canAccess(): bool
+    {
+        $u = auth()->user();
+
+        return ! ($u?->hasRole('comercial') && ! $u->hasAnyRole(['administrador', 'coordinador']));
+    }
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Operación';
+
+    protected static ?int $navigationSort = 2;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;
 
     protected static ?string $navigationLabel = 'Calendario';
 
-    protected static ?int $navigationSort = 5;
 
     protected static ?string $slug = 'calendario-ot';
 

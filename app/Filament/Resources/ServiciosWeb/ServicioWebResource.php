@@ -27,11 +27,21 @@ use UnitEnum;
 
 class ServicioWebResource extends Resource
 {
+    public static function canViewAny(): bool
+    {
+        $u = auth()->user();
+
+        return ! ($u?->hasRole('comercial') && ! $u->hasAnyRole(['administrador', 'coordinador']));
+    }
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Sitio web';
+
+    protected static ?int $navigationSort = 3;
+
     protected static ?string $model = ServicioWeb::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedWrenchScrewdriver;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Sitio web';
 
     protected static ?string $navigationLabel = 'Servicios del sitio';
 

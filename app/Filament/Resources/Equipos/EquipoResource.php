@@ -18,6 +18,17 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class EquipoResource extends Resource
 {
+    public static function canViewAny(): bool
+    {
+        $u = auth()->user();
+
+        return ! ($u?->hasRole('comercial') && ! $u->hasAnyRole(['administrador', 'coordinador']));
+    }
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Clientes y equipos';
+
+    protected static ?int $navigationSort = 5;
+
     protected static ?string $model = Equipo::class;
     protected static ?string $modelLabel = 'equipo';
 

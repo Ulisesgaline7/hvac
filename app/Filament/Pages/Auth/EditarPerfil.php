@@ -39,9 +39,17 @@ class EditarPerfil extends EditProfile
                 ->visible(fn () => ! auth()->user()->hasAnyRole(['cliente_admin', 'cliente_consulta'])),
             $this->getNameFormComponent(),
             $this->getEmailFormComponent(),
-            $this->getPasswordFormComponent(),
+            $this->getPasswordFormComponent()->required(fn () => (bool) auth()->user()->debe_cambiar_password),
             $this->getPasswordConfirmationFormComponent(),
             $this->getCurrentPasswordFormComponent(),
         ]);
+    }
+
+    protected function afterSave(): void
+    {
+        $u = $this->getUser();
+        if ($u->wasChanged('password') && $u->debe_cambiar_password) {
+            $u->forceFill(['debe_cambiar_password' => false])->save();
+        }
     }
 }

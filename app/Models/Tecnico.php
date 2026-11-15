@@ -4,11 +4,14 @@ namespace App\Models;
 
 use App\Models\Concerns\Auditable;
 use App\Models\Concerns\RegistraCreador;
+use App\Observers\TecnicoObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+#[ObservedBy(TecnicoObserver::class)]
 class Tecnico extends Model
 {
     use Auditable, RegistraCreador, SoftDeletes;
@@ -26,6 +29,12 @@ class Tecnico extends Model
     public function documentos(): HasMany
     {
         return $this->hasMany(DocumentoTecnico::class);
+    }
+
+    public function divisiones(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Division::class, 'tecnico_division')
+            ->withPivot(['habilitado', 'vencimiento', 'notas'])->withTimestamps();
     }
 
     public function aceptaciones(): HasMany

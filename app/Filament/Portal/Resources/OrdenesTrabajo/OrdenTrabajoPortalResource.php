@@ -64,6 +64,11 @@ class OrdenTrabajoPortalResource extends Resource
             ]);
     }
 
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Servicios';
+    }
+
     public static function getPages(): array
     {
         return ['index' => ListOrdenesTrabajoPortal::route('/')];

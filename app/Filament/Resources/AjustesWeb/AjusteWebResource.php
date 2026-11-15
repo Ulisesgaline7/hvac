@@ -22,11 +22,21 @@ use UnitEnum;
 
 class AjusteWebResource extends Resource
 {
+    public static function canViewAny(): bool
+    {
+        $u = auth()->user();
+
+        return ! ($u?->hasRole('comercial') && ! $u->hasAnyRole(['administrador', 'coordinador']));
+    }
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Sitio web';
+
+    protected static ?int $navigationSort = 4;
+
     protected static ?string $model = AjusteWeb::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCog6Tooth;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Sitio web';
 
     protected static ?string $navigationLabel = 'Identidad, textos y contacto';
 

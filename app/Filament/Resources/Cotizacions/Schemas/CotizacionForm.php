@@ -78,7 +78,7 @@ class CotizacionForm
                 ->defaultItems(1)->addActionLabel('Agregar línea')->columns(4)
                 ->disabled($bloqueada)
                 ->schema([
-                    Select::make('tipo')->options(['servicio' => 'Servicio', 'repuesto' => 'Repuesto o material'])
+                    Select::make('tipo')->options(['servicio' => 'Servicio', 'mano_de_obra' => 'Mano de obra', 'material' => 'Material', 'equipo' => 'Equipo', 'repuesto' => 'Repuesto', 'otro' => 'Otro'])
                         ->default('servicio')->required(),
                     Select::make('servicio_id')->label('Servicio del tarifario')->searchable()->live()->columnSpan(3)
                         ->options(fn () => ServicioCatalogo::where('activo', true)->orderBy('codigo')->get()
@@ -97,6 +97,9 @@ class CotizacionForm
                     TextInput::make('cantidad')->numeric()->minValue(0.01)->default(1)->required(),
                     TextInput::make('unidad')->default('unidad'),
                     TextInput::make('precio_unitario')->label('Precio unitario (L, sin ISV)')->numeric()->minValue(0)->required(),
+                    TextInput::make('capitulo')->label('Capítulo')->maxLength(120),
+                    TextInput::make('marca')->maxLength(120),
+                    TextInput::make('modelo')->maxLength(120),
                     Hidden::make('codigo'),
                     Hidden::make('cuenta_equipo')->default(false),
                 ]),
@@ -108,6 +111,10 @@ class CotizacionForm
             Select::make('descuento_contrato')->label('Descuento por contrato anual')->placeholder('Sin contrato')
                 ->options(collect(config('tarifario.descuentos'))->filter(fn ($d) => ! isset($d['desde']))->map(fn ($d) => $d['nombre'])->all())
                 ->live()
+                ->afterStateUpdated(function ($state, Set $set) {
+                    $c = (new \App\Models\Cotizacion)->forceFill(['descuento_contrato' => $state ?: null]);
+                    $set('condiciones', \App\Services\ResumenAnual::condiciones($c));
+                })
                 ->helperText('El descuento por volumen se calcula solo. No se acumulan: se aplica el mayor.')
                 ->disabled($bloqueada),
 
@@ -142,7 +149,8 @@ class CotizacionForm
             TextInput::make('total')->label('Total')->prefix('L')->disabled()->dehydrated(false)->visibleOn('edit'),
 
             Textarea::make('condiciones')->label('Condiciones')->rows(8)->columnSpanFull()
-                ->default(fn () => implode("\n", config('tarifario.condiciones')))
+                ->default(fn () => \App\Services\ResumenAnual::condiciones(new \App\Models\Cotizacion))
+                ->helperText('Se arma con la plantilla del plan elegido. Al enviar la cotización se vuelve a generar con la plantilla vigente.')
                 ->disabled($bloqueada),
             Textarea::make('notas')->label('Notas internas')->columnSpanFull(),
         ]);

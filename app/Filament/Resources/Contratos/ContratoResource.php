@@ -20,6 +20,10 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ContratoResource extends Resource
 {
+    protected static string|\UnitEnum|null $navigationGroup = 'Comercial';
+
+    protected static ?int $navigationSort = 3;
+
     protected static ?string $model = Contrato::class;
     protected static ?string $modelLabel = 'contrato';
 

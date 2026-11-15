@@ -25,7 +25,10 @@ class ContactoController extends Controller
 
         unset($datos['g-recaptcha-response']);
 
-        Contacto::create($datos + ['ip' => $request->ip()]);
+        $contacto = Contacto::create($datos + ['ip' => $request->ip()]);
+
+        \App\Services\AvisosContacto::nuevo($contacto);
+        try { \App\Services\Crm::desdeContacto($contacto); } catch (\Throwable $e) { report($e); }
 
         return redirect(url('/') . '#contacto')
             ->with('ok', 'Gracias. Recibimos tu mensaje y te contactaremos pronto.');

@@ -26,6 +26,17 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class DocumentoTerceroResource extends Resource
 {
+    public static function canViewAny(): bool
+    {
+        $u = auth()->user();
+
+        return ! ($u?->hasRole('comercial') && ! $u->hasAnyRole(['administrador', 'coordinador']));
+    }
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Documentos';
+
+    protected static ?int $navigationSort = 3;
+
     protected static ?string $model = DocumentoTercero::class;
     protected static ?string $modelLabel = 'documento de tercero';
     protected static ?string $pluralModelLabel = 'documentos de terceros';

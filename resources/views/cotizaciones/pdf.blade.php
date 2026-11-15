@@ -41,10 +41,15 @@
         <tr><th>Código</th><th>Descripción</th><th class="r">Cant.</th><th>Unidad</th><th class="r">Valor unitario</th><th class="r">Total</th></tr>
     </thead>
     <tbody>
-    @foreach ($c->lineas as $l)
+    @php($capAnterior = null)
+    @foreach ($c->lineas->sortBy(fn ($x) => ($x->capitulo ?? '') . '|' . str_pad((string) $x->id, 10, '0', STR_PAD_LEFT)) as $l)
+        @if (filled($l->capitulo) && $l->capitulo !== $capAnterior)
+            <tr><td colspan="6"><strong>{{ $l->capitulo }}</strong></td></tr>
+            @php($capAnterior = $l->capitulo)
+        @endif
         <tr>
             <td>{{ $l->codigo }}</td>
-            <td>{{ $l->descripcion }}</td>
+            <td>{{ $l->descripcion }}@if (filled($l->marca) || filled($l->modelo))<br><small>{{ trim($l->marca . ' ' . $l->modelo) }}</small>@endif</td>
             <td class="r">{{ rtrim(rtrim(number_format((float) $l->cantidad, 2, '.', ''), '0'), '.') }}</td>
             <td>{{ $l->unidad }}</td>
             <td class="r">L {{ number_format((float) $l->precio_unitario, 2) }}</td>
@@ -54,6 +59,10 @@
     </tbody>
 </table>
 
+@php($ra = \App\Services\ResumenAnual::resumen($c))
+@if ($ra)
+<div class="caja" style="margin: 3mm 0;"><strong>Plan anual:</strong> {{ $ra['texto'] }}. Los valores de esta tabla son por visita.</div>
+@endif
 <table style="width: 60%; margin: 4mm 0 4mm auto;">
     <tr><td>Servicios</td><td class="r">L {{ number_format((float) $c->subtotal_servicios, 2) }}</td></tr>
     @if ((float) $c->ajuste_minimo > 0)
@@ -89,16 +98,20 @@
         <tr><td>Visita técnica (sin costo)</td><td class="r">L 0.00</td></tr>
     @endif
     <tr><td>Subtotal</td><td class="r">L {{ number_format((float) $c->subtotal, 2) }}</td></tr>
+    <tr><td>Importe exonerado</td><td class="r">L 0.00</td></tr>
+    <tr><td>Importe exento</td><td class="r">L 0.00</td></tr>
+    <tr><td>Importe gravado ({{ (int) (config('tarifario.isv') * 100) }} %)</td><td class="r">L {{ number_format((float) $c->subtotal, 2) }}</td></tr>
     <tr><td>ISV ({{ (int) (config('tarifario.isv') * 100) }} %)</td><td class="r">L {{ number_format((float) $c->isv, 2) }}</td></tr>
     <tr class="total"><td>TOTAL</td><td class="r">L {{ number_format((float) $c->total, 2) }}</td></tr>
-    @if ((int) $c->visitas_anuales > 1)
-        @php($anual = \App\Services\LogisticaViaticos::anual((float) $c->subtotal, (int) $c->visitas_anuales, (float) config('tarifario.isv')))
-        <tr><td>Visitas al año</td><td class="r">{{ (int) $c->visitas_anuales }}</td></tr>
-        <tr><td>Subtotal anual</td><td class="r">L {{ number_format($anual['subtotal'], 2) }}</td></tr>
-        <tr><td>ISV anual ({{ (int) (config('tarifario.isv') * 100) }} %)</td><td class="r">L {{ number_format($anual['isv'], 2) }}</td></tr>
-        <tr class="total"><td>TOTAL ANUAL</td><td class="r">L {{ number_format($anual['total'], 2) }}</td></tr>
+    @if ($ra)
+        <tr><td>Visitas al año</td><td class="r">{{ $ra['visitas'] }}</td></tr>
+        <tr><td>Subtotal anual</td><td class="r">L {{ number_format($ra['subtotal'], 2) }}</td></tr>
+        <tr><td>ISV anual ({{ (int) (config('tarifario.isv') * 100) }} %)</td><td class="r">L {{ number_format($ra['isv'], 2) }}</td></tr>
+        <tr class="total"><td>TOTAL ANUAL</td><td class="r">L {{ number_format($ra['total'], 2) }}</td></tr>
     @endif
 </table>
+
+<div class="caja" style="margin: 3mm 0;"><strong>Son:</strong> {{ $letras }}</div>
 
 <strong>Condiciones</strong>
 <ol>
@@ -108,6 +121,18 @@
 </ol>
 
 @php($firmada = $c->estado === 'aprobada' && filled($c->firma_cliente) && str_starts_with((string) $c->firma_cliente, 'data:image/png;base64,'))
+
+@if (! empty($qr))
+<table class="sin-borde" style="margin-top: 8mm;">
+    <tr>
+        <td style="width: 27mm;"><img src="{{ $qr }}" style="width: 25mm; height: 25mm;"></td>
+        <td>
+            <strong>Verifique este documento</strong><br>
+            <span class="muted" style="font-size: 7.5pt;">Escanee el código QR o ingrese a {{ $verificacion_url }} para ver la copia original registrada. Si lo que ve en pantalla no coincide con este documento impreso, el documento fue alterado.</span>
+        </td>
+    </tr>
+</table>
+@endif
 
 <table class="sin-borde" style="margin-top: 14mm;">
     <tr>

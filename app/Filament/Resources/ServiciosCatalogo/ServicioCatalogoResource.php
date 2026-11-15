@@ -23,17 +23,26 @@ use UnitEnum;
 
 class ServicioCatalogoResource extends Resource
 {
+    public static function canViewAny(): bool
+    {
+        $u = auth()->user();
+
+        return ! ($u?->hasRole('comercial') && ! $u->hasAnyRole(['administrador', 'coordinador']));
+    }
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Tarifario';
+
+    protected static ?int $navigationSort = 1;
+
     protected static ?string $model = ServicioCatalogo::class;
 
     protected static ?string $slug = 'servicios-catalogo';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCurrencyDollar;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Tarifario';
 
     protected static ?string $navigationLabel = 'Servicios y precios';
 
-    protected static ?int $navigationSort = 1;
 
     protected static ?string $modelLabel = 'servicio';
 

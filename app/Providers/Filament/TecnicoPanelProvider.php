@@ -25,9 +25,11 @@ class TecnicoPanelProvider extends PanelProvider
         return $panel
             ->id('tecnico')
             ->databaseNotifications()
-            ->databaseNotificationsPolling('30s')
-            ->path('tecnico')
+            ->databaseNotificationsPolling('5s')
+            ->domain(\App\Support\Dominios::de('tecnico'))
+            ->path(\App\Support\Dominios::de('tecnico') ? '' : 'tecnico')
             ->login()
+            ->passwordReset()
             ->colors(['primary' => \App\Support\Marca::primario()])
             ->brandName(\App\Support\Marca::nombre())
             ->profile(\App\Filament\Pages\Auth\EditarPerfil::class)
@@ -51,6 +53,6 @@ class TecnicoPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->renderHook(\Filament\View\PanelsRenderHook::HEAD_END, fn () => view('pwa.head-tecnico'))
-            ->authMiddleware([Authenticate::class]);
+            ->authMiddleware([Authenticate::class, \App\Http\Middleware\ForzarCambioPassword::class]);
     }
 }

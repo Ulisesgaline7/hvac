@@ -37,6 +37,11 @@ class CotizacionLinea extends Model
         return $this->belongsTo(Cotizacion::class, 'cotizacion_id');
     }
 
+    public function costo(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(CotizacionLineaCosto::class, 'cotizacion_linea_id');
+    }
+
     public function servicio(): BelongsTo
     {
         return $this->belongsTo(ServicioCatalogo::class, 'servicio_id');

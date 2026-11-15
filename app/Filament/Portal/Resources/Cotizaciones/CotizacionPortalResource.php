@@ -5,6 +5,7 @@ namespace App\Filament\Portal\Resources\Cotizaciones;
 use App\Filament\Portal\Resources\Cotizaciones\Pages\ListCotizacionesPortal;
 use App\Models\Cotizacion;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -58,7 +59,29 @@ class CotizacionPortalResource extends Resource
                 TextColumn::make('valida_hasta')->label('Válida hasta')->date('d/m/Y'),
                 TextColumn::make('total')->money('HNL'),
                 TextColumn::make('estado')->badge()->color(fn (string $state) => $state === 'aprobada' ? 'success' : 'info'),
+            ])
+            ->recordActions([
+                Action::make('aprobar')
+                    ->label('Revisar y aprobar')
+                    ->icon('heroicon-o-check-badge')
+                    ->color('success')
+                    ->visible(fn ($record) => $record->estado === 'enviada'
+                        && filled($record->token_aceptacion)
+                        && (! $record->valida_hasta || $record->valida_hasta->endOfDay()->isFuture())
+                        && auth()->user()?->hasRole('cliente_admin'))
+                    ->url(fn ($record) => route('cotizaciones.aceptacion', $record->token_aceptacion))
+                    ->openUrlInNewTab(),
+                Action::make('pdf')
+                    ->label('PDF')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->url(fn ($record) => route('portal.doc.cotizacion', $record->id))
+                    ->openUrlInNewTab(),
             ]);
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Comercial';
     }
 
     public static function getPages(): array

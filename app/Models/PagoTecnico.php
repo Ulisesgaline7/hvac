@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[\Illuminate\Database\Eloquent\Attributes\ObservedBy(\App\Observers\PagoTecnicoObserver::class)]
 class PagoTecnico extends Model
 {
     protected $table = 'pagos_tecnico';

@@ -20,6 +20,17 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class TecnicoResource extends Resource
 {
+    public static function canViewAny(): bool
+    {
+        $u = auth()->user();
+
+        return ! ($u?->hasRole('comercial') && ! $u->hasAnyRole(['administrador', 'coordinador']));
+    }
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Operación';
+
+    protected static ?int $navigationSort = 5;
+
     protected static ?string $model = Tecnico::class;
     protected static ?string $modelLabel = 'técnico';
 

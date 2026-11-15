@@ -19,17 +19,26 @@ use UnitEnum;
 
 class ReglaTarifarioResource extends Resource
 {
+    public static function canViewAny(): bool
+    {
+        $u = auth()->user();
+
+        return ! ($u?->hasRole('comercial') && ! $u->hasAnyRole(['administrador', 'coordinador']));
+    }
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Tarifario';
+
+    protected static ?int $navigationSort = 2;
+
     protected static ?string $model = ReglaTarifario::class;
 
     protected static ?string $slug = 'reglas-tarifario';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedAdjustmentsHorizontal;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Tarifario';
 
     protected static ?string $navigationLabel = 'Reglas comerciales';
 
-    protected static ?int $navigationSort = 2;
 
     protected static ?string $modelLabel = 'regla';
 

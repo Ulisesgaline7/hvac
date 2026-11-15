@@ -13,7 +13,7 @@ class CobrosPendientes extends Command
     protected $signature = 'cobros:pendientes';
     protected $description = 'Solo lectura: OT cerradas sin factura y periodos de contrato sin facturar';
 
-    private const MESES = ['mensual' => 1, 'trimestral' => 3, 'semestral' => 6, 'anual' => 12];
+    private const MESES = ['mensual' => 1, 'bimestral' => 2, 'trimestral' => 3, 'semestral' => 6, 'anual' => 12];
 
     public function handle(): int
     {

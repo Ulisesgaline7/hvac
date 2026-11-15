@@ -20,7 +20,7 @@ class Proveedor extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()->logOnly(['nombre', 'rtn', 'contacto', 'telefono', 'email', 'direccion', 'activo'])
-            ->logOnlyDirty()->dontSubmitEmptyLogs();
+            ->logOnlyDirty()->dontLogEmptyChanges();
     }
 
     public function insumos(): HasMany

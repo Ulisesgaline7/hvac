@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\PerteneceADivision;
 use App\Models\Concerns\Auditable;
 use App\Models\Concerns\RegistraCreador;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +13,8 @@ use Illuminate\Support\Str;
 
 class Cotizacion extends Model
 {
+    use PerteneceADivision;
+
     use Auditable, RegistraCreador, SoftDeletes;
 
     protected $table = 'cotizaciones';

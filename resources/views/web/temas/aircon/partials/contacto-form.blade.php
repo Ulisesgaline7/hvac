@@ -28,7 +28,7 @@
         </div>
         <div class="col-md-6">
             <div class="form-floating">
-                <input type="text" class="form-control" id="ciudad" name="ciudad" placeholder="Ciudad" value="{{ old('ciudad') }}">
+                <select class="form-select" id="ciudad" name="ciudad"><option value="">Selecciona tu ciudad</option>@foreach (config('ciudades') as $ciudad)<option value="{{ $ciudad }}" @selected(old('ciudad') === $ciudad)>{{ $ciudad }}</option>@endforeach</select>
                 <label for="ciudad">Ciudad</label>
             </div>
         </div>

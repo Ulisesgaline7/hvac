@@ -23,6 +23,17 @@ use Filament\Tables\Table;
 
 class PlantillaFormularioResource extends Resource
 {
+    public static function canViewAny(): bool
+    {
+        $u = auth()->user();
+
+        return ! ($u?->hasRole('comercial') && ! $u->hasAnyRole(['administrador', 'coordinador']));
+    }
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Configuración';
+
+    protected static ?int $navigationSort = 4;
+
     protected static ?string $model = PlantillaFormulario::class;
     protected static ?string $modelLabel = 'plantilla de formulario';
 
@@ -98,6 +109,8 @@ class PlantillaFormularioResource extends Resource
     {
         return 'Plantillas de formulario';
     }
+
+    protected static ?string $navigationParentItem = 'Documentos';
 
     public static function getNavigationGroup(): ?string
     {

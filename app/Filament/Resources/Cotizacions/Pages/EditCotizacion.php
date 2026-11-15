@@ -68,6 +68,16 @@ class EditCotizacion extends EditRecord
                     return $partes ? implode(' · ', $partes) : 'No había contrato ni OT que generar.';
                 }, 'Cotización aprobada')),
 
+            Action::make('generarContrato')->label('Generar contrato')->icon('heroicon-o-document-text')->color('gray')
+                ->visible(fn () => $this->record->estado === 'aprobada' && blank($this->record->contrato_id))
+                ->requiresConfirmation()
+                ->modalDescription('Crea un contrato en borrador con la plantilla de servicio único. No genera cobros: el servicio se factura al cerrar la orden de trabajo.')
+                ->action(fn () => $this->ejecutar(function () {
+                    $c = app(CotizacionFlujo::class)->generarContratoUnico($this->record);
+
+                    return 'Contrato en borrador #' . $c->id;
+                }, 'Contrato generado')),
+
             Action::make('rechazar')->label('Registrar rechazo')->icon('heroicon-o-x-circle')->color('danger')
                 ->visible(fn () => $this->record->estado === 'enviada')
                 ->schema([Textarea::make('motivo')->label('Motivo')])

@@ -10,6 +10,10 @@ use Filament\Support\Icons\Heroicon;
 
 class Finanzas extends Page
 {
+    protected static string|\UnitEnum|null $navigationGroup = 'Finanzas';
+
+    protected static ?int $navigationSort = 1;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBanknotes;
 
     protected static ?string $navigationLabel = 'Finanzas';

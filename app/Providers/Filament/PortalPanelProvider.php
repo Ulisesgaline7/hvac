@@ -25,9 +25,11 @@ class PortalPanelProvider extends PanelProvider
         return $panel
             ->id('portal')
             ->databaseNotifications()
-            ->databaseNotificationsPolling('30s')
-            ->path('portal')
+            ->databaseNotificationsPolling('5s')
+            ->domain(\App\Support\Dominios::de('portal'))
+            ->path(\App\Support\Dominios::de('portal') ? '' : 'portal')
             ->login()
+            ->passwordReset()
             ->colors(['primary' => \App\Support\Marca::primario()])
             ->brandName(\App\Support\Marca::nombre())
             ->profile(\App\Filament\Pages\Auth\EditarPerfil::class)
@@ -37,6 +39,7 @@ class PortalPanelProvider extends PanelProvider
             ->favicon(\App\Support\Marca::favicon())
             ->discoverResources(in: app_path('Filament/Portal/Resources'), for: 'App\Filament\Portal\Resources')
             ->discoverWidgets(in: app_path('Filament/Portal/Widgets'), for: 'App\Filament\Portal\Widgets')
+            ->discoverPages(in: app_path('Filament/Portal/Pages'), for: 'App\Filament\Portal\Pages')
             ->pages([Dashboard::class])
             ->widgets([AccountWidget::class])
             ->middleware([
@@ -50,6 +53,6 @@ class PortalPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
-            ->authMiddleware([Authenticate::class]);
+            ->authMiddleware([Authenticate::class, \App\Http\Middleware\ForzarCambioPassword::class]);
     }
 }

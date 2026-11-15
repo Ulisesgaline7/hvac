@@ -25,6 +25,7 @@ class AvisoPanel extends Notification implements ShouldQueue
     {
         $canales = $this->correo ? ['database', 'mail'] : ['database'];
         $canales[] = \App\Notifications\Channels\WebPushChannel::class;
+        $canales[] = 'broadcast';
 
         return $canales;
     }
@@ -47,6 +48,15 @@ class AvisoPanel extends Notification implements ShouldQueue
         }
 
         return $n->getDatabaseMessage();
+    }
+
+    public function toBroadcast($notifiable): \Illuminate\Notifications\Messages\BroadcastMessage
+    {
+        return FilamentNotification::make()
+            ->title($this->titulo)
+            ->body($this->cuerpo)
+            ->icon($this->icono)
+            ->getBroadcastMessage();
     }
 
     public function toMail($notifiable): MailMessage

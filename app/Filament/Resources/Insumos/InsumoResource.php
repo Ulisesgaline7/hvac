@@ -39,6 +39,17 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class InsumoResource extends Resource
 {
+    public static function canViewAny(): bool
+    {
+        $u = auth()->user();
+
+        return ! ($u?->hasRole('comercial') && ! $u->hasAnyRole(['administrador', 'coordinador']));
+    }
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Inventario';
+
+    protected static ?int $navigationSort = 1;
+
     protected static ?string $model = Insumo::class;
 
     protected static ?string $slug = 'insumos';
@@ -49,11 +60,9 @@ class InsumoResource extends Resource
 
     protected static ?string $navigationLabel = 'Insumos';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Inventario';
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-cube';
 
-    protected static ?int $navigationSort = 1;
 
     protected static ?string $recordTitleAttribute = 'nombre';
 

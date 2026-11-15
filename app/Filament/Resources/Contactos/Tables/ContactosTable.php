@@ -45,6 +45,7 @@ class ContactosTable
             ])
             ->recordActions([
                 ViewAction::make(),
+                \App\Filament\Acciones\ConvertirEnOportunidad::make(),
                 EditAction::make(),
             ])
             ->toolbarActions([

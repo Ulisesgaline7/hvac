@@ -29,15 +29,19 @@ use UnitEnum;
 
 class BibliotecaDocumentoResource extends Resource
 {
+    protected static string|\UnitEnum|null $navigationGroup = 'Documentos';
+
+    protected static ?int $navigationSort = 2;
+
     protected static ?string $model = DocumentoCatalogo::class;
 
     protected static ?string $slug = 'biblioteca-documentos';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBookOpen;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Configuración';
 
     protected static ?string $navigationLabel = 'Biblioteca de documentos';
+    protected static ?string $navigationParentItem = 'Documentos';
 
     protected static ?string $modelLabel = 'documento';
 

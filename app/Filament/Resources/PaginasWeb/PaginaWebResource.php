@@ -32,17 +32,26 @@ use UnitEnum;
 
 class PaginaWebResource extends Resource
 {
+    public static function canViewAny(): bool
+    {
+        $u = auth()->user();
+
+        return ! ($u?->hasRole('comercial') && ! $u->hasAnyRole(['administrador', 'coordinador']));
+    }
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Sitio web';
+
+    protected static ?int $navigationSort = 1;
+
     protected static ?string $model = WebPagina::class;
 
     protected static ?string $slug = 'paginas-web';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Sitio web';
 
     protected static ?string $navigationLabel = 'Páginas';
 
-    protected static ?int $navigationSort = 1;
 
     protected static ?string $modelLabel = 'página';
 

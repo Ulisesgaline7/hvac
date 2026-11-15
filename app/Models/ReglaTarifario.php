@@ -2,27 +2,33 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\PerteneceADivision;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
 class ReglaTarifario extends Model
 {
+    use PerteneceADivision;
+
     protected $table = 'reglas_tarifario';
 
-    protected $fillable = ['clave', 'etiqueta', 'grupo', 'tipo', 'valor', 'ayuda', 'orden'];
+    protected $fillable = ['division_id', 'clave', 'etiqueta', 'grupo', 'tipo', 'valor', 'ayuda', 'orden'];
 
     protected $casts = ['valor' => 'json'];
 
     protected static function booted(): void
     {
-        static::saved(fn () => Cache::forget('reglas_tarifario'));
-        static::deleted(fn () => Cache::forget('reglas_tarifario'));
+        static::saved(fn (self $r) => Cache::forget('reglas_tarifario:' . ($r->division_id ?: 'base')));
+        static::deleted(fn (self $r) => Cache::forget('reglas_tarifario:' . ($r->division_id ?: 'base')));
     }
 
     /** [clave => valor guardado]. */
-    public static function guardadas(): array
+    public static function guardadas(?int $division = null): array
     {
-        return Cache::rememberForever('reglas_tarifario', fn () => static::query()->get()
+        $division ??= (int) \App\Models\Division::where('codigo', 'CLIMA')->value('id');
+
+        return Cache::rememberForever('reglas_tarifario:' . $division, fn () => static::query()
+            ->withoutGlobalScope('division')->where('division_id', $division)->get()
             ->mapWithKeys(fn (self $r) => [$r->clave => $r->valor])->all());
     }
 

@@ -16,6 +16,17 @@ use Spatie\Activitylog\Models\Activity;
 
 class BitacoraResource extends Resource
 {
+    public static function canViewAny(): bool
+    {
+        $u = auth()->user();
+
+        return $u?->hasRole('administrador') ?? false;
+    }
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Sistema';
+
+    protected static ?int $navigationSort = 99;
+
     protected static ?string $model = Activity::class;
 
     protected static ?string $slug = 'bitacora';
@@ -24,13 +35,11 @@ class BitacoraResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Bitácora';
 
-    protected static ?string $navigationLabel = 'Bitácora';
+    protected static ?string $navigationLabel = 'Bitácora general';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Sistema';
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
 
-    protected static ?int $navigationSort = 99;
 
     public static function canCreate(): bool
     {

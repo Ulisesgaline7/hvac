@@ -15,7 +15,7 @@ class ResumenOperativoWidget extends StatsOverviewWidget
 
     public static function canView(): bool
     {
-        return auth()->user()?->hasAnyRole(['administrador', 'coordinador']) ?? false;
+        return auth()->user()?->hasAnyRole(['administrador', 'coordinador', 'supervisor']) ?? false;
     }
 
     protected function getStats(): array

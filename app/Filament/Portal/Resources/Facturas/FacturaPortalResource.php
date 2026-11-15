@@ -64,6 +64,11 @@ class FacturaPortalResource extends Resource
             ]);
     }
 
+    public static function getNavigationGroup(): ?string
+    {
+        return 'Facturación';
+    }
+
     public static function getPages(): array
     {
         return ['index' => ListFacturasPortal::route('/')];
