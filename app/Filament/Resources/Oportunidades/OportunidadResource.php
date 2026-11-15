@@ -78,7 +78,7 @@ class OportunidadResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $q) => $q->with(['cliente', 'responsable']))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['cliente', 'responsable']))
             ->defaultSort('cierre_esperado')
             ->columns([
                 TextColumn::make('titulo')->searchable()->wrap(),
